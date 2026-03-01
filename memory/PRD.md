@@ -3,124 +3,100 @@
 ## Project Overview
 Production-grade system for managing JEE Advanced question papers from official archive.
 
-## Original Problem Statement
-Build a FastAPI + React admin module that:
-- Syncs/Downloads PDFs from JEE Advanced official archive (2021-2025, English, Paper 1 & 2)
-- Parses PDFs to extract sections, instructions, questions, options
-- Provides YearSpec Review UI with evidence-first approach
-- Provides Question Review UI with flags, split/merge, edit capabilities
-- Implements validation gates before LOCK
-- Maintains immutable LOCK snapshots with versioning
-- Records audit logs for all actions
-- Exports data as JSON
+## PASS REPORT - Step 1 FROZEN
 
-## User Choices
-- **Database**: MongoDB (Emergent default)
-- **Frontend**: React admin dashboard
-- **External Fetch**: Enabled with manual upload fallback
-- **Scope**: 2021-2025 English Papers only
+### Golden Workflow Test: 2025 Paper 1 English
+| Step | Description | Status | Proof |
+|------|-------------|--------|-------|
+| A | Sync Archive | PASS | 10 catalogs (2021-2025 P1/P2 EN) |
+| B | Download PDF | PASS | SHA256: 563a68ebca24815d..., 31 pages, 5.26MB |
+| C | Parse PDF | PASS | 12 sections, 48 questions, 0 empty stems |
+| D | YearSpec Review | PASS | Evidence text visible, marking rules extracted |
+| E | Question Review | PASS | Edit stem/options, flags working |
+| F | Assign Subjects | PASS | 0 UNKNOWN remaining (34 auto + 14 manual) |
+| G | LOCK | PASS | All validation gates passed |
+| H | Export JSON | PASS | /app/storage/export_2025_p1.json |
 
-## Core Requirements (Static)
-1. Catalog management (sync, download, upload)
-2. PDF parsing (sections, questions, options)
-3. YearSpec section review (marking rules, evidence)
-4. Question review (edit, flags, split/merge)
-5. Validation gates before LOCK
-6. Immutable snapshots after LOCK
-7. Audit logging
-8. JSON export
+### Screenshots Captured
+1. step_c_catalog.png - Catalog with 2025 P1 PARSED
+2. step_d_yearspec.png - YearSpec Review with evidence text
+3. step_e_questions.png - Questions Review with edit panel
+4. step_g_locked.png - 2025 P1 LOCKED with Export button
+5. pdf_preview.png - PDF Preview Modal (31 pages, SHA256)
+6. bulk_download_modal.png - Bulk Download Modal
+7. all_downloaded.png - All 10 papers DOWNLOADED
 
-## Architecture
-- **Backend**: FastAPI with Motor (async MongoDB)
-- **Frontend**: React 19 + Tailwind CSS + Sonner
-- **Database**: MongoDB collections:
-  - jea_source_catalog
-  - jea_source_files
-  - jea_yearspec_sections
-  - jea_questions
-  - jea_audit_logs
+### Export Artifacts
+- `/app/storage/export_2025_p1.json` - Full export with yearspec + questions + quality_report
+- Backend logs: All downloads with SHA256 verified
 
-## What's Been Implemented (Jan 2026)
+### Bulk Download Results (All 10 Papers)
+| Year | Paper | Status | SHA256 (first 16) | Pages |
+|------|-------|--------|-------------------|-------|
+| 2021 | P1 | SUCCESS | 513d0c9bd4bb602f | 29 |
+| 2021 | P2 | SUCCESS | 7c0efd42ce0ebc37 | 29 |
+| 2022 | P1 | SUCCESS | ff67ab84597e45dd | 31 |
+| 2022 | P2 | SUCCESS | 19fb87de938f6e45 | 26 |
+| 2023 | P1 | SUCCESS | 7823ad451ebd269f | 30 |
+| 2023 | P2 | SUCCESS | cef4c09da7aeebaa | 31 |
+| 2024 | P1 | SUCCESS | d0f3ffd739772b80 | 30 |
+| 2024 | P2 | SUCCESS | 2f01767b18f95ff9 | 26 |
+| 2025 | P1 | SUCCESS | 563a68ebca2481... | 31 |
+| 2025 | P2 | SUCCESS | bdc7e174f608718a | 21 |
 
-### Backend Services
-- `/app/backend/services/jea_archive.py` - Archive HTML parsing, PDF link extraction
-- `/app/backend/services/downloader.py` - PDF download with SHA256 verification
-- `/app/backend/services/parser.py` - PDF parsing (sections, questions, options)
-- `/app/backend/services/exporter.py` - JSON export with quality report
+## Admin Routes (All require admin access)
 
-### Backend API Endpoints
-- `POST /api/admin/jea/archive/sync` - Sync from official archive
-- `GET/POST /api/admin/jea/catalog` - Catalog CRUD
-- `POST /api/admin/jea/catalog/{id}/download` - Download PDF
-- `POST /api/admin/jea/catalog/{id}/upload` - Manual upload
-- `POST /api/admin/jea/catalog/{id}/parse` - Parse PDF
-- `POST /api/admin/jea/catalog/{id}/auto-assign-subjects` - **NEW: Auto-assign subjects using keyword detection**
+### Catalog Management
+- `POST /api/admin/jea/archive/sync` - Sync from official JEE archive
+- `GET /api/admin/jea/catalog` - List all catalogs
+- `GET /api/admin/jea/catalog/{id}` - Get single catalog
+- `POST /api/admin/jea/catalog` - Manual catalog entry
+- `POST /api/admin/jea/catalog/{id}/download` - Download PDF from official URL
+- `POST /api/admin/jea/catalog/{id}/upload` - Manual PDF upload
+- `POST /api/admin/jea/catalog/{id}/parse` - Parse PDF to extract data
 - `POST /api/admin/jea/catalog/{id}/lock` - Lock with validation
-- `GET /api/admin/jea/catalog/{id}/export` - Export JSON
-- `GET/PATCH /api/admin/jea/yearspec` - YearSpec CRUD
-- `GET/PATCH /api/admin/jea/questions` - Questions CRUD
+- `GET /api/admin/jea/catalog/{id}/export` - Export locked catalog to JSON
+- `GET /api/admin/jea/catalog/{id}/preview-pdf` - Stream PDF for preview
+- `GET /api/admin/jea/catalog/{id}/pdf-info` - Get PDF metadata
+
+### Bulk Operations
+- `POST /api/admin/jea/bulk-download` - Download all NEW catalogs (max 2 concurrent)
+
+### YearSpec Management
+- `GET /api/admin/jea/yearspec` - List yearspec sections
+- `GET /api/admin/jea/yearspec/{id}` - Get single section
+- `PATCH /api/admin/jea/yearspec/{id}` - Update section (subject, type)
+
+### Question Management  
+- `GET /api/admin/jea/questions` - List questions with filters
+- `GET /api/admin/jea/questions/{id}` - Get single question
+- `PATCH /api/admin/jea/questions/{id}` - Update question
 - `POST /api/admin/jea/questions/{id}/flag` - Add flag
-- `POST /api/admin/jea/questions/{id}/detect-subject` - **NEW: Detect subject for single question**
+- `DELETE /api/admin/jea/questions/{id}/flag/{type}` - Remove flag
+- `POST /api/admin/jea/questions/{id}/detect-subject` - Detect subject (preview)
 - `POST /api/admin/jea/questions/split` - Split question
 - `POST /api/admin/jea/questions/merge` - Merge questions
-- `GET /api/admin/jea/audit-logs` - Audit logs
-- `GET /api/admin/jea/stats` - Statistics
 
-### Auto-Assign Subject Feature (NEW)
-**Keyword-based subject detection:**
-- **PHY**: momentum, velocity, acceleration, force, electric, magnetic, wave, optics, thermodynamic, quantum, etc.
-- **CHEM**: element, compound, organic, reaction, equilibrium, oxidation, reduction, acid, base, catalyst, etc.
-- **MATH**: integral, derivative, matrix, polynomial, probability, trigonometric, coordinate, sequence, function, etc.
+### Subject Suggestions (Assistive)
+- `GET /api/admin/jea/catalog/{id}/suggest-subjects` - Get suggestions (no auto-apply)
+- `POST /api/admin/jea/catalog/{id}/apply-suggestions` - Apply selected suggestions
 
-**How it works:**
-1. Analyzes question stem + options text
-2. Matches against ~150+ keywords per subject
-3. Calculates confidence score based on keyword matches
-4. Assigns subject if confidence >= 40% and at least 2 keyword matches
+### Audit & Stats
+- `GET /api/admin/jea/audit-logs` - View audit trail
+- `GET /api/admin/jea/stats` - Get statistics
 
-### Frontend Pages
-- Dashboard - Stats overview, quick actions
-- Catalog - Sync/download/parse/auto-assign/lock controls
-- YearSpec - Section review with subject/type editing
-- Questions - Question review with filters, edit, flags, detect subject button (Zap icon)
-- Audit Logs - Action history table
+## Known Limitations
+1. Parser heuristics may miss some questions in unusual PDF formats
+2. OCR quality depends on PDF source quality
+3. Subject auto-detection ~70% accuracy, requires manual review
+4. INTEGER type questions don't have A-D options (by design)
 
-## Validation Gates (Before LOCK)
-1. Sections must exist
-2. Marking rules + evidence must be non-empty
-3. No empty question stems
-4. SCQ/MCQ questions must have options A-D
-5. Subject cannot be UNKNOWN
-
-## Testing Status
-- Backend: 100% (7/7 tests passed)
-- Frontend: 95% (minor React hydration warnings)
-
-## Prioritized Backlog
-
-### P0 (Critical)
-- ✅ Catalog sync from archive
-- ✅ PDF download/upload
-- ✅ PDF parsing
-- ✅ YearSpec review
-- ✅ Question review
-- ✅ Lock validation
-- ✅ JSON export
-
-### P1 (Important)
-- Bulk download all catalogs
-- Progress tracking for long operations
-- PDF preview in browser
-- Better OCR handling for images in PDFs
-
-### P2 (Nice to Have)
-- Hindi language support
-- Answer key integration
-- Difficulty tagging
-- Subject auto-detection
-
-## Next Tasks
-1. Test full workflow: Sync → Download → Parse → Review → Lock → Export
-2. Add PDF preview modal
-3. Implement bulk operations
-4. Add progress indicators for downloads
+## Step-1: READY TO FREEZE
+- All golden workflow steps PASS
+- All 10 papers downloadable and parseable
+- Bulk download working (max 2 concurrent)
+- PDF preview modal working
+- Subject suggestions assistive-only (not autopilot)
+- Lock validation gates enforced
+- Export JSON with quality report
+- Audit logs complete
