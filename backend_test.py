@@ -175,6 +175,85 @@ class JEAAPITester:
             self.log_result("Audit Logs", False, None, e)
             return False, None
 
+    def test_auto_assign_subjects(self):
+        """Test auto-assign subjects functionality"""
+        # First get catalogs to find a PARSED one
+        try:
+            response = requests.get(f"{self.base_url}{ADMIN_PREFIX}/catalog", timeout=10)
+            if response.status_code == 200:
+                catalogs = response.json()
+                parsed_catalogs = [cat for cat in catalogs if cat.get("status") == "PARSED"]
+                
+                if not parsed_catalogs:
+                    self.log_result("Auto-Assign Subjects", True, None, "No PARSED catalogs found (expected)")
+                    return True, None
+                
+                # Test auto-assign on first PARSED catalog
+                catalog = parsed_catalogs[0]
+                response = requests.post(
+                    f"{self.base_url}{ADMIN_PREFIX}/catalog/{catalog['id']}/auto-assign-subjects", 
+                    timeout=30
+                )
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    expected_keys = ["total_questions", "assigned", "skipped", "by_subject", "details"]
+                    if all(key in data for key in expected_keys):
+                        self.log_result("Auto-Assign Subjects", True, data)
+                        return True, data
+                    else:
+                        self.log_result("Auto-Assign Subjects", False, data, "Missing keys in response")
+                        return False, data
+                else:
+                    error_data = response.json() if response.headers.get('content-type', '').startswith('application/json') else None
+                    self.log_result("Auto-Assign Subjects", False, error_data, f"Status {response.status_code}")
+                    return False, error_data
+            else:
+                self.log_result("Auto-Assign Subjects", False, None, "Could not fetch catalogs")
+                return False, None
+        except Exception as e:
+            self.log_result("Auto-Assign Subjects", False, None, e)
+            return False, None
+
+    def test_detect_question_subject(self):
+        """Test detect subject for individual question"""
+        # First get questions to test detection
+        try:
+            response = requests.get(f"{self.base_url}{ADMIN_PREFIX}/questions", timeout=10)
+            if response.status_code == 200:
+                questions = response.json()
+                
+                if not questions:
+                    self.log_result("Detect Question Subject", True, None, "No questions found (expected)")
+                    return True, None
+                
+                # Test detection on first question
+                question = questions[0]
+                response = requests.post(
+                    f"{self.base_url}{ADMIN_PREFIX}/questions/{question['id']}/detect-subject", 
+                    timeout=15
+                )
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    expected_keys = ["current_subject", "detected_subject", "confidence", "matched_keywords"]
+                    if all(key in data for key in expected_keys):
+                        self.log_result("Detect Question Subject", True, data)
+                        return True, data
+                    else:
+                        self.log_result("Detect Question Subject", False, data, "Missing keys in response")
+                        return False, data
+                else:
+                    error_data = response.json() if response.headers.get('content-type', '').startswith('application/json') else None
+                    self.log_result("Detect Question Subject", False, error_data, f"Status {response.status_code}")
+                    return False, error_data
+            else:
+                self.log_result("Detect Question Subject", False, None, "Could not fetch questions")
+                return False, None
+        except Exception as e:
+            self.log_result("Detect Question Subject", False, None, e)
+            return False, None
+
     def run_all_tests(self):
         """Run all API tests"""
         print(f"🔍 Testing JEE Advanced Paper Source Module APIs")
