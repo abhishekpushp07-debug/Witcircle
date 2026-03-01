@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import "@/App.css";
-import { BrowserRouter, Routes, Route, NavLink, useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, NavLink } from "react-router-dom";
 import axios from "axios";
 import { Toaster, toast } from "sonner";
 import {
@@ -12,20 +12,18 @@ import {
   Download,
   ChevronRight,
   RefreshCw,
-  Upload,
   Play,
   Lock,
   FileJson,
   AlertTriangle,
-  CheckCircle2,
-  Clock,
   Loader2,
-  Edit,
   Flag,
-  Split,
-  Merge,
   X,
-  Zap
+  Zap,
+  Eye,
+  CheckCircle,
+  XCircle,
+  DownloadCloud
 } from "lucide-react";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -40,7 +38,11 @@ const StatusBadge = ({ status }) => {
     LOCKED: "status-locked",
     ERROR: "status-error",
     DRAFT: "status-new",
-    APPROVED: "status-locked"
+    APPROVED: "status-locked",
+    SUCCESS: "status-locked",
+    FAILED: "status-error",
+    SKIPPED: "status-new",
+    PENDING: "status-downloaded"
   };
   
   return (
@@ -72,6 +74,317 @@ const Spinner = ({ size = "md" }) => {
   return <Loader2 className={`${sizes[size]} animate-spin text-primary`} />;
 };
 
+// PDF Preview Modal
+const PDFPreviewModal = ({ catalogId, year, paperNo, onClose }) => {
+  const [pdfInfo, setPdfInfo] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    axios.get(`${API}/catalog/${catalogId}/pdf-info`)
+      .then(res => setPdfInfo(res.data))
+      .catch(() => setPdfInfo({ has_pdf: false }))
+      .finally(() => setLoading(false));
+  }, [catalogId]);
+
+  if (loading) {
+    return (
+      <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+        <Spinner size="lg" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" data-testid="pdf-preview-modal">
+      <div className="bg-card rounded-xl border border-border w-full max-w-6xl h-[90vh] flex flex-col">
+        <div className="flex items-center justify-between p-4 border-b border-border">
+          <div>
+            <h3 className="font-heading text-lg font-semibold">PDF Preview: {year} Paper {paperNo}</h3>
+            {pdfInfo?.has_pdf && (
+              <p className="text-xs text-muted-foreground mt-1">
+                v{pdfInfo.file_version} | {pdfInfo.pages_count} pages | SHA256: {pdfInfo.sha256?.slice(0, 16)}...
+              </p>
+            )}
+          </div>
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground" data-testid="close-preview">
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+        <div className="flex-1 overflow-hidden">
+          {pdfInfo?.has_pdf ? (
+            <iframe
+              src={`${API}/catalog/${catalogId}/preview-pdf`}
+              className="w-full h-full"
+              title="PDF Preview"
+            />
+          ) : (
+            <div className="flex items-center justify-center h-full text-muted-foreground">
+              No PDF available. Download the paper first.
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Bulk Download Modal
+const BulkDownloadModal = ({ onClose, onComplete }) => {
+  const [status, setStatus] = useState("idle"); // idle, running, done
+  const [result, setResult] = useState(null);
+
+  const startBulkDownload = async () => {
+    setStatus("running");
+    try {
+      const res = await axios.post(`${API}/bulk-download?force=false&max_concurrent=2`);
+      setResult(res.data);
+      setStatus("done");
+      toast.success(`Bulk download complete: ${res.data.success} success, ${res.data.failed} failed`);
+      onComplete();
+    } catch (err) {
+      toast.error(err.response?.data?.detail || "Bulk download failed");
+      setStatus("idle");
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" data-testid="bulk-download-modal">
+      <div className="bg-card rounded-xl border border-border w-full max-w-2xl">
+        <div className="flex items-center justify-between p-4 border-b border-border">
+          <h3 className="font-heading text-lg font-semibold">Bulk Download All PDFs</h3>
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        <div className="p-6 space-y-4">
+          {status === "idle" && (
+            <div className="text-center space-y-4">
+              <DownloadCloud className="w-12 h-12 text-primary mx-auto" />
+              <p className="text-muted-foreground">Download all NEW catalogs (max 2 concurrent)</p>
+              <button
+                onClick={startBulkDownload}
+                className="bg-primary text-primary-foreground px-6 py-2 rounded-lg font-medium hover:bg-primary/90"
+                data-testid="start-bulk-download"
+              >
+                Start Bulk Download
+              </button>
+            </div>
+          )}
+          {status === "running" && (
+            <div className="text-center space-y-4">
+              <Spinner size="lg" />
+              <p className="text-muted-foreground">Downloading PDFs... Please wait.</p>
+            </div>
+          )}
+          {status === "done" && result && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-3 gap-4 text-center">
+                <div className="bg-green-900/30 rounded-lg p-3">
+                  <p className="text-2xl font-bold text-green-400">{result.success}</p>
+                  <p className="text-xs text-green-400">Success</p>
+                </div>
+                <div className="bg-red-900/30 rounded-lg p-3">
+                  <p className="text-2xl font-bold text-red-400">{result.failed}</p>
+                  <p className="text-xs text-red-400">Failed</p>
+                </div>
+                <div className="bg-slate-800 rounded-lg p-3">
+                  <p className="text-2xl font-bold text-slate-400">{result.skipped}</p>
+                  <p className="text-xs text-slate-400">Skipped</p>
+                </div>
+              </div>
+              <div className="max-h-64 overflow-auto rounded-lg border border-border">
+                <table className="w-full text-sm">
+                  <thead className="bg-secondary sticky top-0">
+                    <tr>
+                      <th className="px-3 py-2 text-left">Paper</th>
+                      <th className="px-3 py-2 text-left">Status</th>
+                      <th className="px-3 py-2 text-left">Details</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {result.items.map((item, i) => (
+                      <tr key={i}>
+                        <td className="px-3 py-2">{item.year} P{item.paper_no}</td>
+                        <td className="px-3 py-2">
+                          {item.status === "SUCCESS" && <CheckCircle className="w-4 h-4 text-green-400" />}
+                          {item.status === "FAILED" && <XCircle className="w-4 h-4 text-red-400" />}
+                          {item.status === "SKIPPED" && <span className="text-slate-400">-</span>}
+                        </td>
+                        <td className="px-3 py-2 text-xs text-muted-foreground truncate max-w-xs">
+                          {item.sha256 ? `SHA: ${item.sha256.slice(0, 12)}...` : item.error || "Skipped"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <button
+                onClick={onClose}
+                className="w-full bg-secondary text-secondary-foreground py-2 rounded-lg font-medium hover:bg-secondary/80"
+              >
+                Close
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Subject Suggestions Modal
+const SubjectSuggestionsModal = ({ catalogId, onClose, onApply }) => {
+  const [suggestions, setSuggestions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState({});
+  const [applying, setApplying] = useState(false);
+
+  useEffect(() => {
+    axios.get(`${API}/catalog/${catalogId}/suggest-subjects`)
+      .then(res => {
+        setSuggestions(res.data.suggestions);
+        // Pre-select high confidence suggestions
+        const preSelected = {};
+        res.data.suggestions.forEach(s => {
+          if (s.confidence >= 0.5 && s.suggested_subject !== "UNKNOWN") {
+            preSelected[s.question_id] = s.suggested_subject;
+          }
+        });
+        setSelected(preSelected);
+      })
+      .catch(err => toast.error("Failed to get suggestions"))
+      .finally(() => setLoading(false));
+  }, [catalogId]);
+
+  const handleApply = async () => {
+    const toApply = Object.entries(selected).map(([question_id, subject]) => ({ question_id, subject }));
+    if (toApply.length === 0) {
+      toast.error("No suggestions selected");
+      return;
+    }
+    setApplying(true);
+    try {
+      const res = await axios.post(`${API}/catalog/${catalogId}/apply-suggestions`, { suggestions: toApply });
+      toast.success(`Applied ${res.data.applied} subject assignments`);
+      onApply();
+      onClose();
+    } catch (err) {
+      toast.error("Failed to apply suggestions");
+    } finally {
+      setApplying(false);
+    }
+  };
+
+  const toggleSelect = (qId, subject) => {
+    setSelected(prev => {
+      if (prev[qId]) {
+        const { [qId]: _, ...rest } = prev;
+        return rest;
+      }
+      return { ...prev, [qId]: subject };
+    });
+  };
+
+  const selectAll = () => {
+    const all = {};
+    suggestions.forEach(s => {
+      if (s.suggested_subject !== "UNKNOWN") {
+        all[s.question_id] = s.suggested_subject;
+      }
+    });
+    setSelected(all);
+  };
+
+  const selectNone = () => setSelected({});
+
+  return (
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" data-testid="suggestions-modal">
+      <div className="bg-card rounded-xl border border-border w-full max-w-4xl max-h-[90vh] flex flex-col">
+        <div className="flex items-center justify-between p-4 border-b border-border">
+          <div>
+            <h3 className="font-heading text-lg font-semibold">Subject Suggestions (Assistive)</h3>
+            <p className="text-xs text-muted-foreground">Review and select which suggestions to apply</p>
+          </div>
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        
+        {loading ? (
+          <div className="flex-1 flex items-center justify-center p-8"><Spinner size="lg" /></div>
+        ) : (
+          <>
+            <div className="p-4 border-b border-border flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <button onClick={selectAll} className="text-xs text-primary hover:underline">Select All Valid</button>
+                <button onClick={selectNone} className="text-xs text-muted-foreground hover:underline">Clear Selection</button>
+              </div>
+              <span className="text-sm text-muted-foreground">{Object.keys(selected).length} selected</span>
+            </div>
+            
+            <div className="flex-1 overflow-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-secondary sticky top-0">
+                  <tr>
+                    <th className="px-3 py-2 text-left w-10"></th>
+                    <th className="px-3 py-2 text-left">Q#</th>
+                    <th className="px-3 py-2 text-left">Suggested</th>
+                    <th className="px-3 py-2 text-left">Confidence</th>
+                    <th className="px-3 py-2 text-left">Keywords</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {suggestions.map(s => (
+                    <tr 
+                      key={s.question_id} 
+                      className={`cursor-pointer transition-colors ${selected[s.question_id] ? "bg-primary/10" : "hover:bg-secondary/50"}`}
+                      onClick={() => s.suggested_subject !== "UNKNOWN" && toggleSelect(s.question_id, s.suggested_subject)}
+                    >
+                      <td className="px-3 py-2">
+                        <input
+                          type="checkbox"
+                          checked={!!selected[s.question_id]}
+                          onChange={() => {}}
+                          disabled={s.suggested_subject === "UNKNOWN"}
+                          className="rounded border-border"
+                        />
+                      </td>
+                      <td className="px-3 py-2 font-mono">Q.{s.q_no}</td>
+                      <td className="px-3 py-2"><SubjectBadge subject={s.suggested_subject} /></td>
+                      <td className="px-3 py-2">
+                        <span className={`${s.confidence >= 0.6 ? "text-green-400" : s.confidence >= 0.4 ? "text-yellow-400" : "text-red-400"}`}>
+                          {Math.round(s.confidence * 100)}%
+                        </span>
+                      </td>
+                      <td className="px-3 py-2 text-xs text-muted-foreground truncate max-w-xs">
+                        {s.matched_keywords.slice(0, 5).join(", ")}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            
+            <div className="p-4 border-t border-border flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">
+                Only selected suggestions will be applied. UNKNOWN suggestions are not selectable.
+              </p>
+              <button
+                onClick={handleApply}
+                disabled={applying || Object.keys(selected).length === 0}
+                className="bg-primary text-primary-foreground px-4 py-2 rounded-lg font-medium hover:bg-primary/90 disabled:opacity-50"
+                data-testid="apply-suggestions-btn"
+              >
+                {applying ? <Spinner size="sm" /> : `Apply ${Object.keys(selected).length} Suggestions`}
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
 // Sidebar Component
 const Sidebar = () => {
   const navItems = [
@@ -86,7 +399,7 @@ const Sidebar = () => {
     <aside className="w-64 bg-card border-r border-border flex flex-col h-screen fixed left-0 top-0">
       <div className="p-6 border-b border-border">
         <h1 className="font-heading text-xl font-bold text-foreground">JEA Paper Source</h1>
-        <p className="text-xs text-muted-foreground mt-1">Admin Module</p>
+        <p className="text-xs text-muted-foreground mt-1">Admin Module v1.0</p>
       </div>
       <nav className="flex-1 p-4 space-y-1">
         {navItems.map(({ to, icon: Icon, label }) => (
@@ -109,6 +422,7 @@ const Sidebar = () => {
       </nav>
       <div className="p-4 border-t border-border">
         <p className="text-xs text-muted-foreground">2021-2025 English Papers</p>
+        <p className="text-xs text-muted-foreground">Step-1: Paper Source Module</p>
       </div>
     </aside>
   );
@@ -122,7 +436,7 @@ const Dashboard = () => {
   useEffect(() => {
     axios.get(`${API}/stats`)
       .then(res => setStats(res.data))
-      .catch(err => toast.error("Failed to load stats"))
+      .catch(() => toast.error("Failed to load stats"))
       .finally(() => setLoading(false));
   }, []);
 
@@ -136,31 +450,10 @@ const Dashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard 
-          title="Total Catalogs" 
-          value={stats?.catalogs?.total || 0} 
-          icon={FolderSync}
-          subtitle="Papers indexed"
-        />
-        <StatCard 
-          title="Questions" 
-          value={stats?.questions?.total || 0} 
-          icon={HelpCircle}
-          subtitle={`${stats?.questions?.flagged || 0} flagged`}
-        />
-        <StatCard 
-          title="YearSpec Sections" 
-          value={stats?.yearspec_sections || 0} 
-          icon={FileText}
-          subtitle="Section definitions"
-        />
-        <StatCard 
-          title="Unknown Subject" 
-          value={stats?.questions?.unknown_subject || 0} 
-          icon={AlertTriangle}
-          subtitle="Need assignment"
-          variant="warning"
-        />
+        <StatCard title="Total Catalogs" value={stats?.catalogs?.total || 0} icon={FolderSync} subtitle="Papers indexed" />
+        <StatCard title="Questions" value={stats?.questions?.total || 0} icon={HelpCircle} subtitle={`${stats?.questions?.flagged || 0} flagged`} />
+        <StatCard title="YearSpec Sections" value={stats?.yearspec_sections || 0} icon={FileText} subtitle="Section definitions" />
+        <StatCard title="Unknown Subject" value={stats?.questions?.unknown_subject || 0} icon={AlertTriangle} subtitle="Need assignment" variant="warning" />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -180,11 +473,11 @@ const Dashboard = () => {
           <h3 className="font-heading text-lg font-semibold mb-4">Quick Actions</h3>
           <div className="space-y-3">
             <NavLink to="/catalog" className="flex items-center justify-between p-3 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors group">
-              <span className="text-sm font-medium">Sync from Archive</span>
+              <span className="text-sm font-medium">Manage Catalog</span>
               <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-1 transition-transform" />
             </NavLink>
-            <NavLink to="/questions?has_flags=true" className="flex items-center justify-between p-3 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors group">
-              <span className="text-sm font-medium">Review Flagged Questions</span>
+            <NavLink to="/questions?subject=UNKNOWN" className="flex items-center justify-between p-3 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors group">
+              <span className="text-sm font-medium">Review UNKNOWN Subjects</span>
               <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-1 transition-transform" />
             </NavLink>
           </div>
@@ -195,25 +488,18 @@ const Dashboard = () => {
 };
 
 // Stat Card Component
-const StatCard = ({ title, value, icon: Icon, subtitle, variant = "default" }) => {
-  const variants = {
-    default: "border-border",
-    warning: "border-yellow-800"
-  };
-  
-  return (
-    <div className={`rounded-xl border bg-card p-6 card-hover ${variants[variant]}`}>
-      <div className="flex items-center justify-between">
-        <Icon className={`w-5 h-5 ${variant === "warning" ? "text-yellow-400" : "text-muted-foreground"}`} />
-      </div>
-      <div className="mt-4">
-        <p className="text-3xl font-bold text-foreground">{value}</p>
-        <p className="text-sm font-medium text-foreground mt-1">{title}</p>
-        <p className="text-xs text-muted-foreground">{subtitle}</p>
-      </div>
+const StatCard = ({ title, value, icon: Icon, subtitle, variant = "default" }) => (
+  <div className={`rounded-xl border bg-card p-6 card-hover ${variant === "warning" ? "border-yellow-800" : "border-border"}`}>
+    <div className="flex items-center justify-between">
+      <Icon className={`w-5 h-5 ${variant === "warning" ? "text-yellow-400" : "text-muted-foreground"}`} />
     </div>
-  );
-};
+    <div className="mt-4">
+      <p className="text-3xl font-bold text-foreground">{value}</p>
+      <p className="text-sm font-medium text-foreground mt-1">{title}</p>
+      <p className="text-xs text-muted-foreground">{subtitle}</p>
+    </div>
+  </div>
+);
 
 // Catalog Page
 const CatalogPage = () => {
@@ -221,12 +507,15 @@ const CatalogPage = () => {
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [actionLoading, setActionLoading] = useState({});
+  const [previewCatalog, setPreviewCatalog] = useState(null);
+  const [showBulkDownload, setShowBulkDownload] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(null);
 
   const fetchCatalogs = useCallback(() => {
     setLoading(true);
     axios.get(`${API}/catalog`)
       .then(res => setCatalogs(res.data))
-      .catch(err => toast.error("Failed to load catalogs"))
+      .catch(() => toast.error("Failed to load catalogs"))
       .finally(() => setLoading(false));
   }, []);
 
@@ -249,30 +538,28 @@ const CatalogPage = () => {
     setActionLoading(prev => ({ ...prev, [`${catalogId}-${action}`]: true }));
     try {
       if (action === "download") {
-        await axios.post(`${API}/catalog/${catalogId}/download`);
-        toast.success("Download complete");
+        const res = await axios.post(`${API}/catalog/${catalogId}/download`);
+        toast.success(`Downloaded: SHA256=${res.data.sha256.slice(0, 16)}..., ${res.data.pages_count} pages`);
       } else if (action === "parse") {
         const res = await axios.post(`${API}/catalog/${catalogId}/parse`);
         toast.success(`Parsed: ${res.data.questions} questions, ${res.data.yearspec_sections} sections`);
       } else if (action === "lock") {
         const res = await axios.post(`${API}/catalog/${catalogId}/lock`);
         if (res.data.locked) {
-          toast.success("Catalog locked successfully");
+          toast.success("Catalog LOCKED successfully - ready for export");
         } else {
-          toast.error(res.data.reason || "Lock failed");
+          toast.error(`Lock failed: ${res.data.reason}`);
         }
-      } else if (action === "auto-assign") {
-        const res = await axios.post(`${API}/catalog/${catalogId}/auto-assign-subjects`);
-        toast.success(`Auto-assigned: ${res.data.assigned} questions (PHY: ${res.data.by_subject.PHY}, CHEM: ${res.data.by_subject.CHEM}, MATH: ${res.data.by_subject.MATH})`);
       } else if (action === "export") {
         const res = await axios.get(`${API}/catalog/${catalogId}/export`);
-        const blob = new Blob([JSON.stringify(res.data.payload, null, 2)], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
+        // Export main payload
+        const payloadBlob = new Blob([JSON.stringify(res.data.payload, null, 2)], { type: "application/json" });
+        const payloadUrl = URL.createObjectURL(payloadBlob);
         const a = document.createElement("a");
-        a.href = url;
-        a.download = `export_${res.data.payload.catalog.year}_p${res.data.payload.catalog.paper_no}.json`;
+        a.href = payloadUrl;
+        a.download = `JEA_${res.data.payload.catalog.year}_P${res.data.payload.catalog.paper_no}_export.json`;
         a.click();
-        toast.success("Export downloaded");
+        toast.success("Export JSON downloaded");
       }
       fetchCatalogs();
     } catch (err) {
@@ -289,15 +576,25 @@ const CatalogPage = () => {
           <h2 className="font-heading text-3xl font-bold text-foreground">Catalog</h2>
           <p className="text-muted-foreground mt-1">Manage paper sources (2021-2025 English)</p>
         </div>
-        <button
-          onClick={handleSync}
-          disabled={syncing}
-          className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
-          data-testid="sync-button"
-        >
-          {syncing ? <Spinner size="sm" /> : <RefreshCw className="w-4 h-4" />}
-          Sync from Archive
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowBulkDownload(true)}
+            className="flex items-center gap-2 bg-secondary text-secondary-foreground px-4 py-2 rounded-lg font-medium hover:bg-secondary/80 transition-colors"
+            data-testid="bulk-download-btn"
+          >
+            <DownloadCloud className="w-4 h-4" />
+            Bulk Download
+          </button>
+          <button
+            onClick={handleSync}
+            disabled={syncing}
+            className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+            data-testid="sync-button"
+          >
+            {syncing ? <Spinner size="sm" /> : <RefreshCw className="w-4 h-4" />}
+            Sync Archive
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -305,7 +602,7 @@ const CatalogPage = () => {
       ) : catalogs.length === 0 ? (
         <div className="text-center py-12 rounded-xl border border-border bg-card">
           <FolderSync className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground">No catalogs found. Click "Sync from Archive" to fetch papers.</p>
+          <p className="text-muted-foreground">No catalogs found. Click "Sync Archive" to fetch papers.</p>
         </div>
       ) : (
         <div className="rounded-xl border border-border overflow-hidden">
@@ -314,7 +611,6 @@ const CatalogPage = () => {
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Year</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Paper</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Language</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
                 <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
               </tr>
@@ -323,11 +619,20 @@ const CatalogPage = () => {
               {catalogs.map(cat => (
                 <tr key={cat.id} className="table-row-hover" data-testid={`catalog-row-${cat.year}-${cat.paper_no}`}>
                   <td className="px-4 py-4 text-sm font-medium text-foreground">{cat.year}</td>
-                  <td className="px-4 py-4 text-sm text-foreground">Paper {cat.paper_no}</td>
-                  <td className="px-4 py-4 text-sm text-muted-foreground">{cat.language}</td>
+                  <td className="px-4 py-4 text-sm text-foreground">Paper {cat.paper_no} ({cat.language})</td>
                   <td className="px-4 py-4"><StatusBadge status={cat.status} /></td>
                   <td className="px-4 py-4">
                     <div className="flex items-center justify-end gap-2">
+                      {/* Preview PDF - always available if downloaded */}
+                      {cat.status !== "NEW" && (
+                        <ActionButton
+                          onClick={() => setPreviewCatalog(cat)}
+                          icon={Eye}
+                          label="Preview"
+                          data-testid={`preview-btn-${cat.id}`}
+                        />
+                      )}
+                      
                       {cat.status === "NEW" && (
                         <ActionButton
                           onClick={() => handleAction(cat.id, "download")}
@@ -349,12 +654,11 @@ const CatalogPage = () => {
                       {cat.status === "PARSED" && (
                         <>
                           <ActionButton
-                            onClick={() => handleAction(cat.id, "auto-assign")}
-                            loading={actionLoading[`${cat.id}-auto-assign`]}
+                            onClick={() => setShowSuggestions(cat.id)}
                             icon={Zap}
-                            label="Auto-Assign"
+                            label="Suggest"
                             variant="warning"
-                            data-testid={`auto-assign-btn-${cat.id}`}
+                            data-testid={`suggest-btn-${cat.id}`}
                           />
                           <ActionButton
                             onClick={() => handleAction(cat.id, "lock")}
@@ -383,6 +687,29 @@ const CatalogPage = () => {
             </tbody>
           </table>
         </div>
+      )}
+
+      {/* Modals */}
+      {previewCatalog && (
+        <PDFPreviewModal
+          catalogId={previewCatalog.id}
+          year={previewCatalog.year}
+          paperNo={previewCatalog.paper_no}
+          onClose={() => setPreviewCatalog(null)}
+        />
+      )}
+      {showBulkDownload && (
+        <BulkDownloadModal
+          onClose={() => setShowBulkDownload(false)}
+          onComplete={fetchCatalogs}
+        />
+      )}
+      {showSuggestions && (
+        <SubjectSuggestionsModal
+          catalogId={showSuggestions}
+          onClose={() => setShowSuggestions(null)}
+          onApply={fetchCatalogs}
+        />
       )}
     </div>
   );
@@ -416,24 +743,29 @@ const YearSpecPage = () => {
   const [loading, setLoading] = useState(true);
   const [selectedSpec, setSelectedSpec] = useState(null);
   const [editData, setEditData] = useState({});
+  const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
+  const fetchYearspecs = useCallback(() => {
+    setLoading(true);
     axios.get(`${API}/yearspec`)
       .then(res => setYearspecs(res.data))
-      .catch(err => toast.error("Failed to load yearspec"))
+      .catch(() => toast.error("Failed to load yearspec"))
       .finally(() => setLoading(false));
   }, []);
 
+  useEffect(() => { fetchYearspecs(); }, [fetchYearspecs]);
+
   const handleSave = async () => {
     if (!selectedSpec) return;
+    setSaving(true);
     try {
       await axios.patch(`${API}/yearspec/${selectedSpec.id}`, editData);
       toast.success("Section updated");
-      setSelectedSpec(null);
-      const res = await axios.get(`${API}/yearspec`);
-      setYearspecs(res.data);
+      fetchYearspecs();
     } catch (err) {
       toast.error(err.response?.data?.detail || "Update failed");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -449,7 +781,7 @@ const YearSpecPage = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-5 rounded-xl border border-border overflow-hidden">
           <div className="bg-secondary px-4 py-3 border-b border-border">
-            <h3 className="text-sm font-medium text-foreground">Sections</h3>
+            <h3 className="text-sm font-medium text-foreground">Sections ({yearspecs.length})</h3>
           </div>
           <div className="divide-y divide-border max-h-[600px] overflow-auto">
             {yearspecs.map(spec => (
@@ -468,7 +800,7 @@ const YearSpecPage = () => {
                   <span className="text-sm font-medium text-foreground">{spec.year} P{spec.paper_no} - {spec.section_code}</span>
                   <SubjectBadge subject={spec.subject} />
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">{spec.question_type}</p>
+                <p className="text-xs text-muted-foreground mt-1">{spec.question_type} | Expected: {spec.q_count_expected || "?"} Q</p>
               </button>
             ))}
           </div>
@@ -478,7 +810,7 @@ const YearSpecPage = () => {
           {selectedSpec ? (
             <div className="rounded-xl border border-border bg-card p-6 space-y-6">
               <div className="flex items-center justify-between">
-                <h3 className="font-heading text-lg font-semibold">{selectedSpec.section_code} Details</h3>
+                <h3 className="font-heading text-lg font-semibold">{selectedSpec.year} P{selectedSpec.paper_no} - {selectedSpec.section_code}</h3>
                 <button onClick={() => setSelectedSpec(null)} className="text-muted-foreground hover:text-foreground">
                   <X className="w-5 h-5" />
                 </button>
@@ -486,7 +818,7 @@ const YearSpecPage = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-1">Subject</label>
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">Subject *</label>
                   <select
                     value={editData.subject || ""}
                     onChange={e => setEditData(prev => ({ ...prev, subject: e.target.value }))}
@@ -518,22 +850,23 @@ const YearSpecPage = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-2">Marking Rule (JSON)</label>
-                <pre className="evidence-text">{selectedSpec.marking_rule_json}</pre>
+                <label className="block text-sm font-medium text-muted-foreground mb-2">Marking Rule (Evidence)</label>
+                <pre className="evidence-text text-xs">{selectedSpec.marking_rule_json}</pre>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-2">Evidence Text</label>
-                <div className="evidence-text whitespace-pre-wrap">{selectedSpec.evidence_text}</div>
+                <label className="block text-sm font-medium text-muted-foreground mb-2">Evidence Text (from PDF)</label>
+                <div className="evidence-text whitespace-pre-wrap text-xs max-h-48">{selectedSpec.evidence_text}</div>
               </div>
 
               <div className="flex justify-end">
                 <button
                   onClick={handleSave}
-                  className="bg-primary text-primary-foreground px-4 py-2 rounded-lg font-medium hover:bg-primary/90 transition-colors"
+                  disabled={saving}
+                  className="bg-primary text-primary-foreground px-4 py-2 rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
                   data-testid="yearspec-save-btn"
                 >
-                  Save Changes
+                  {saving ? <Spinner size="sm" /> : "Save Changes"}
                 </button>
               </div>
             </div>
@@ -556,6 +889,7 @@ const QuestionsPage = () => {
   const [selectedQuestion, setSelectedQuestion] = useState(null);
   const [editData, setEditData] = useState({});
   const [filters, setFilters] = useState({ year: "", subject: "", has_flags: false });
+  const [saving, setSaving] = useState(false);
 
   const fetchQuestions = useCallback(() => {
     setLoading(true);
@@ -566,7 +900,7 @@ const QuestionsPage = () => {
     
     axios.get(`${API}/questions?${params}`)
       .then(res => setQuestions(res.data))
-      .catch(err => toast.error("Failed to load questions"))
+      .catch(() => toast.error("Failed to load questions"))
       .finally(() => setLoading(false));
   }, [filters]);
 
@@ -574,6 +908,7 @@ const QuestionsPage = () => {
 
   const handleSave = async () => {
     if (!selectedQuestion) return;
+    setSaving(true);
     try {
       const payload = { ...editData };
       if (payload.options) {
@@ -585,6 +920,8 @@ const QuestionsPage = () => {
       fetchQuestions();
     } catch (err) {
       toast.error(err.response?.data?.detail || "Update failed");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -592,10 +929,25 @@ const QuestionsPage = () => {
     if (!selectedQuestion) return;
     try {
       await axios.post(`${API}/questions/${selectedQuestion.id}/flag`, { flag_type: flagType });
-      toast.success("Flag added");
+      toast.success(`Flag "${flagType}" added`);
       fetchQuestions();
     } catch (err) {
       toast.error("Failed to add flag");
+    }
+  };
+
+  const detectSubject = async () => {
+    if (!selectedQuestion) return;
+    try {
+      const res = await axios.post(`${API}/questions/${selectedQuestion.id}/detect-subject`);
+      if (res.data.detected_subject !== "UNKNOWN") {
+        setEditData(prev => ({ ...prev, subject: res.data.detected_subject }));
+        toast.success(`Detected: ${res.data.detected_subject} (${Math.round(res.data.confidence * 100)}%)\nKeywords: ${res.data.matched_keywords.slice(0, 5).join(", ")}`);
+      } else {
+        toast.error("Could not detect subject with confidence");
+      }
+    } catch (err) {
+      toast.error("Detection failed");
     }
   };
 
@@ -604,11 +956,11 @@ const QuestionsPage = () => {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="font-heading text-3xl font-bold text-foreground">Questions</h2>
-          <p className="text-muted-foreground mt-1">Review and edit parsed questions</p>
+          <p className="text-muted-foreground mt-1">Review and edit parsed questions ({questions.length} shown)</p>
         </div>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 flex-wrap">
         <select
           value={filters.year}
           onChange={e => setFilters(prev => ({ ...prev, year: e.target.value }))}
@@ -628,7 +980,7 @@ const QuestionsPage = () => {
           <option value="PHY">Physics</option>
           <option value="CHEM">Chemistry</option>
           <option value="MATH">Mathematics</option>
-          <option value="UNKNOWN">Unknown</option>
+          <option value="UNKNOWN">UNKNOWN (Needs Review)</option>
         </select>
         <label className="flex items-center gap-2 text-sm text-muted-foreground">
           <input
@@ -644,11 +996,13 @@ const QuestionsPage = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-5 rounded-xl border border-border overflow-hidden">
-          <div className="bg-secondary px-4 py-3 border-b border-border flex items-center justify-between">
-            <h3 className="text-sm font-medium text-foreground">Questions ({questions.length})</h3>
+          <div className="bg-secondary px-4 py-3 border-b border-border">
+            <h3 className="text-sm font-medium text-foreground">Questions</h3>
           </div>
           {loading ? (
             <div className="flex items-center justify-center h-64"><Spinner /></div>
+          ) : questions.length === 0 ? (
+            <div className="p-8 text-center text-muted-foreground">No questions found</div>
           ) : (
             <div className="divide-y divide-border max-h-[600px] overflow-auto">
               {questions.map(q => (
@@ -673,7 +1027,7 @@ const QuestionsPage = () => {
                     <span className="text-sm font-medium text-foreground">Q.{q.q_no} - {q.year} P{q.paper_no}</span>
                     <SubjectBadge subject={q.subject} />
                   </div>
-                  <p className="text-xs text-muted-foreground line-clamp-2">{q.stem_text}</p>
+                  <p className="text-xs text-muted-foreground line-clamp-2">{q.stem_text?.slice(0, 100)}...</p>
                   {q.flags?.length > 0 && (
                     <div className="flex gap-1 mt-2">
                       {q.flags.map((f, i) => (
@@ -691,7 +1045,7 @@ const QuestionsPage = () => {
           {selectedQuestion ? (
             <div className="rounded-xl border border-border bg-card p-6 space-y-6">
               <div className="flex items-center justify-between">
-                <h3 className="font-heading text-lg font-semibold">Q.{selectedQuestion.q_no} Details</h3>
+                <h3 className="font-heading text-lg font-semibold">Q.{selectedQuestion.q_no} - {selectedQuestion.year} P{selectedQuestion.paper_no}</h3>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => handleFlag("BROKEN_OCR")}
@@ -708,7 +1062,7 @@ const QuestionsPage = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-1">Subject</label>
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">Subject *</label>
                   <div className="flex gap-2">
                     <select
                       value={editData.subject || ""}
@@ -722,20 +1076,8 @@ const QuestionsPage = () => {
                       <option value="MATH">Mathematics</option>
                     </select>
                     <button
-                      onClick={async () => {
-                        try {
-                          const res = await axios.post(`${API}/questions/${selectedQuestion.id}/detect-subject`);
-                          if (res.data.detected_subject !== "UNKNOWN") {
-                            setEditData(prev => ({ ...prev, subject: res.data.detected_subject }));
-                            toast.success(`Detected: ${res.data.detected_subject} (${Math.round(res.data.confidence * 100)}% confidence)\nKeywords: ${res.data.matched_keywords.slice(0, 5).join(", ")}`);
-                          } else {
-                            toast.error("Could not detect subject with confidence");
-                          }
-                        } catch (err) {
-                          toast.error("Detection failed");
-                        }
-                      }}
-                      className="bg-amber-900/50 text-amber-400 px-2 py-1 rounded hover:bg-amber-900/70 text-xs"
+                      onClick={detectSubject}
+                      className="bg-amber-900/50 text-amber-400 px-2 py-1 rounded hover:bg-amber-900/70"
                       title="Auto-detect subject"
                       data-testid="detect-subject-btn"
                     >
@@ -774,7 +1116,7 @@ const QuestionsPage = () => {
 
               {(editData.q_type === "SCQ" || editData.q_type === "MCQ_MULTI") && (
                 <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-2">Options</label>
+                  <label className="block text-sm font-medium text-muted-foreground mb-2">Options (A-D required for lock)</label>
                   <div className="space-y-2">
                     {["A", "B", "C", "D"].map(opt => (
                       <div key={opt} className="flex items-start gap-2">
@@ -798,10 +1140,11 @@ const QuestionsPage = () => {
               <div className="flex justify-end gap-3">
                 <button
                   onClick={handleSave}
-                  className="bg-primary text-primary-foreground px-4 py-2 rounded-lg font-medium hover:bg-primary/90 transition-colors"
+                  disabled={saving}
+                  className="bg-primary text-primary-foreground px-4 py-2 rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
                   data-testid="question-save-btn"
                 >
-                  Save Changes
+                  {saving ? <Spinner size="sm" /> : "Save Changes"}
                 </button>
               </div>
             </div>
@@ -825,7 +1168,7 @@ const AuditPage = () => {
   useEffect(() => {
     axios.get(`${API}/audit-logs?limit=100`)
       .then(res => setLogs(res.data))
-      .catch(err => toast.error("Failed to load audit logs"))
+      .catch(() => toast.error("Failed to load audit logs"))
       .finally(() => setLoading(false));
   }, []);
 
@@ -835,7 +1178,7 @@ const AuditPage = () => {
     <div className="space-y-6 animate-fade-in" data-testid="audit-page">
       <div>
         <h2 className="font-heading text-3xl font-bold text-foreground">Audit Logs</h2>
-        <p className="text-muted-foreground mt-1">Track all changes and actions</p>
+        <p className="text-muted-foreground mt-1">Track all changes and actions ({logs.length} entries)</p>
       </div>
 
       <div className="rounded-xl border border-border overflow-hidden">
@@ -849,7 +1192,9 @@ const AuditPage = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {logs.map(log => (
+            {logs.length === 0 ? (
+              <tr><td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">No audit logs yet</td></tr>
+            ) : logs.map(log => (
               <tr key={log.id} className="table-row-hover">
                 <td className="px-4 py-3 text-sm text-muted-foreground font-mono">
                   {new Date(log.created_at).toLocaleString()}
@@ -860,13 +1205,14 @@ const AuditPage = () => {
                     log.action === "LOCK" ? "bg-green-900/50 text-green-400" :
                     log.action === "EDIT" ? "bg-blue-900/50 text-blue-400" :
                     log.action === "PARSE" ? "bg-yellow-900/50 text-yellow-400" :
+                    log.action === "DOWNLOAD" || log.action === "BULK_DOWNLOAD" ? "bg-cyan-900/50 text-cyan-400" :
                     "bg-secondary text-secondary-foreground"
                   }`}>
                     {log.action}
                   </span>
                 </td>
                 <td className="px-4 py-3 text-sm text-muted-foreground font-mono truncate max-w-xs">
-                  {log.entity_id}
+                  {log.after_json ? log.after_json.slice(0, 50) + "..." : log.entity_id.slice(0, 20)}
                 </td>
               </tr>
             ))}
@@ -881,9 +1227,7 @@ const AuditPage = () => {
 const Layout = ({ children }) => (
   <div className="min-h-screen bg-background">
     <Sidebar />
-    <main className="ml-64 p-8">
-      {children}
-    </main>
+    <main className="ml-64 p-8">{children}</main>
   </div>
 );
 
