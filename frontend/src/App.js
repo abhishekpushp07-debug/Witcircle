@@ -343,14 +343,24 @@ const CatalogPage = () => {
                         />
                       )}
                       {cat.status === "PARSED" && (
-                        <ActionButton
-                          onClick={() => handleAction(cat.id, "lock")}
-                          loading={actionLoading[`${cat.id}-lock`]}
-                          icon={Lock}
-                          label="Lock"
-                          variant="success"
-                          data-testid={`lock-btn-${cat.id}`}
-                        />
+                        <>
+                          <ActionButton
+                            onClick={() => handleAction(cat.id, "auto-assign")}
+                            loading={actionLoading[`${cat.id}-auto-assign`]}
+                            icon={Zap}
+                            label="Auto-Assign"
+                            variant="warning"
+                            data-testid={`auto-assign-btn-${cat.id}`}
+                          />
+                          <ActionButton
+                            onClick={() => handleAction(cat.id, "lock")}
+                            loading={actionLoading[`${cat.id}-lock`]}
+                            icon={Lock}
+                            label="Lock"
+                            variant="success"
+                            data-testid={`lock-btn-${cat.id}`}
+                          />
+                        </>
                       )}
                       {cat.status === "LOCKED" && (
                         <ActionButton
