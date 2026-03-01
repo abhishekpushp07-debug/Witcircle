@@ -119,8 +119,9 @@ def serialize_doc(doc: dict) -> dict:
     if doc is None:
         return None
     doc = dict(doc)
+    # Remove MongoDB _id, keep existing id field if present
     if "_id" in doc:
-        doc["id"] = str(doc.pop("_id"))
+        doc.pop("_id")
     for key, val in doc.items():
         if isinstance(val, datetime):
             doc[key] = val.isoformat()
