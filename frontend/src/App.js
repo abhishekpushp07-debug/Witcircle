@@ -393,7 +393,8 @@ const ActionButton = ({ onClick, loading, icon: Icon, label, variant = "default"
   const variants = {
     default: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
     success: "bg-green-900/50 text-green-400 hover:bg-green-900/70",
-    primary: "bg-primary/20 text-primary hover:bg-primary/30"
+    primary: "bg-primary/20 text-primary hover:bg-primary/30",
+    warning: "bg-amber-900/50 text-amber-400 hover:bg-amber-900/70"
   };
   
   return (
