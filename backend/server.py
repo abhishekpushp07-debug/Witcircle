@@ -1181,6 +1181,318 @@ async def get_stats():
     }
 
 
+# ============== Bulk Download ==============
+
+class BulkDownloadItem(BaseModel):
+    catalog_id: str
+    year: int
+    paper_no: int
+    status: str
+    error: Optional[str] = None
+    sha256: Optional[str] = None
+    pages_count: Optional[int] = None
+
+
+class BulkDownloadResult(BaseModel):
+    total: int
+    success: int
+    failed: int
+    skipped: int
+    items: List[BulkDownloadItem]
+
+
+@admin_router.post("/bulk-download", response_model=BulkDownloadResult)
+async def bulk_download(
+    force: bool = Query(False, description="Force re-download even if already downloaded"),
+    max_concurrent: int = Query(2, ge=1, le=5, description="Max concurrent downloads")
+):
+    """
+    Bulk download all catalogs that are in NEW status.
+    If force=True, re-downloads all creating new file_version.
+    Resumable: if one fails, rest continue.
+    """
+    if not ALLOW_EXTERNAL_FETCH:
+        raise HTTPException(400, "External fetch disabled")
+    
+    # Get all catalogs
+    query = {} if force else {"status": "NEW"}
+    catalogs = await db.jea_source_catalog.find(query).sort([("year", 1), ("paper_no", 1)]).to_list(100)
+    
+    results = []
+    success_count = 0
+    failed_count = 0
+    skipped_count = 0
+    
+    import asyncio
+    semaphore = asyncio.Semaphore(max_concurrent)
+    
+    async def download_one(cat):
+        nonlocal success_count, failed_count, skipped_count
+        
+        async with semaphore:
+            item = BulkDownloadItem(
+                catalog_id=cat["id"],
+                year=cat["year"],
+                paper_no=cat["paper_no"],
+                status="PENDING"
+            )
+            
+            # Skip if already downloaded and not forcing
+            if cat["status"] != "NEW" and not force:
+                item.status = "SKIPPED"
+                skipped_count += 1
+                return item
+            
+            try:
+                ensure_dirs()
+                
+                # Get next version
+                latest = await db.jea_source_files.find_one(
+                    {"catalog_id": cat["id"]},
+                    sort=[("file_version", -1)]
+                )
+                next_ver = 1 if not latest else latest["file_version"] + 1
+                
+                dest = get_storage_path(cat["year"], cat["paper_no"], cat["language"], next_ver)
+                
+                # Download with timeout
+                sha, nbytes, etag, lastmod = sha256_stream_to_file(cat["official_url"], dest, timeout=120)
+                pages = count_pdf_pages(dest)
+                
+                # Store file record
+                file_doc = {
+                    "id": str(uuid.uuid4()),
+                    "catalog_id": cat["id"],
+                    "file_version": next_ver,
+                    "sha256": sha,
+                    "bytes": nbytes,
+                    "mime": "application/pdf",
+                    "storage_path": dest,
+                    "downloaded_at": datetime.now(timezone.utc),
+                    "http_etag": etag,
+                    "http_last_modified": lastmod,
+                    "pages_count": pages
+                }
+                await db.jea_source_files.insert_one(file_doc)
+                
+                # Update catalog status
+                await db.jea_source_catalog.update_one(
+                    {"id": cat["id"]},
+                    {"$set": {"status": "DOWNLOADED"}}
+                )
+                
+                logger.info(f"Downloaded {cat['year']} P{cat['paper_no']}: sha256={sha[:16]}..., pages={pages}")
+                
+                item.status = "SUCCESS"
+                item.sha256 = sha
+                item.pages_count = pages
+                success_count += 1
+                
+            except Exception as e:
+                logger.error(f"Failed to download {cat['year']} P{cat['paper_no']}: {e}")
+                item.status = "FAILED"
+                item.error = str(e)[:200]
+                failed_count += 1
+            
+            return item
+    
+    # Run downloads with controlled concurrency
+    tasks = [download_one(cat) for cat in catalogs]
+    results = await asyncio.gather(*tasks)
+    
+    await create_audit_log(
+        "BulkDownload",
+        "ALL",
+        "BULK_DOWNLOAD",
+        after_json=json.dumps({"success": success_count, "failed": failed_count, "skipped": skipped_count})
+    )
+    
+    return BulkDownloadResult(
+        total=len(catalogs),
+        success=success_count,
+        failed=failed_count,
+        skipped=skipped_count,
+        items=results
+    )
+
+
+# ============== PDF Preview ==============
+
+from fastapi.responses import FileResponse
+
+@admin_router.get("/catalog/{catalog_id}/preview-pdf")
+async def preview_pdf(catalog_id: str):
+    """Get the latest PDF file for preview"""
+    cat = await db.jea_source_catalog.find_one({"id": catalog_id})
+    if not cat:
+        raise HTTPException(404, "Catalog not found")
+    
+    latest_file = await db.jea_source_files.find_one(
+        {"catalog_id": catalog_id},
+        sort=[("file_version", -1)]
+    )
+    if not latest_file:
+        raise HTTPException(404, "No PDF file available")
+    
+    file_path = latest_file["storage_path"]
+    if not os.path.exists(file_path):
+        raise HTTPException(404, "PDF file not found on disk")
+    
+    return FileResponse(
+        file_path,
+        media_type="application/pdf",
+        filename=f"JEA_{cat['year']}_P{cat['paper_no']}_{cat['language']}.pdf"
+    )
+
+
+@admin_router.get("/catalog/{catalog_id}/pdf-info")
+async def get_pdf_info(catalog_id: str):
+    """Get PDF file metadata for preview"""
+    cat = await db.jea_source_catalog.find_one({"id": catalog_id})
+    if not cat:
+        raise HTTPException(404, "Catalog not found")
+    
+    latest_file = await db.jea_source_files.find_one(
+        {"catalog_id": catalog_id},
+        sort=[("file_version", -1)]
+    )
+    if not latest_file:
+        return {"has_pdf": False}
+    
+    return {
+        "has_pdf": True,
+        "file_id": latest_file["id"],
+        "file_version": latest_file["file_version"],
+        "sha256": latest_file["sha256"],
+        "bytes": latest_file["bytes"],
+        "pages_count": latest_file["pages_count"],
+        "downloaded_at": latest_file["downloaded_at"].isoformat() if isinstance(latest_file["downloaded_at"], datetime) else latest_file["downloaded_at"]
+    }
+
+
+# ============== Subject Suggestions (Assistive Only) ==============
+
+class SubjectSuggestion(BaseModel):
+    question_id: str
+    q_no: int
+    current_subject: str
+    suggested_subject: str
+    confidence: float
+    matched_keywords: List[str]
+    applied: bool = False
+
+
+class SuggestSubjectsResult(BaseModel):
+    total_questions: int
+    suggestions: List[SubjectSuggestion]
+    summary: Dict[str, int]
+
+
+@admin_router.get("/catalog/{catalog_id}/suggest-subjects", response_model=SuggestSubjectsResult)
+async def suggest_subjects(catalog_id: str):
+    """
+    Generate subject suggestions for questions (ASSISTIVE ONLY).
+    Does NOT auto-apply. Returns suggestions for manual review.
+    """
+    cat = await db.jea_source_catalog.find_one({"id": catalog_id})
+    if not cat:
+        raise HTTPException(404, "Catalog not found")
+    
+    if cat["status"] == "LOCKED":
+        raise HTTPException(400, "Cannot suggest for LOCKED catalog")
+    
+    questions = await db.jea_questions.find({
+        "year": cat["year"],
+        "paper_no": cat["paper_no"]
+    }).to_list(500)
+    
+    suggestions = []
+    summary = {"PHY": 0, "CHEM": 0, "MATH": 0, "UNKNOWN": 0, "ALREADY_ASSIGNED": 0}
+    
+    for q in questions:
+        # Skip if already assigned
+        if q.get("subject") != "UNKNOWN":
+            summary["ALREADY_ASSIGNED"] += 1
+            continue
+        
+        # Combine stem and options for detection
+        text_to_analyze = q.get("stem_text", "")
+        if q.get("options_json"):
+            try:
+                opts = json.loads(q["options_json"])
+                text_to_analyze += " " + " ".join(opts.values())
+            except:
+                pass
+        
+        detected_subject, confidence = detect_subject(text_to_analyze)
+        
+        # Find matched keywords
+        text_lower = text_to_analyze.lower()
+        matched = []
+        for kw in SUBJECT_KEYWORDS.get(detected_subject, []):
+            if kw in text_lower:
+                matched.append(kw)
+        
+        suggestions.append(SubjectSuggestion(
+            question_id=q["id"],
+            q_no=q["q_no"],
+            current_subject=q.get("subject", "UNKNOWN"),
+            suggested_subject=detected_subject,
+            confidence=round(confidence, 2),
+            matched_keywords=matched[:10]
+        ))
+        
+        summary[detected_subject] += 1
+    
+    return SuggestSubjectsResult(
+        total_questions=len(questions),
+        suggestions=suggestions,
+        summary=summary
+    )
+
+
+class ApplySuggestionsRequest(BaseModel):
+    suggestions: List[Dict[str, Any]]  # List of {question_id, subject}
+
+
+@admin_router.post("/catalog/{catalog_id}/apply-suggestions")
+async def apply_subject_suggestions(catalog_id: str, request: ApplySuggestionsRequest):
+    """
+    Apply selected subject suggestions (manual review step).
+    Only applies suggestions explicitly passed.
+    """
+    cat = await db.jea_source_catalog.find_one({"id": catalog_id})
+    if not cat:
+        raise HTTPException(404, "Catalog not found")
+    
+    if cat["status"] == "LOCKED":
+        raise HTTPException(400, "Cannot modify LOCKED catalog")
+    
+    applied = 0
+    for sugg in request.suggestions:
+        q_id = sugg.get("question_id")
+        subject = sugg.get("subject")
+        
+        if not q_id or not subject or subject not in ["PHY", "CHEM", "MATH"]:
+            continue
+        
+        result = await db.jea_questions.update_one(
+            {"id": q_id, "year": cat["year"], "paper_no": cat["paper_no"]},
+            {"$set": {"subject": subject}}
+        )
+        if result.modified_count > 0:
+            applied += 1
+    
+    await create_audit_log(
+        "JeaSourceCatalog",
+        catalog_id,
+        "APPLY_SUGGESTIONS",
+        after_json=json.dumps({"applied": applied})
+    )
+    
+    return {"applied": applied, "total_submitted": len(request.suggestions)}
+
+
 # Include routers
 api_router.include_router(admin_router)
 app.include_router(api_router)
