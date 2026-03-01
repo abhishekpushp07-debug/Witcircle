@@ -269,6 +269,10 @@ class JEAAPITester:
         self.test_questions_list()
         self.test_audit_logs()
         
+        # Test new Auto-Assign Subject features
+        self.test_auto_assign_subjects()
+        self.test_detect_question_subject()
+        
         print("=" * 60)
         print(f"📊 Test Summary: {self.tests_passed}/{self.tests_run} tests passed")
         
