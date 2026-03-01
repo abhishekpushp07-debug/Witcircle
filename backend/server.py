@@ -1494,6 +1494,671 @@ async def apply_subject_suggestions(catalog_id: str, request: ApplySuggestionsRe
     return {"applied": applied, "total_submitted": len(request.suggestions)}
 
 
+# ============== BASELINE ENGINE ROUTER ==============
+
+baseline_router = APIRouter(prefix="/baseline", tags=["baseline-engine"])
+
+
+# ============== Task 2.2: Canonical QBank ==============
+
+class QBankBuildResult(BaseModel):
+    total_questions: int
+    by_year: Dict[int, int]
+    by_subject: Dict[str, int]
+    by_type: Dict[str, int]
+    build_time_ms: int
+
+
+@baseline_router.post("/build-qbank")
+async def build_canonical_qbank():
+    """
+    Build jea_qbank_v1 from all locked exports.
+    Creates a canonical collection with stable qids.
+    """
+    import hashlib
+    import time
+    
+    start = time.time()
+    
+    # Get all locked catalogs
+    cats = await db.jea_source_catalog.find({"status": "LOCKED"}).to_list(100)
+    
+    if not cats:
+        raise HTTPException(400, "No locked catalogs found")
+    
+    # Clear existing qbank
+    await db.jea_qbank_v1.delete_many({})
+    
+    stats = {"by_year": {}, "by_subject": {}, "by_type": {}}
+    total = 0
+    
+    for cat in cats:
+        year = cat["year"]
+        paper_no = cat["paper_no"]
+        
+        # Get file sha256
+        file_doc = await db.jea_source_files.find_one(
+            {"catalog_id": cat["id"]},
+            sort=[("file_version", -1)]
+        )
+        file_sha = file_doc["sha256"] if file_doc else "unknown"
+        
+        # Get questions
+        questions = await db.jea_questions.find({
+            "year": year,
+            "paper_no": paper_no
+        }).to_list(500)
+        
+        # Get yearspec for marking rules
+        yearspecs = await db.jea_yearspec_sections.find({
+            "year": year,
+            "paper_no": paper_no
+        }).to_list(100)
+        yearspec_map = {(s["section_code"], i): s for i, s in enumerate(yearspecs)}
+        
+        for q in questions:
+            # Generate stable qid
+            qid_raw = f"{year}_{paper_no}_{q['section_code']}_{q['q_no']}_{file_sha[:16]}"
+            qid = hashlib.sha256(qid_raw.encode()).hexdigest()[:24]
+            
+            # Find matching yearspec
+            matching_ys = None
+            for (sec, idx), ys in yearspec_map.items():
+                if sec == q["section_code"]:
+                    matching_ys = ys
+                    break
+            
+            qbank_doc = {
+                "qid": qid,
+                "year": year,
+                "paperNo": paper_no,
+                "sectionCode": q["section_code"],
+                "subject": q["subject"],
+                "qType": q["q_type"],
+                "qNo": q["q_no"],
+                "markingRuleRef": matching_ys["id"] if matching_ys else None,
+                "stemText": q["stem_text"],
+                "options": json.loads(q["options_json"]) if q.get("options_json") else None,
+                "evidenceRef": matching_ys["id"] if matching_ys else None,
+                "source": {
+                    "sha256": file_sha,
+                    "pageRefs": q.get("source_page_range")
+                },
+                "status": "LOCKED_ONLY",
+                "created_at": datetime.now(timezone.utc)
+            }
+            
+            await db.jea_qbank_v1.insert_one(qbank_doc)
+            total += 1
+            
+            # Update stats
+            stats["by_year"][year] = stats["by_year"].get(year, 0) + 1
+            stats["by_subject"][q["subject"]] = stats["by_subject"].get(q["subject"], 0) + 1
+            stats["by_type"][q["q_type"]] = stats["by_type"].get(q["q_type"], 0) + 1
+    
+    # Create indexes
+    await db.jea_qbank_v1.create_index([("year", 1), ("paperNo", 1), ("subject", 1), ("qType", 1)])
+    await db.jea_qbank_v1.create_index([("qid", 1)], unique=True)
+    await db.jea_qbank_v1.create_index([("stemText", "text")])
+    
+    elapsed = int((time.time() - start) * 1000)
+    
+    # Save build report
+    report = {
+        "built_at": datetime.now(timezone.utc).isoformat(),
+        "total_questions": total,
+        "by_year": stats["by_year"],
+        "by_subject": stats["by_subject"],
+        "by_type": stats["by_type"],
+        "build_time_ms": elapsed
+    }
+    
+    with open("/app/memory/jea_qbank_build_report.json", "w") as f:
+        json.dump(report, f, indent=2)
+    
+    return QBankBuildResult(
+        total_questions=total,
+        by_year=stats["by_year"],
+        by_subject=stats["by_subject"],
+        by_type=stats["by_type"],
+        build_time_ms=elapsed
+    )
+
+
+@baseline_router.get("/qbank/stats")
+async def get_qbank_stats():
+    """Get qbank statistics"""
+    total = await db.jea_qbank_v1.count_documents({})
+    
+    # Aggregate by year
+    by_year = {}
+    for year in range(2021, 2026):
+        by_year[year] = await db.jea_qbank_v1.count_documents({"year": year})
+    
+    # Aggregate by subject
+    by_subject = {}
+    for subj in ["PHY", "CHEM", "MATH"]:
+        by_subject[subj] = await db.jea_qbank_v1.count_documents({"subject": subj})
+    
+    # Aggregate by type
+    pipeline = [
+        {"$group": {"_id": "$qType", "count": {"$sum": 1}}}
+    ]
+    by_type = {}
+    async for doc in db.jea_qbank_v1.aggregate(pipeline):
+        by_type[doc["_id"]] = doc["count"]
+    
+    return {
+        "total": total,
+        "by_year": by_year,
+        "by_subject": by_subject,
+        "by_type": by_type
+    }
+
+
+@baseline_router.get("/qbank/metrics-only")
+async def get_metrics_only_export():
+    """Export qbank without stems/options (privacy safe)"""
+    docs = await db.jea_qbank_v1.find({}, {
+        "_id": 0,
+        "stemText": 0,
+        "options": 0
+    }).to_list(1000)
+    
+    return {
+        "count": len(docs),
+        "questions": docs
+    }
+
+
+# ============== Task 2.4: DI/TI Engine ==============
+
+import re
+import math
+
+def compute_reading_len(stem: str, options: dict) -> int:
+    """Compute total reading length"""
+    total = len(stem or "")
+    if options:
+        total += sum(len(v) for v in options.values())
+    return total
+
+
+def compute_equation_count(text: str) -> int:
+    """Count equations/formulas (heuristic)"""
+    if not text:
+        return 0
+    # Count common math patterns
+    patterns = [
+        r'=',  # equations
+        r'\^',  # exponents
+        r'\\frac',  # fractions (LaTeX)
+        r'\d+/\d+',  # fractions
+        r'√|∫|∑|∏|∂',  # math symbols
+        r'sin|cos|tan|log|ln|exp',  # functions
+    ]
+    count = 0
+    for p in patterns:
+        count += len(re.findall(p, text, re.IGNORECASE))
+    return min(count, 20)  # Cap at 20
+
+
+def compute_option_similarity(options: dict) -> float:
+    """Compute how similar options are (0-1)"""
+    if not options or len(options) < 2:
+        return 0.0
+    
+    vals = list(options.values())
+    # Simple: compare character overlap
+    total_sim = 0
+    pairs = 0
+    for i in range(len(vals)):
+        for j in range(i + 1, len(vals)):
+            # Jaccard similarity on words
+            words_i = set(vals[i].lower().split())
+            words_j = set(vals[j].lower().split())
+            if words_i or words_j:
+                sim = len(words_i & words_j) / len(words_i | words_j) if (words_i | words_j) else 0
+                total_sim += sim
+                pairs += 1
+    
+    return total_sim / pairs if pairs > 0 else 0.0
+
+
+def estimate_difficulty_heuristic(
+    q_type: str,
+    reading_len: int,
+    equation_count: int,
+    option_similarity: float,
+    subject: str
+) -> dict:
+    """
+    Estimate DI/TI/EI/II using deterministic heuristics.
+    This is a baseline - can be enhanced with ML later.
+    """
+    # Base difficulty by type
+    type_base_di = {
+        "SCQ": 40,
+        "MCQ_MULTI": 60,
+        "INTEGER": 55,
+        "MATCH": 65,
+        "COMP_SET": 50,
+        "OTHER": 50
+    }
+    
+    # Base time by type (seconds)
+    type_base_ti = {
+        "SCQ": 120,
+        "MCQ_MULTI": 180,
+        "INTEGER": 150,
+        "MATCH": 240,
+        "COMP_SET": 180,
+        "OTHER": 150
+    }
+    
+    base_di = type_base_di.get(q_type, 50)
+    base_ti = type_base_ti.get(q_type, 150)
+    
+    # Adjust for reading length (longer = harder)
+    reading_factor = min(reading_len / 500, 2.0)  # Cap at 2x
+    di_reading = reading_factor * 10
+    ti_reading = reading_factor * 30
+    
+    # Adjust for equations (more = harder)
+    eq_factor = min(equation_count / 5, 2.0)
+    di_eq = eq_factor * 8
+    ti_eq = eq_factor * 20
+    
+    # Adjust for option similarity (higher = trickier = higher EI)
+    ei = option_similarity * 60 + 20  # Base 20, max 80
+    
+    # Integration index (heuristic based on reading + equations)
+    ii = min((reading_len / 200 + equation_count) * 10, 100)
+    
+    # Final values
+    di = min(max(base_di + di_reading + di_eq, 10), 95)
+    ti = base_ti + ti_reading + ti_eq
+    
+    # Step count estimate
+    step_count = max(2, int(equation_count * 1.5 + reading_len / 200))
+    
+    return {
+        "DI": round(di, 1),
+        "TI": round(ti, 1),
+        "EI": round(ei, 1),
+        "II": round(ii, 1),
+        "features": {
+            "reading_len": reading_len,
+            "equation_count": equation_count,
+            "option_similarity": round(option_similarity, 3),
+            "step_count_est": step_count
+        }
+    }
+
+
+@baseline_router.post("/compute-metrics")
+async def compute_all_metrics():
+    """
+    Compute DI/TI/EI/II for all questions in qbank.
+    Stores in jea_qmetrics_v1 collection.
+    """
+    import time
+    start = time.time()
+    
+    # Get all questions from qbank
+    questions = await db.jea_qbank_v1.find({}).to_list(1000)
+    
+    if not questions:
+        raise HTTPException(400, "QBank is empty. Build qbank first.")
+    
+    # Clear existing metrics
+    await db.jea_qmetrics_v1.delete_many({})
+    
+    computed = 0
+    errors = []
+    
+    for q in questions:
+        try:
+            # Compute features
+            reading_len = compute_reading_len(q.get("stemText", ""), q.get("options"))
+            equation_count = compute_equation_count(q.get("stemText", ""))
+            option_sim = compute_option_similarity(q.get("options"))
+            
+            # Estimate metrics
+            metrics = estimate_difficulty_heuristic(
+                q.get("qType", "OTHER"),
+                reading_len,
+                equation_count,
+                option_sim,
+                q.get("subject", "UNKNOWN")
+            )
+            
+            # Store
+            metric_doc = {
+                "qid": q["qid"],
+                "year": q["year"],
+                "paperNo": q["paperNo"],
+                "subject": q["subject"],
+                "qType": q["qType"],
+                "DI": metrics["DI"],
+                "TI": metrics["TI"],
+                "EI": metrics["EI"],
+                "II": metrics["II"],
+                "features": metrics["features"],
+                "compute_version": "v1_heuristic",
+                "computed_at": datetime.now(timezone.utc)
+            }
+            
+            await db.jea_qmetrics_v1.insert_one(metric_doc)
+            computed += 1
+            
+        except Exception as e:
+            errors.append({"qid": q.get("qid"), "error": str(e)})
+    
+    # Create indexes
+    await db.jea_qmetrics_v1.create_index([("qid", 1)], unique=True)
+    await db.jea_qmetrics_v1.create_index([("year", 1), ("paperNo", 1), ("subject", 1)])
+    
+    elapsed = int((time.time() - start) * 1000)
+    
+    # Save coverage report
+    coverage = {
+        "computed_at": datetime.now(timezone.utc).isoformat(),
+        "total_questions": len(questions),
+        "computed": computed,
+        "errors": len(errors),
+        "coverage_pct": round(computed / len(questions) * 100, 2),
+        "compute_time_ms": elapsed
+    }
+    
+    with open("/app/memory/qmetrics_coverage_report.json", "w") as f:
+        json.dump(coverage, f, indent=2)
+    
+    with open("/app/memory/qmetrics_quarantine_list.json", "w") as f:
+        json.dump({"errors": errors}, f, indent=2)
+    
+    return {
+        "computed": computed,
+        "total": len(questions),
+        "errors": len(errors),
+        "time_ms": elapsed
+    }
+
+
+# ============== Task 2.5: Baseline Profiles ==============
+
+import statistics
+
+@baseline_router.post("/build-baselines")
+async def build_baseline_profiles():
+    """Build baseline_2025 and envelope_2021_2025 profiles"""
+    
+    # Get all metrics
+    all_metrics = await db.jea_qmetrics_v1.find({}).to_list(1000)
+    
+    if not all_metrics:
+        raise HTTPException(400, "No metrics computed. Run compute-metrics first.")
+    
+    # Separate 2025 and full envelope
+    metrics_2025 = [m for m in all_metrics if m["year"] == 2025]
+    
+    def build_profile(metrics, name):
+        """Build profile from list of metrics"""
+        if not metrics:
+            return None
+        
+        dis = [m["DI"] for m in metrics]
+        tis = [m["TI"] for m in metrics]
+        
+        # DI histogram (10 bins)
+        di_bins = [0] * 10
+        for d in dis:
+            bin_idx = min(int(d / 10), 9)
+            di_bins[bin_idx] += 1
+        
+        # TI histogram (bins: 0-60, 60-120, 120-180, 180-240, 240-300, 300+)
+        ti_bins = [0] * 6
+        ti_bounds = [60, 120, 180, 240, 300, float('inf')]
+        for t in tis:
+            for i, bound in enumerate(ti_bounds):
+                if t <= bound:
+                    ti_bins[i] += 1
+                    break
+        
+        # Subject-wise means
+        by_subject = {}
+        for subj in ["PHY", "CHEM", "MATH"]:
+            subj_metrics = [m for m in metrics if m["subject"] == subj]
+            if subj_metrics:
+                by_subject[subj] = {
+                    "count": len(subj_metrics),
+                    "DI_mean": round(statistics.mean([m["DI"] for m in subj_metrics]), 2),
+                    "TI_mean": round(statistics.mean([m["TI"] for m in subj_metrics]), 2),
+                    "DI_std": round(statistics.stdev([m["DI"] for m in subj_metrics]) if len(subj_metrics) > 1 else 0, 2),
+                    "TI_std": round(statistics.stdev([m["TI"] for m in subj_metrics]) if len(subj_metrics) > 1 else 0, 2)
+                }
+        
+        # Type-wise means
+        by_type = {}
+        types = set(m["qType"] for m in metrics)
+        for qtype in types:
+            type_metrics = [m for m in metrics if m["qType"] == qtype]
+            if type_metrics:
+                by_type[qtype] = {
+                    "count": len(type_metrics),
+                    "DI_mean": round(statistics.mean([m["DI"] for m in type_metrics]), 2),
+                    "TI_mean": round(statistics.mean([m["TI"] for m in type_metrics]), 2)
+                }
+        
+        return {
+            "name": name,
+            "total_questions": len(metrics),
+            "DI": {
+                "mean": round(statistics.mean(dis), 2),
+                "std": round(statistics.stdev(dis) if len(dis) > 1 else 0, 2),
+                "min": round(min(dis), 2),
+                "max": round(max(dis), 2),
+                "histogram": di_bins
+            },
+            "TI": {
+                "mean": round(statistics.mean(tis), 2),
+                "std": round(statistics.stdev(tis) if len(tis) > 1 else 0, 2),
+                "min": round(min(tis), 2),
+                "max": round(max(tis), 2),
+                "histogram": ti_bins
+            },
+            "by_subject": by_subject,
+            "by_type": by_type
+        }
+    
+    # Build profiles
+    baseline_2025 = build_profile(metrics_2025, "baseline_2025")
+    envelope_2021_2025 = build_profile(all_metrics, "envelope_2021_2025")
+    
+    # Add year breakdown to envelope
+    if envelope_2021_2025:
+        envelope_2021_2025["by_year"] = {}
+        for year in range(2021, 2026):
+            year_metrics = [m for m in all_metrics if m["year"] == year]
+            if year_metrics:
+                envelope_2021_2025["by_year"][year] = {
+                    "count": len(year_metrics),
+                    "DI_mean": round(statistics.mean([m["DI"] for m in year_metrics]), 2),
+                    "TI_mean": round(statistics.mean([m["TI"] for m in year_metrics]), 2)
+                }
+    
+    # Save profiles
+    baseline_2025["generated_at"] = datetime.now(timezone.utc).isoformat()
+    envelope_2021_2025["generated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    with open("/app/memory/baseline_profile_2025.json", "w") as f:
+        json.dump(baseline_2025, f, indent=2)
+    
+    with open("/app/memory/envelope_profile_2021_2025.json", "w") as f:
+        json.dump(envelope_2021_2025, f, indent=2)
+    
+    # Cache in DB
+    await db.jea_baselines.delete_many({})
+    await db.jea_baselines.insert_one({**baseline_2025, "_type": "baseline_2025"})
+    await db.jea_baselines.insert_one({**envelope_2021_2025, "_type": "envelope_2021_2025"})
+    
+    return {
+        "baseline_2025": baseline_2025,
+        "envelope_2021_2025": envelope_2021_2025
+    }
+
+
+@baseline_router.get("/profiles")
+async def get_cached_profiles():
+    """Get cached baseline profiles (fast)"""
+    import time
+    start = time.time()
+    
+    baseline = await db.jea_baselines.find_one({"_type": "baseline_2025"}, {"_id": 0})
+    envelope = await db.jea_baselines.find_one({"_type": "envelope_2021_2025"}, {"_id": 0})
+    
+    elapsed = int((time.time() - start) * 1000)
+    
+    return {
+        "baseline_2025": baseline,
+        "envelope_2021_2025": envelope,
+        "fetch_time_ms": elapsed
+    }
+
+
+# ============== Task 2.6: Distribution Match ==============
+
+def ks_test_statistic(sample1, sample2):
+    """Compute two-sample Kolmogorov-Smirnov statistic"""
+    if not sample1 or not sample2:
+        return 1.0
+    
+    # Sort both samples
+    s1 = sorted(sample1)
+    s2 = sorted(sample2)
+    n1, n2 = len(s1), len(s2)
+    
+    # Compute ECDF and max difference
+    all_vals = sorted(set(s1 + s2))
+    max_diff = 0
+    
+    for v in all_vals:
+        ecdf1 = sum(1 for x in s1 if x <= v) / n1
+        ecdf2 = sum(1 for x in s2 if x <= v) / n2
+        max_diff = max(max_diff, abs(ecdf1 - ecdf2))
+    
+    return round(max_diff, 4)
+
+
+@baseline_router.post("/compare-distribution")
+async def compare_distribution(
+    year_a: int = Query(..., description="Year to compare"),
+    paper_a: Optional[int] = Query(None, description="Paper number (optional, both if not specified)")
+):
+    """
+    Compare distribution of year_a against baseline_2025.
+    Returns PASS/FAIL with KS statistics.
+    """
+    # Get baseline metrics (2025)
+    baseline_metrics = await db.jea_qmetrics_v1.find({"year": 2025}).to_list(500)
+    
+    # Get comparison metrics
+    query = {"year": year_a}
+    if paper_a:
+        query["paperNo"] = paper_a
+    compare_metrics = await db.jea_qmetrics_v1.find(query).to_list(500)
+    
+    if not baseline_metrics or not compare_metrics:
+        raise HTTPException(400, "Insufficient data for comparison")
+    
+    # Extract DI and TI values
+    baseline_di = [m["DI"] for m in baseline_metrics]
+    baseline_ti = [m["TI"] for m in baseline_metrics]
+    compare_di = [m["DI"] for m in compare_metrics]
+    compare_ti = [m["TI"] for m in compare_metrics]
+    
+    # KS tests
+    ks_di = ks_test_statistic(compare_di, baseline_di)
+    ks_ti = ks_test_statistic(compare_ti, baseline_ti)
+    
+    # Type-wise DI drift
+    type_drift = {}
+    types = set(m["qType"] for m in compare_metrics)
+    for qtype in types:
+        base_type = [m["DI"] for m in baseline_metrics if m["qType"] == qtype]
+        comp_type = [m["DI"] for m in compare_metrics if m["qType"] == qtype]
+        if base_type and comp_type:
+            drift = statistics.mean(comp_type) - statistics.mean(base_type)
+            type_drift[qtype] = round(drift, 2)
+    
+    # Subject-wise TI drift
+    subject_drift = {}
+    for subj in ["PHY", "CHEM", "MATH"]:
+        base_subj = [m["TI"] for m in baseline_metrics if m["subject"] == subj]
+        comp_subj = [m["TI"] for m in compare_metrics if m["subject"] == subj]
+        if base_subj and comp_subj:
+            base_mean = statistics.mean(base_subj)
+            comp_mean = statistics.mean(comp_subj)
+            drift_pct = (comp_mean - base_mean) / base_mean if base_mean else 0
+            subject_drift[subj] = round(drift_pct, 4)
+    
+    # Thresholds
+    KS_DI_THRESHOLD = 0.08
+    KS_TI_THRESHOLD = 0.10
+    TYPE_DRIFT_THRESHOLD = 4
+    SUBJ_DRIFT_THRESHOLD = 0.10
+    
+    # Check pass/fail
+    ks_di_pass = ks_di <= KS_DI_THRESHOLD
+    ks_ti_pass = ks_ti <= KS_TI_THRESHOLD
+    type_pass = all(abs(d) <= TYPE_DRIFT_THRESHOLD for d in type_drift.values())
+    subj_pass = all(abs(d) <= SUBJ_DRIFT_THRESHOLD for d in subject_drift.values())
+    
+    overall_pass = ks_di_pass and ks_ti_pass and type_pass and subj_pass
+    
+    result = {
+        "comparison": f"{year_a} P{paper_a or 'all'} vs baseline_2025",
+        "overall": "PASS" if overall_pass else "FAIL",
+        "metrics": {
+            "KS_DI": {"value": ks_di, "threshold": KS_DI_THRESHOLD, "pass": ks_di_pass},
+            "KS_TI": {"value": ks_ti, "threshold": KS_TI_THRESHOLD, "pass": ks_ti_pass},
+            "type_DI_drift": {"values": type_drift, "threshold": TYPE_DRIFT_THRESHOLD, "pass": type_pass},
+            "subject_TI_drift": {"values": subject_drift, "threshold": SUBJ_DRIFT_THRESHOLD, "pass": subj_pass}
+        },
+        "sample_sizes": {
+            "baseline_2025": len(baseline_metrics),
+            "comparison": len(compare_metrics)
+        }
+    }
+    
+    return result
+
+
+@baseline_router.get("/distribution-contract")
+async def get_distribution_contract():
+    """Get the distribution match contract/thresholds"""
+    contract = {
+        "version": "v1",
+        "thresholds": {
+            "KS_DI": {"max": 0.08, "description": "Kolmogorov-Smirnov stat for DI distribution"},
+            "KS_TI": {"max": 0.10, "description": "Kolmogorov-Smirnov stat for TI distribution"},
+            "type_DI_drift": {"max": 4, "description": "Max DI mean drift per question type"},
+            "subject_TI_drift": {"max": 0.10, "description": "Max TI mean drift % per subject"}
+        },
+        "baseline": "2025",
+        "envelope": "2021-2025"
+    }
+    
+    with open("/app/memory/distribution_match_contract_v1.json", "w") as f:
+        json.dump(contract, f, indent=2)
+    
+    return contract
+
+
+# Include baseline router
+admin_router.include_router(baseline_router)
+
+
 # Include routers
 api_router.include_router(admin_router)
 app.include_router(api_router)
