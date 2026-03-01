@@ -261,6 +261,9 @@ const CatalogPage = () => {
         } else {
           toast.error(res.data.reason || "Lock failed");
         }
+      } else if (action === "auto-assign") {
+        const res = await axios.post(`${API}/catalog/${catalogId}/auto-assign-subjects`);
+        toast.success(`Auto-assigned: ${res.data.assigned} questions (PHY: ${res.data.by_subject.PHY}, CHEM: ${res.data.by_subject.CHEM}, MATH: ${res.data.by_subject.MATH})`);
       } else if (action === "export") {
         const res = await axios.get(`${API}/catalog/${catalogId}/export`);
         const blob = new Blob([JSON.stringify(res.data.payload, null, 2)], { type: "application/json" });
