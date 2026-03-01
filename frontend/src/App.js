@@ -393,6 +393,7 @@ const Sidebar = () => {
     { to: "/catalog", icon: FolderSync, label: "Catalog" },
     { to: "/yearspec", icon: FileText, label: "YearSpec" },
     { to: "/questions", icon: HelpCircle, label: "Questions" },
+    { to: "/baseline", icon: BarChart3, label: "Baseline" },
     { to: "/audit", icon: ClipboardList, label: "Audit Logs" }
   ];
 
