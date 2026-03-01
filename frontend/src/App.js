@@ -1535,6 +1535,7 @@ function App() {
             <Route path="/catalog" element={<CatalogPage />} />
             <Route path="/yearspec" element={<YearSpecPage />} />
             <Route path="/questions" element={<QuestionsPage />} />
+            <Route path="/baseline" element={<BaselinePage />} />
             <Route path="/audit" element={<AuditPage />} />
           </Routes>
         </Layout>
