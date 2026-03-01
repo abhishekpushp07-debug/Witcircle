@@ -1981,7 +1981,7 @@ async def build_baseline_profiles():
         for year in range(2021, 2026):
             year_metrics = [m for m in all_metrics if m["year"] == year]
             if year_metrics:
-                envelope_2021_2025["by_year"][year] = {
+                envelope_2021_2025["by_year"][str(year)] = {
                     "count": len(year_metrics),
                     "DI_mean": round(statistics.mean([m["DI"] for m in year_metrics]), 2),
                     "TI_mean": round(statistics.mean([m["TI"] for m in year_metrics]), 2)
@@ -1997,10 +1997,15 @@ async def build_baseline_profiles():
     with open("/app/memory/envelope_profile_2021_2025.json", "w") as f:
         json.dump(envelope_2021_2025, f, indent=2)
     
-    # Cache in DB
+    # Cache in DB - convert dict keys to strings for MongoDB
+    def stringify_keys(d):
+        if isinstance(d, dict):
+            return {str(k): stringify_keys(v) for k, v in d.items()}
+        return d
+    
     await db.jea_baselines.delete_many({})
-    await db.jea_baselines.insert_one({**baseline_2025, "_type": "baseline_2025"})
-    await db.jea_baselines.insert_one({**envelope_2021_2025, "_type": "envelope_2021_2025"})
+    await db.jea_baselines.insert_one({**stringify_keys(baseline_2025), "_type": "baseline_2025"})
+    await db.jea_baselines.insert_one({**stringify_keys(envelope_2021_2025), "_type": "envelope_2021_2025"})
     
     return {
         "baseline_2025": baseline_2025,
