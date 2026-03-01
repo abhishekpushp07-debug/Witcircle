@@ -57,35 +57,35 @@
     }
   },
   "by_type": {
-    "MCQ_MULTI": {
-      "count": 92,
-      "DI_mean": 74.23,
-      "TI_mean": 220.66
-    },
-    "INTEGER": {
-      "count": 249,
-      "DI_mean": 69.41,
-      "TI_mean": 189.42
+    "OTHER": {
+      "count": 5,
+      "DI_mean": 72.14,
+      "TI_mean": 210.0
     },
     "COMP_SET": {
       "count": 12,
       "DI_mean": 57.5,
       "TI_mean": 202.0
     },
-    "MATCH": {
-      "count": 53,
-      "DI_mean": 84.92,
-      "TI_mean": 298.32
+    "MCQ_MULTI": {
+      "count": 92,
+      "DI_mean": 74.23,
+      "TI_mean": 220.66
     },
     "SCQ": {
       "count": 96,
       "DI_mean": 50.61,
       "TI_mean": 150.49
     },
-    "OTHER": {
-      "count": 5,
-      "DI_mean": 72.14,
-      "TI_mean": 210.0
+    "MATCH": {
+      "count": 53,
+      "DI_mean": 84.92,
+      "TI_mean": 298.32
+    },
+    "INTEGER": {
+      "count": 249,
+      "DI_mean": 69.41,
+      "TI_mean": 189.42
     }
   },
   "by_year": {
@@ -115,5 +115,5 @@
       "TI_mean": 200.22
     }
   },
-  "generated_at": "2026-03-01T21:34:59.201979+00:00"
+  "generated_at": "2026-03-01T21:35:31.024520+00:00"
 }

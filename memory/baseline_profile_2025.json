@@ -62,6 +62,11 @@
       "DI_mean": 74.37,
       "TI_mean": 221.31
     },
+    "SCQ": {
+      "count": 24,
+      "DI_mean": 50.62,
+      "TI_mean": 150.37
+    },
     "MATCH": {
       "count": 9,
       "DI_mean": 85.59,
@@ -71,12 +76,7 @@
       "count": 42,
       "DI_mean": 72.06,
       "TI_mean": 196.68
-    },
-    "SCQ": {
-      "count": 24,
-      "DI_mean": 50.62,
-      "TI_mean": 150.37
     }
   },
-  "generated_at": "2026-03-01T21:34:59.201966+00:00"
+  "generated_at": "2026-03-01T21:35:31.024508+00:00"
 }
