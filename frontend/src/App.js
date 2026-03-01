@@ -424,11 +424,296 @@ const Sidebar = () => {
       </nav>
       <div className="p-4 border-t border-border">
         <p className="text-xs text-muted-foreground">2021-2025 English Papers</p>
-        <p className="text-xs text-muted-foreground">Step-1: Paper Source Module</p>
+        <p className="text-xs text-muted-foreground">Step-2: Baseline Engine</p>
       </div>
     </aside>
   );
 };
+
+// Baseline Dashboard Page
+const BaselinePage = () => {
+  const [profiles, setProfiles] = useState(null);
+  const [qbankStats, setQbankStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [building, setBuilding] = useState(false);
+  const [compareYear, setCompareYear] = useState("2024");
+  const [compareResult, setCompareResult] = useState(null);
+  const [fetchTime, setFetchTime] = useState(null);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const [profilesRes, statsRes] = await Promise.all([
+        axios.get(`${API}/baseline/profiles`),
+        axios.get(`${API}/baseline/qbank/stats`)
+      ]);
+      setProfiles(profilesRes.data);
+      setQbankStats(statsRes.data);
+      setFetchTime(profilesRes.data.fetch_time_ms);
+    } catch (err) {
+      toast.error("Failed to load baseline data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBuildAll = async () => {
+    setBuilding(true);
+    try {
+      toast.info("Building QBank...");
+      await axios.post(`${API}/baseline/build-qbank`);
+      
+      toast.info("Computing metrics...");
+      await axios.post(`${API}/baseline/compute-metrics`);
+      
+      toast.info("Building baselines...");
+      await axios.post(`${API}/baseline/build-baselines`);
+      
+      toast.success("Baseline engine built successfully!");
+      fetchData();
+    } catch (err) {
+      toast.error(err.response?.data?.detail || "Build failed");
+    } finally {
+      setBuilding(false);
+    }
+  };
+
+  const handleCompare = async () => {
+    try {
+      const res = await axios.post(`${API}/baseline/compare-distribution?year_a=${compareYear}`);
+      setCompareResult(res.data);
+    } catch (err) {
+      toast.error("Comparison failed");
+    }
+  };
+
+  const downloadMetricsOnly = async () => {
+    try {
+      const res = await axios.get(`${API}/baseline/qbank/metrics-only`);
+      const blob = new Blob([JSON.stringify(res.data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "jea_metrics_only_export.json";
+      a.click();
+      toast.success("Metrics export downloaded (no stems/options)");
+    } catch (err) {
+      toast.error("Export failed");
+    }
+  };
+
+  if (loading) return <div className="flex items-center justify-center h-64"><Spinner size="lg" /></div>;
+
+  const baseline = profiles?.baseline_2025;
+  const envelope = profiles?.envelope_2021_2025;
+
+  return (
+    <div className="space-y-8 animate-fade-in" data-testid="baseline-page">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="font-heading text-3xl font-bold text-foreground">Baseline Engine</h2>
+          <p className="text-muted-foreground mt-1">DI/TI metrics and distribution profiles (2025 anchor)</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={downloadMetricsOnly}
+            className="flex items-center gap-2 bg-secondary text-secondary-foreground px-4 py-2 rounded-lg font-medium hover:bg-secondary/80"
+            data-testid="download-metrics-btn"
+          >
+            <Download className="w-4 h-4" />
+            Metrics Export
+          </button>
+          <button
+            onClick={handleBuildAll}
+            disabled={building}
+            className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg font-medium hover:bg-primary/90 disabled:opacity-50"
+            data-testid="build-baseline-btn"
+          >
+            {building ? <Spinner size="sm" /> : <RefreshCw className="w-4 h-4" />}
+            Rebuild All
+          </button>
+        </div>
+      </div>
+
+      {/* Stats Row */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <StatCard 
+          title="QBank Total" 
+          value={qbankStats?.total || 0} 
+          icon={HelpCircle}
+          subtitle="Canonical questions"
+        />
+        <StatCard 
+          title="Baseline 2025" 
+          value={baseline?.total_questions || 0} 
+          icon={BarChart3}
+          subtitle={`DI: ${baseline?.DI?.mean || '-'}`}
+        />
+        <StatCard 
+          title="Envelope 2021-25" 
+          value={envelope?.total_questions || 0} 
+          icon={BarChart3}
+          subtitle={`DI: ${envelope?.DI?.mean || '-'}`}
+        />
+        <StatCard 
+          title="Fetch Time" 
+          value={`${fetchTime || '-'}ms`} 
+          icon={Zap}
+          subtitle="Cached profile load"
+        />
+      </div>
+
+      {/* Baseline 2025 Details */}
+      {baseline && (
+        <div className="rounded-xl border border-border bg-card p-6">
+          <h3 className="font-heading text-lg font-semibold mb-4">Baseline 2025 Profile</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* DI Distribution */}
+            <div>
+              <h4 className="text-sm font-medium text-muted-foreground mb-2">Difficulty Index (DI) Distribution</h4>
+              <div className="flex items-end gap-1 h-32">
+                {baseline.DI.histogram.map((count, i) => (
+                  <div key={i} className="flex-1 flex flex-col items-center">
+                    <div 
+                      className="w-full bg-primary rounded-t"
+                      style={{ height: `${Math.max(4, (count / Math.max(...baseline.DI.histogram)) * 100)}%` }}
+                    />
+                    <span className="text-xs text-muted-foreground mt-1">{i*10}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                Mean: {baseline.DI.mean} | Std: {baseline.DI.std} | Range: {baseline.DI.min}-{baseline.DI.max}
+              </p>
+            </div>
+
+            {/* TI Distribution */}
+            <div>
+              <h4 className="text-sm font-medium text-muted-foreground mb-2">Time Index (TI) Distribution</h4>
+              <div className="flex items-end gap-1 h-32">
+                {baseline.TI.histogram.map((count, i) => (
+                  <div key={i} className="flex-1 flex flex-col items-center">
+                    <div 
+                      className="w-full bg-green-500 rounded-t"
+                      style={{ height: `${Math.max(4, (count / Math.max(...baseline.TI.histogram)) * 100)}%` }}
+                    />
+                    <span className="text-xs text-muted-foreground mt-1">{['60s','120s','180s','240s','300s','300+'][i]}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                Mean: {baseline.TI.mean}s | Std: {baseline.TI.std}s
+              </p>
+            </div>
+          </div>
+
+          {/* By Subject */}
+          <div className="mt-6">
+            <h4 className="text-sm font-medium text-muted-foreground mb-2">By Subject</h4>
+            <div className="grid grid-cols-3 gap-4">
+              {Object.entries(baseline.by_subject || {}).map(([subj, data]) => (
+                <div key={subj} className="bg-secondary rounded-lg p-3">
+                  <SubjectBadge subject={subj} />
+                  <p className="text-lg font-bold mt-2">{data.count} Q</p>
+                  <p className="text-xs text-muted-foreground">DI: {data.DI_mean} | TI: {data.TI_mean}s</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* By Type */}
+          <div className="mt-6">
+            <h4 className="text-sm font-medium text-muted-foreground mb-2">By Question Type</h4>
+            <div className="grid grid-cols-4 gap-4">
+              {Object.entries(baseline.by_type || {}).map(([qtype, data]) => (
+                <div key={qtype} className="bg-secondary rounded-lg p-3">
+                  <span className="text-xs font-medium text-foreground">{qtype}</span>
+                  <p className="text-lg font-bold">{data.count}</p>
+                  <p className="text-xs text-muted-foreground">DI: {data.DI_mean}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Distribution Comparison */}
+      <div className="rounded-xl border border-border bg-card p-6">
+        <h3 className="font-heading text-lg font-semibold mb-4">Distribution Match Test</h3>
+        <div className="flex items-center gap-4 mb-4">
+          <select
+            value={compareYear}
+            onChange={e => setCompareYear(e.target.value)}
+            className="bg-secondary border border-border rounded-md px-3 py-2 text-sm"
+          >
+            {[2021, 2022, 2023, 2024].map(y => (
+              <option key={y} value={y}>{y}</option>
+            ))}
+          </select>
+          <span className="text-muted-foreground">vs baseline_2025</span>
+          <button
+            onClick={handleCompare}
+            className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90"
+            data-testid="compare-btn"
+          >
+            Compare
+          </button>
+        </div>
+
+        {compareResult && (
+          <div className="space-y-4">
+            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg ${
+              compareResult.overall === "PASS" ? "bg-green-900/30 text-green-400" : "bg-red-900/30 text-red-400"
+            }`}>
+              {compareResult.overall === "PASS" ? <CheckCircle className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
+              <span className="font-semibold">{compareResult.overall}</span>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <MetricCard
+                label="KS(DI)"
+                value={compareResult.metrics.KS_DI.value}
+                threshold={compareResult.metrics.KS_DI.threshold}
+                pass={compareResult.metrics.KS_DI.pass}
+              />
+              <MetricCard
+                label="KS(TI)"
+                value={compareResult.metrics.KS_TI.value}
+                threshold={compareResult.metrics.KS_TI.threshold}
+                pass={compareResult.metrics.KS_TI.pass}
+              />
+              <MetricCard
+                label="Type Drift"
+                value={Object.values(compareResult.metrics.type_DI_drift.values).map(v => Math.abs(v)).reduce((a,b) => Math.max(a,b), 0).toFixed(2)}
+                threshold={compareResult.metrics.type_DI_drift.threshold}
+                pass={compareResult.metrics.type_DI_drift.pass}
+              />
+              <MetricCard
+                label="Subject Drift"
+                value={(Object.values(compareResult.metrics.subject_TI_drift.values).map(v => Math.abs(v)).reduce((a,b) => Math.max(a,b), 0) * 100).toFixed(1) + "%"}
+                threshold={(compareResult.metrics.subject_TI_drift.threshold * 100) + "%"}
+                pass={compareResult.metrics.subject_TI_drift.pass}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Metric Card for comparisons
+const MetricCard = ({ label, value, threshold, pass }) => (
+  <div className={`rounded-lg p-3 ${pass ? "bg-green-900/20 border border-green-800" : "bg-red-900/20 border border-red-800"}`}>
+    <p className="text-xs text-muted-foreground">{label}</p>
+    <p className={`text-lg font-bold ${pass ? "text-green-400" : "text-red-400"}`}>{value}</p>
+    <p className="text-xs text-muted-foreground">Threshold: {threshold}</p>
+  </div>
+);
 
 // Dashboard Page
 const Dashboard = () => {
