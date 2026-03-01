@@ -1557,8 +1557,8 @@ async def build_canonical_qbank():
         yearspec_map = {(s["section_code"], i): s for i, s in enumerate(yearspecs)}
         
         for q in questions:
-            # Generate stable qid
-            qid_raw = f"{year}_{paper_no}_{q['section_code']}_{q['q_no']}_{file_sha[:16]}"
+            # Generate stable qid - include full question info for uniqueness
+            qid_raw = f"{year}_{paper_no}_{q['section_code']}_{q['q_no']}_{q['id']}_{file_sha[:16]}"
             qid = hashlib.sha256(qid_raw.encode()).hexdigest()[:24]
             
             # Find matching yearspec
