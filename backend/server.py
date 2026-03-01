@@ -779,6 +779,247 @@ async def merge_questions(
     return {"merged_id": question_id_1, "deleted_id": question_id_2}
 
 
+# ============== Auto-Assign Subject ==============
+
+# Subject keyword mappings
+SUBJECT_KEYWORDS = {
+    "PHY": [
+        # Mechanics
+        "momentum", "velocity", "acceleration", "force", "mass", "weight", "friction",
+        "kinetic", "potential", "gravitational", "projectile", "collision", "impulse",
+        "torque", "angular", "rotation", "oscillation", "pendulum", "spring",
+        # Thermodynamics
+        "temperature", "heat", "thermal", "entropy", "adiabatic", "isothermal",
+        "isobaric", "isochoric", "carnot", "thermodynamic",
+        # Waves & Optics
+        "wavelength", "frequency", "amplitude", "interference", "diffraction",
+        "refraction", "reflection", "lens", "mirror", "optical", "spectrum",
+        "polarization", "electromagnetic", "photon",
+        # Electricity & Magnetism
+        "electric", "magnetic", "capacitor", "inductor", "resistor", "circuit",
+        "current", "voltage", "ohm", "faraday", "coulomb", "gauss", "ampere",
+        "electromagnetic", "induction", "flux",
+        # Modern Physics
+        "quantum", "photoelectric", "bohr", "nucleus", "radioactive", "decay",
+        "binding energy", "fission", "fusion", "de broglie", "heisenberg",
+        # General
+        "particle", "joule", "watt", "newton", "meter", "second", "kilogram"
+    ],
+    "CHEM": [
+        # General Chemistry
+        "element", "compound", "molecule", "atom", "ion", "electron", "proton",
+        "neutron", "orbital", "valence", "bonding", "covalent", "ionic",
+        # Organic Chemistry
+        "organic", "hydrocarbon", "alkane", "alkene", "alkyne", "benzene",
+        "aromatic", "aldehyde", "ketone", "alcohol", "ether", "ester", "amine",
+        "carboxylic", "amide", "polymer", "isomer", "stereochemistry", "chiral",
+        "functional group", "substitution", "elimination", "addition",
+        # Inorganic Chemistry
+        "inorganic", "coordination", "ligand", "complex", "metal", "transition",
+        "oxidation", "reduction", "redox", "electrochemistry", "galvanic",
+        "electrolysis", "corrosion",
+        # Physical Chemistry
+        "equilibrium", "concentration", "molarity", "molality", "solubility",
+        "ph", "buffer", "titration", "indicator", "catalyst", "kinetics",
+        "reaction rate", "activation energy", "enthalpy", "gibbs",
+        # General
+        "periodic table", "molar", "avogadro", "stoichiometry", "empirical",
+        "molecular formula", "precipitate", "aqueous", "solution", "reagent"
+    ],
+    "MATH": [
+        # Calculus
+        "integral", "derivative", "differentiation", "integration", "limit",
+        "continuous", "differential equation", "maxima", "minima", "tangent",
+        "normal", "curve", "area under",
+        # Algebra
+        "matrix", "determinant", "vector", "polynomial", "equation", "quadratic",
+        "cubic", "root", "coefficient", "linear", "system of equations",
+        "eigenvalue", "eigenvector",
+        # Trigonometry
+        "sin", "cos", "tan", "trigonometric", "angle", "radian", "degree",
+        "triangle", "identity",
+        # Coordinate Geometry
+        "coordinate", "parabola", "ellipse", "hyperbola", "circle", "conic",
+        "locus", "slope", "intercept", "asymptote",
+        # Probability & Statistics
+        "probability", "permutation", "combination", "factorial", "binomial",
+        "mean", "variance", "standard deviation", "distribution",
+        # Complex Numbers & Sequences
+        "complex number", "imaginary", "argand", "sequence", "series",
+        "arithmetic progression", "geometric progression", "convergent",
+        # General
+        "function", "domain", "range", "inverse", "logarithm", "exponential",
+        "inequality", "modulus", "absolute value"
+    ]
+}
+
+
+def detect_subject(text: str) -> tuple[str, float]:
+    """
+    Detect subject from text using keyword matching.
+    Returns (subject, confidence_score)
+    """
+    if not text:
+        return "UNKNOWN", 0.0
+    
+    text_lower = text.lower()
+    scores = {"PHY": 0, "CHEM": 0, "MATH": 0}
+    
+    for subject, keywords in SUBJECT_KEYWORDS.items():
+        for keyword in keywords:
+            if keyword in text_lower:
+                # Longer keywords get higher weight
+                weight = 1 + (len(keyword) / 10)
+                scores[subject] += weight
+    
+    total_score = sum(scores.values())
+    if total_score == 0:
+        return "UNKNOWN", 0.0
+    
+    best_subject = max(scores, key=scores.get)
+    confidence = scores[best_subject] / total_score
+    
+    # Only assign if confidence is above threshold
+    if confidence >= 0.4 and scores[best_subject] >= 2:
+        return best_subject, confidence
+    
+    return "UNKNOWN", confidence
+
+
+class AutoAssignResult(BaseModel):
+    total_questions: int
+    assigned: int
+    skipped: int
+    by_subject: Dict[str, int]
+    details: List[Dict[str, Any]]
+
+
+@admin_router.post("/catalog/{catalog_id}/auto-assign-subjects", response_model=AutoAssignResult)
+async def auto_assign_subjects(
+    catalog_id: str,
+    force: bool = Query(False, description="Force reassign even if already assigned")
+):
+    """Auto-assign subjects to questions using keyword detection"""
+    cat = await db.jea_source_catalog.find_one({"id": catalog_id})
+    if not cat:
+        raise HTTPException(404, "Catalog not found")
+    
+    if cat["status"] == "LOCKED":
+        raise HTTPException(400, "Cannot modify LOCKED catalog")
+    
+    questions = await db.jea_questions.find({
+        "year": cat["year"],
+        "paper_no": cat["paper_no"]
+    }).to_list(500)
+    
+    assigned = 0
+    skipped = 0
+    by_subject = {"PHY": 0, "CHEM": 0, "MATH": 0}
+    details = []
+    
+    for q in questions:
+        # Skip if already assigned and not forcing
+        if q.get("subject") != "UNKNOWN" and not force:
+            skipped += 1
+            continue
+        
+        # Combine stem and options for detection
+        text_to_analyze = q.get("stem_text", "")
+        if q.get("options_json"):
+            try:
+                opts = json.loads(q["options_json"])
+                text_to_analyze += " " + " ".join(opts.values())
+            except:
+                pass
+        
+        detected_subject, confidence = detect_subject(text_to_analyze)
+        
+        if detected_subject != "UNKNOWN":
+            await db.jea_questions.update_one(
+                {"id": q["id"]},
+                {"$set": {"subject": detected_subject}}
+            )
+            assigned += 1
+            by_subject[detected_subject] += 1
+            details.append({
+                "q_no": q["q_no"],
+                "subject": detected_subject,
+                "confidence": round(confidence, 2)
+            })
+        else:
+            skipped += 1
+            details.append({
+                "q_no": q["q_no"],
+                "subject": "UNKNOWN",
+                "confidence": round(confidence, 2),
+                "reason": "Low confidence"
+            })
+    
+    # Also update yearspec sections
+    yearspecs = await db.jea_yearspec_sections.find({
+        "year": cat["year"],
+        "paper_no": cat["paper_no"]
+    }).to_list(100)
+    
+    for sec in yearspecs:
+        if sec.get("subject") != "UNKNOWN" and not force:
+            continue
+        
+        detected_subject, _ = detect_subject(sec.get("evidence_text", ""))
+        if detected_subject != "UNKNOWN":
+            await db.jea_yearspec_sections.update_one(
+                {"id": sec["id"]},
+                {"$set": {"subject": detected_subject}}
+            )
+    
+    await create_audit_log(
+        "JeaSourceCatalog",
+        catalog_id,
+        "AUTO_ASSIGN_SUBJECTS",
+        after_json=json.dumps({"assigned": assigned, "skipped": skipped, "by_subject": by_subject})
+    )
+    
+    return AutoAssignResult(
+        total_questions=len(questions),
+        assigned=assigned,
+        skipped=skipped,
+        by_subject=by_subject,
+        details=details[:50]  # Limit details
+    )
+
+
+@admin_router.post("/questions/{question_id}/detect-subject")
+async def detect_question_subject(question_id: str):
+    """Detect subject for a single question (preview without saving)"""
+    q = await db.jea_questions.find_one({"id": question_id})
+    if not q:
+        raise HTTPException(404, "Question not found")
+    
+    text_to_analyze = q.get("stem_text", "")
+    if q.get("options_json"):
+        try:
+            opts = json.loads(q["options_json"])
+            text_to_analyze += " " + " ".join(opts.values())
+        except:
+            pass
+    
+    detected_subject, confidence = detect_subject(text_to_analyze)
+    
+    # Find matching keywords for explanation
+    text_lower = text_to_analyze.lower()
+    matched_keywords = []
+    for keyword in SUBJECT_KEYWORDS.get(detected_subject, []):
+        if keyword in text_lower:
+            matched_keywords.append(keyword)
+    
+    return {
+        "current_subject": q.get("subject"),
+        "detected_subject": detected_subject,
+        "confidence": round(confidence, 2),
+        "matched_keywords": matched_keywords[:10]
+    }
+
+
 # ============== Lock/Export Routes ==============
 
 @admin_router.post("/catalog/{catalog_id}/lock", response_model=LockResult)
