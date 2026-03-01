@@ -54,21 +54,35 @@ Build a FastAPI + React admin module that:
 - `POST /api/admin/jea/catalog/{id}/download` - Download PDF
 - `POST /api/admin/jea/catalog/{id}/upload` - Manual upload
 - `POST /api/admin/jea/catalog/{id}/parse` - Parse PDF
+- `POST /api/admin/jea/catalog/{id}/auto-assign-subjects` - **NEW: Auto-assign subjects using keyword detection**
 - `POST /api/admin/jea/catalog/{id}/lock` - Lock with validation
 - `GET /api/admin/jea/catalog/{id}/export` - Export JSON
 - `GET/PATCH /api/admin/jea/yearspec` - YearSpec CRUD
 - `GET/PATCH /api/admin/jea/questions` - Questions CRUD
 - `POST /api/admin/jea/questions/{id}/flag` - Add flag
+- `POST /api/admin/jea/questions/{id}/detect-subject` - **NEW: Detect subject for single question**
 - `POST /api/admin/jea/questions/split` - Split question
 - `POST /api/admin/jea/questions/merge` - Merge questions
 - `GET /api/admin/jea/audit-logs` - Audit logs
 - `GET /api/admin/jea/stats` - Statistics
 
+### Auto-Assign Subject Feature (NEW)
+**Keyword-based subject detection:**
+- **PHY**: momentum, velocity, acceleration, force, electric, magnetic, wave, optics, thermodynamic, quantum, etc.
+- **CHEM**: element, compound, organic, reaction, equilibrium, oxidation, reduction, acid, base, catalyst, etc.
+- **MATH**: integral, derivative, matrix, polynomial, probability, trigonometric, coordinate, sequence, function, etc.
+
+**How it works:**
+1. Analyzes question stem + options text
+2. Matches against ~150+ keywords per subject
+3. Calculates confidence score based on keyword matches
+4. Assigns subject if confidence >= 40% and at least 2 keyword matches
+
 ### Frontend Pages
 - Dashboard - Stats overview, quick actions
-- Catalog - Sync/download/parse/lock controls
+- Catalog - Sync/download/parse/auto-assign/lock controls
 - YearSpec - Section review with subject/type editing
-- Questions - Question review with filters, edit, flags
+- Questions - Question review with filters, edit, flags, detect subject button (Zap icon)
 - Audit Logs - Action history table
 
 ## Validation Gates (Before LOCK)
