@@ -1,0 +1,85 @@
+import os, time, uuid
+from datetime import datetime
+from motor.motor_asyncio import AsyncIOMotorClient
+from fastapi import HTTPException
+from bson import ObjectId
+
+client = AsyncIOMotorClient(
+    os.environ["MONGO_URL"], maxPoolSize=100, serverSelectionTimeoutMS=5000
+)
+db = client[os.environ["DB_NAME"]]
+users = db.tejas_users
+sessions = db.tejas_sessions
+sets = db.tejas_sets
+attempts = db.tejas_attempts
+files = db.tejas_files
+jobs = db.tejas_jobs
+audits = db.tejas_audits
+
+
+def uid():
+    return str(uuid.uuid4())
+
+
+def now():
+    return time.time()
+
+
+def clean(v):
+    if isinstance(v, dict):
+        return {k: clean(x) for k, x in v.items() if k != "_id"}
+    if isinstance(v, list):
+        return [clean(x) for x in v]
+    if isinstance(v, datetime):
+        return v.isoformat()
+    if isinstance(v, ObjectId):
+        return str(v)
+    return v
+
+
+async def get(coll, id):
+    d = await coll.find_one({"id": id}, {"_id": 0})
+    if not d:
+        raise HTTPException(404, "This item is unavailable or does not exist.")
+    if coll.name == "tejas_attempts" and d.get("pack_id"):
+        from .packs import hydrate
+
+        d = await hydrate(d)
+    return d
+
+
+async def audit(actor, action, resource, detail=""):
+    await audits.insert_one(
+        {
+            "id": uid(),
+            "actor": actor,
+            "action": action,
+            "resource": resource,
+            "detail": detail[:2000],
+            "at": now(),
+        }
+    )
+
+
+async def indexes():
+    for c in [users, sessions, sets, attempts, files, jobs, audits]:
+        await c.create_index("id", unique=True)
+    await users.create_index("email", unique=True)
+    await sessions.create_index("expires_at", expireAfterSeconds=0)
+    await sets.create_index([("status", 1), ("exam", 1)])
+    await attempts.create_index([("user_id", 1), ("started_at", -1)])
+    await attempts.create_index([("user_id", 1), ("start_key", 1)], unique=True)
+    await attempts.create_index(
+        [("user_id", 1), ("set_id", 1), ("mode", 1)],
+        unique=True,
+        partialFilterExpression={"status": "active"},
+    )
+    await attempts.create_index([("status", 1), ("deadline", 1)])
+    await sets.create_index(
+        [("status", 1), ("audience", 1), ("exam", 1), ("created_at", -1)]
+    )
+    await db.tejas_preflight.create_index([("user_id", 1), ("set_id", 1)], unique=True)
+
+    await jobs.create_index([("status", 1), ("lease_until", 1)])
+    await audits.create_index([("resource", 1), ("at", -1)])
+    await db.tejas_login_limits.create_index("expires_at", expireAfterSeconds=0)

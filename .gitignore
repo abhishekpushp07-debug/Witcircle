@@ -81,3 +81,10 @@ android-sdk/ -e
 # Environment files
 *.env
 *.env.*
+
+# Private source vault and owner handoff
+memory/test_credentials.md
+sources/
+archive/
+test_reports/*.pdf
+test_reports/*.png
