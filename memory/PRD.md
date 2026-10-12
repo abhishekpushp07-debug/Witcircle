@@ -1,3 +1,23 @@
+# Latest authoritative checkpoint — audit completed, NO fixes applied
+
+The user explicitly required an **audit first**, not more implementation. Read `/app/docs/audit/AUDIT_REPORT.md`, `REQUIREMENTS_MATRIX.md`, `RULEBOOK_ERRATA.md`, `EVIDENCE_LEDGER.md` and `REMEDIATION_PLAN.md` before making any new claims or changes.
+
+**Verdict:** current application is not compliant with the full five-PDF specification and is not qualified for 500,000 concurrent students. There are reproduced code defects, not just missing infrastructure.
+
+- Independent real-function tests confirm six backend defects: retry-resume key not bound, duplicate same-version publication, silent reviewer lost updates, invalid audience fail-open, waiting jobs not self-draining, and stale extraction worker write after lease replacement
+- Additional findings: actual middleware permits an oversized non-file multipart field through the unbounded parser path; typed MCQ options display raw LaTeX; logout removes all profiles' pending draft keys without immediate discard confirmation. Some local-storage corruption UI behavior remains NOT VERIFIED, not fixed
+- Source PDFs require **all 60 analyses**. The internal rulebook's 40-minimum was an error. Full metric contracts: 10 partial, 50 not found; do not translate this into a readiness percentage
+- Audit methodology issues were disclosed: early simulated/copied tests rejected; four orphan test-only pack records from a faulty harness removed after identity/reference checks; a staff credential in a test-agent report was redacted. **Actual account password rotation and session revocation are still required and were NOT performed**
+- Initial97 application/config hashes are unchanged. Four additional public/build files are unchanged since discovery. No application fixes, env changes, content publication or infrastructure provisioning occurred
+- Original paper remains75questions, review, v1/r3;50QAsets remain withdrawn. Core scorer fixture baselines/builds pass, but they do not override the audit failures
+- User choices remain matte maroon and phone-only student access (no OTP/password); staff security is separate. Do not “fix” intentional student convenience access by contradicting those choices
+
+Next action requires user review/approval of the remediation priorities. Every later fix must be independently verified by the testing agent against its exact failing case before being called fixed.
+
+---
+## Previous checkpoint (historical, superseded where the audit disagrees)
+
+
 # Current authoritative status — PDF v5 architecture alignment
 
 This section supersedes conflicting historical entries below. The active application is **Tejas**, React + FastAPI + MongoDB. Latest user choices: matte maroon (replaces teal/blue); phone-number-only student convenience login; separate staff access; update the rulebook from all five PDFs and harden code against the scale guidance.
