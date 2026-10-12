@@ -1,0 +1,18 @@
+{
+  "schema_version": "packet1-gates-v1",
+  "packet": 1,
+  "status": "IN_PROGRESS",
+  "capacity_status": "UNQUALIFIED",
+  "production_launch_allowed": false,
+  "gates": [
+    {"id": "P01-ATOMIC", "owner": "application_lead_and_source_reviewer", "status": "BLOCKED", "reason": "All source pages are inventoried, but candidate blocks are not proof of complete reviewed atomic mandatory-clause coverage"},
+    {"id": "P01-CONTRACT", "owner": "product_and_application_lead", "status": "BLOCKED", "reason": "Reference kernel and legacy inventory are partial; full pinned route-family schemas and formal contract approval remain required"},
+    {"id": "P01-SLO", "owner": "product_and_performance_operator", "status": "BLOCKED", "reason": "Guide targets are explicit; exact client/device/failure/cost profiles need named approval and measured evidence"},
+    {"id": "P01-CREDENTIAL", "owner": "security_operator", "status": "BLOCKED", "reason": "Persisted staff credential rotation and race-safe session revocation not executed"},
+    {"id": "P01-REGRESSION", "owner": "qa", "status": "PARTIAL_BLOCKED", "reason": "Report37: 71 green plus six strict OPEN A01-A06 invariants repeated three times; remaining audit reproductions and all-adapter golden coverage are not complete", "evidence": ["test_reports/iteration_37.json", "tests/packet1"]},
+    {"id": "P01-CONTAINMENT", "owner": "application_lead_and_qa", "status": "VERIFIED_SCOPED", "reason": "Upload body-read hold, protected direct calls and extraction/regrade dispatch holds verified; containment is not permanent parser/worker repair or credential revocation", "evidence": ["test_reports/iteration_37.json"]}
+  ],
+  "unresolved_decisions": ["D01", "D02", "D03", "D04", "D05", "D06", "D07", "D08", "D09", "D10", "D11"],
+  "later_packet_defects": {"A01": 6, "A02": 5, "A03": 5, "A04": 5, "A04b": 5, "A05": 4, "A05b": 4, "A06": 4, "S01": 4, "F01": 7, "F02": 7, "F03": 7, "A07": 5, "A08": 8},
+  "note": "No open finding is closed by documentation, an expected-failure test, or containment"
+}

@@ -4,6 +4,7 @@ import copy
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from .db import db, sets, attempts, get, now, audit
 from .auth import owner
+from .safety import Capability, require_capability
 from .packs import seal, unpack, hydrate
 from tejas_core import score_attempt
 
@@ -64,6 +65,7 @@ async def with_grade(a, version=None):
 
 
 async def run_regrade(job):
+    require_capability(Capability.REGRADE)
     s = job["payload"]["set_snapshot"]
     latest = {q["id"]: q for q in s["questions"]}
     created = skipped = 0
@@ -163,6 +165,7 @@ async def run_regrade(job):
 
 @router.post("/studio/sets/{id}/regrade")
 async def regrade(id: str, data: dict, bg: BackgroundTasks, u=Depends(owner)):
+    require_capability(Capability.REGRADE)
     s = await get(sets, id)
     note = str(data.get("note", "")).strip()
     if len(note) < 10:

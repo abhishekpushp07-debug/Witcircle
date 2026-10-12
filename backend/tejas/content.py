@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field
 from starlette.concurrency import run_in_threadpool
 from .db import db, sets, files, audits, jobs, uid, now, get, clean, audit
 from .auth import staff, owner
+from .safety import Capability, require_capability
 from tejas_core import validate_pdf, crop_png, normalize_answer
 from tejas_storage import put_object, get_object
 
@@ -245,6 +246,7 @@ async def update_set(id: str, data: SetInput, u=Depends(staff)):
 async def upload(
     id: str, kind: str = Form(...), file: UploadFile = File(...), u=Depends(staff)
 ):
+    require_capability(Capability.SOURCE_UPLOAD)
     s = await get(sets, id)
     if not s.get("rights_upload"):
         raise HTTPException(400, "Confirm permission to upload in set settings first.")
@@ -283,6 +285,7 @@ async def upload(
 
 @router.get("/studio/files/{id}/page/{page}")
 async def source_page(id: str, page: int, u=Depends(staff)):
+    require_capability(Capability.SOURCE_PARSE)
     f = await get(files, id)
     raw = await run_in_threadpool(get_object, f["path"])
     d = validate_pdf(raw)
@@ -299,6 +302,7 @@ async def source_page(id: str, page: int, u=Depends(staff)):
 
 @router.get("/studio/files/{id}/text/{page}")
 async def source_text(id: str, page: int, u=Depends(staff)):
+    require_capability(Capability.SOURCE_PARSE)
     f = await get(files, id)
     raw = await run_in_threadpool(get_object, f["path"])
     d = validate_pdf(raw)
@@ -323,6 +327,7 @@ async def source_download(id: str, u=Depends(staff)):
 
 @router.post("/studio/sets/{id}/extract")
 async def extract(id: str, data: dict, bg: BackgroundTasks, u=Depends(staff)):
+    require_capability(Capability.EXTRACTION)
     s = await get(sets, id)
     if s.get("questions") and not data.get("replace_drafts"):
         raise HTTPException(
@@ -563,6 +568,7 @@ async def approve_question(id: str, qid: str, u=Depends(staff)):
 
 @router.post("/studio/sets/{id}/publish")
 async def publish(id: str, data: dict, u=Depends(owner)):
+    require_capability(Capability.PUBLICATION)
     s = await get(sets, id)
     if not data.get("confirm"):
         raise HTTPException(400, "Confirm publication for the specified audience.")
@@ -678,6 +684,7 @@ async def subset(id: str, data: dict, u=Depends(staff)):
 
 @router.get("/studio/sets/{id}/questions/{qid}/asset/{kind}/{index}")
 async def preview_asset(id: str, qid: str, kind: str, index: int, u=Depends(staff)):
+    require_capability(Capability.SOURCE_PARSE)
     s = await get(sets, id)
     q = next((q for q in s["questions"] if q["id"] == qid), None)
     if not q or kind not in ["question", "solution"]:

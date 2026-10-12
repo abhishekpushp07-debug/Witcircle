@@ -1,1 +1,34 @@
-[]
+[
+  {
+    "content": "Establish Packet 1 source, API and data-boundary contracts with honest coverage gaps",
+    "status": "completed"
+  },
+  {
+    "content": "Implement fail-closed high-risk content containment without blocking student saves or grading",
+    "status": "completed"
+  },
+  {
+    "content": "Add exact workload calculator, typed command schemas and staff-only readiness endpoints",
+    "status": "completed"
+  },
+  {
+    "content": "Correct the isolated test harness and execute real-function audit regressions",
+    "status": "completed"
+  },
+  {
+    "content": "Run independent final verification and retain hashed evidence",
+    "status": "completed"
+  },
+  {
+    "content": "Complete atomic source-clause coverage and full per-operation contract review",
+    "status": "pending"
+  },
+  {
+    "content": "Port remaining audit reproductions and complete dependency/advisory triage",
+    "status": "pending"
+  },
+  {
+    "content": "Close credential rotation and owner/operator approval gates before Packet 1 exit",
+    "status": "pending"
+  }
+]

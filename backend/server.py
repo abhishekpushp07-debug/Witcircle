@@ -17,6 +17,7 @@ from tejas import (
     profiles,
     corrections,
     answers,
+    engineering,
 )
 from tejas.db import indexes, client
 from tejas.contracts import EnvelopeResponse, error_response, request_id
@@ -40,7 +41,9 @@ app = FastAPI(
     openapi_url="/api/openapi.json",
 )
 from tejas.http_limits import JsonBodyLimits
+from tejas.safety import ContentSafetyHold
 app.add_middleware(JsonBodyLimits)
+app.add_middleware(ContentSafetyHold)
 origins = [os.environ["FRONTEND_URL"].rstrip("/")]
 app.add_middleware(
     CORSMiddleware,
@@ -131,5 +134,6 @@ for module in [
     reviewers,
     profiles,
     corrections,
+    engineering,
 ]:
     app.include_router(module.router)

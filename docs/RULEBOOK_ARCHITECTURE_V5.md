@@ -46,7 +46,7 @@ The preview is ONE FastAPI/Mongo deployment with in-process bounded pilot job ex
 
 ## 6. Analytics and exports (V4 pp1–4,19–23)
 - Immutable exact grade ledger feeds results and PDF. Use rational arithmetic until display. Approved correction makes a separate grade/report, never overwrites original bytes.
-- At least 40 meaningful analyses in the full first-release specification, catalogue of 60. Current limited metrics are not 40/60 completed views. Mark missing evidence, no fabricated percentile/rank, timing or cohort values.
+- **All 60 numbered analyses are mandatory**, with typed informative unavailable states when evidence is missing (V4 p1; V5 p64). There is no 40-analysis minimum substitute. Current limited metrics are not 60 completed contracts/views. Mark missing evidence; never fabricate percentile/rank, timing or cohort values.
 - Cohort identity pins paper/profile/key/mode/timing/exposure/date-window. Privacy minimum proposed 10 distinct learners is NOT percentile evidence minimum 100; suppress complementary cells too.
 - Versioned materialized reports/aggregates built asynchronously; no repeated analytical joins on live writer. Released solutions only; every export uses same grade/version as screen.
 

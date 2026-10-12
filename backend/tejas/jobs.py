@@ -8,6 +8,7 @@ from pymongo.errors import DuplicateKeyError
 from starlette.concurrency import run_in_threadpool
 from .db import jobs, sets, files, attempts, db, uid, now, get, audit
 from .auth import current
+from .safety import JOB_CAPABILITIES, HOLD_MESSAGE, job_held, require_capability
 from .runtime import LANE_LIMITS, JOB_ATTEMPTS, JOB_LEASE_SECONDS, INLINE_JOBS
 from tejas_core import build_questions, generate_report
 from tejas_storage import get_object, put_object
@@ -17,10 +18,15 @@ _active = {kind: set() for kind in LANE_LIMITS}
 
 
 def public_job(j):
-    return {k: v for k, v in j.items() if k not in ('_id', 'path', 'payload', 'lease')}
+    result = {k: v for k, v in j.items() if k not in ('_id', 'path', 'payload', 'lease')}
+    if job_held(j.get('kind')) and j.get('status') != 'done':
+        result.update({'processing_held': True, 'hold_code': 'capability_held', 'message': HOLD_MESSAGE})
+    return result
 
 
 async def enqueue(kind, user_id, set_id, payload):
+    if kind in JOB_CAPABILITIES:
+        require_capability(JOB_CAPABILITIES[kind])
     if kind == 'report':
         key = payload['attempt_id'] + '-' + payload.get('score_version', 'original')
     elif kind == 'grade':
@@ -54,6 +60,8 @@ async def run_job(id):
     if not header or header['kind'] not in _active:
         return
     kind = header['kind']
+    if job_held(kind):
+        return  # Leave intent durable, without taking a lease or touching outputs.
     lane = _active[kind]
     # No semaphore waiters or per-request thread accumulation. Overflow remains durable.
     if id in lane or len(lane) >= LANE_LIMITS[kind]:
@@ -147,6 +155,8 @@ async def retry_job(id: str, bg: BackgroundTasks, u=Depends(current)):
     j = await status(id, bg, u)
     if j['status'] == 'done':
         return j
+    if j['kind'] in JOB_CAPABILITIES:
+        require_capability(JOB_CAPABILITIES[j['kind']])
     if j['status'] != 'failed':
         raise HTTPException(409, 'This job is already queued or processing.', headers={'Retry-After': '3'})
     updated = await jobs.find_one_and_update({'id': id, 'status': 'failed'}, {'$set': {'status': 'queued', 'error': '', 'attempts': 0, 'next_run_at': 0}}, return_document=ReturnDocument.AFTER)

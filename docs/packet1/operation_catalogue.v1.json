@@ -1,0 +1,1037 @@
+{
+  "version": 1,
+  "routes": [
+    {
+      "operation_id": "health_api_health_get",
+      "method": "GET",
+      "path": "/api/health",
+      "roles": [
+        "public_or_cookie_session"
+      ],
+      "workload_tier": "normal",
+      "owner_policy": "public_or_session_specific_contract",
+      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "body_limit_bytes": 0,
+      "status": "LEGACY_CONTRACT_GAPS",
+      "gaps": [
+        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+      ],
+      "current_response_models": [
+        "200"
+      ],
+      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+    },
+    {
+      "operation_id": "register_api_auth_register_post",
+      "method": "POST",
+      "path": "/api/auth/register",
+      "roles": [
+        "public_or_cookie_session"
+      ],
+      "workload_tier": "control",
+      "owner_policy": "public_or_session_specific_contract",
+      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "body_limit_bytes": 1048576,
+      "status": "LEGACY_CONTRACT_GAPS",
+      "gaps": [
+        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+      ],
+      "current_response_models": [
+        "200"
+      ],
+      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+    },
+    {
+      "operation_id": "login_api_auth_login_post",
+      "method": "POST",
+      "path": "/api/auth/login",
+      "roles": [
+        "public_or_cookie_session"
+      ],
+      "workload_tier": "control",
+      "owner_policy": "public_or_session_specific_contract",
+      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "body_limit_bytes": 1048576,
+      "status": "LEGACY_CONTRACT_GAPS",
+      "gaps": [
+        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+      ],
+      "current_response_models": [
+        "200",
+        "422"
+      ],
+      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+    },
+    {
+      "operation_id": "session_api_auth_session_get",
+      "method": "GET",
+      "path": "/api/auth/session",
+      "roles": [
+        "public_or_cookie_session"
+      ],
+      "workload_tier": "control",
+      "owner_policy": "public_or_session_specific_contract",
+      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "body_limit_bytes": 0,
+      "status": "LEGACY_CONTRACT_GAPS",
+      "gaps": [
+        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+      ],
+      "current_response_models": [
+        "200"
+      ],
+      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+    },
+    {
+      "operation_id": "me_api_auth_me_get",
+      "method": "GET",
+      "path": "/api/auth/me",
+      "roles": [
+        "authenticated_owner_of_resource"
+      ],
+      "workload_tier": "control",
+      "owner_policy": "server_resource_ownership_and_release_checks_required",
+      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "body_limit_bytes": 0,
+      "status": "LEGACY_CONTRACT_GAPS",
+      "gaps": [
+        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+      ],
+      "current_response_models": [
+        "200"
+      ],
+      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+    },
+    {
+      "operation_id": "refresh_api_auth_refresh_post",
+      "method": "POST",
+      "path": "/api/auth/refresh",
+      "roles": [
+        "public_or_cookie_session"
+      ],
+      "workload_tier": "control",
+      "owner_policy": "public_or_session_specific_contract",
+      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "body_limit_bytes": 1048576,
+      "status": "LEGACY_CONTRACT_GAPS",
+      "gaps": [
+        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+      ],
+      "current_response_models": [
+        "200"
+      ],
+      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+    },
+    {
+      "operation_id": "logout_api_auth_logout_post",
+      "method": "POST",
+      "path": "/api/auth/logout",
+      "roles": [
+        "public_or_cookie_session"
+      ],
+      "workload_tier": "control",
+      "owner_policy": "public_or_session_specific_contract",
+      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "body_limit_bytes": 1048576,
+      "status": "LEGACY_CONTRACT_GAPS",
+      "gaps": [
+        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+      ],
+      "current_response_models": [
+        "200"
+      ],
+      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+    },
+    {
+      "operation_id": "preferences_api_auth_preferences_patch",
+      "method": "PATCH",
+      "path": "/api/auth/preferences",
+      "roles": [
+        "authenticated_owner_of_resource"
+      ],
+      "workload_tier": "control",
+      "owner_policy": "server_resource_ownership_and_release_checks_required",
+      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "body_limit_bytes": 1048576,
+      "status": "LEGACY_CONTRACT_GAPS",
+      "gaps": [
+        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+      ],
+      "current_response_models": [
+        "200",
+        "422"
+      ],
+      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+    },
+    {
+      "operation_id": "access_api_auth_phone_post",
+      "method": "POST",
+      "path": "/api/auth/phone",
+      "roles": [
+        "public_or_cookie_session"
+      ],
+      "workload_tier": "control",
+      "owner_policy": "public_or_session_specific_contract",
+      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "body_limit_bytes": 1048576,
+      "status": "LEGACY_CONTRACT_GAPS",
+      "gaps": [
+        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+      ],
+      "current_response_models": [
+        "200",
+        "422"
+      ],
+      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+    },
+    {
+      "operation_id": "catalogue_api_sets_get",
+      "method": "GET",
+      "path": "/api/sets",
+      "roles": [
+        "public_or_cookie_session"
+      ],
+      "workload_tier": "normal",
+      "owner_policy": "public_or_session_specific_contract",
+      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "body_limit_bytes": 0,
+      "status": "LEGACY_CONTRACT_GAPS",
+      "gaps": [
+        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+      ],
+      "current_response_models": [
+        "200",
+        "422"
+      ],
+      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+    },
+    {
+      "operation_id": "set_detail_api_sets__id__get",
+      "method": "GET",
+      "path": "/api/sets/{id}",
+      "roles": [
+        "public_or_cookie_session"
+      ],
+      "workload_tier": "normal",
+      "owner_policy": "public_or_session_specific_contract",
+      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "body_limit_bytes": 0,
+      "status": "LEGACY_CONTRACT_GAPS",
+      "gaps": [
+        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+      ],
+      "current_response_models": [
+        "200",
+        "422"
+      ],
+      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+    },
+    {
+      "operation_id": "studio_sets_api_studio_sets_get",
+      "method": "GET",
+      "path": "/api/studio/sets",
+      "roles": [
+        "owner",
+        "reviewer"
+      ],
+      "workload_tier": "control",
+      "owner_policy": "server_resource_ownership_and_release_checks_required",
+      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "body_limit_bytes": 0,
+      "status": "LEGACY_CONTRACT_GAPS",
+      "gaps": [
+        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+      ],
+      "current_response_models": [
+        "200"
+      ],
+      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+    },
+    {
+      "operation_id": "create_set_api_studio_sets_post",
+      "method": "POST",
+      "path": "/api/studio/sets",
+      "roles": [
+        "owner",
+        "reviewer"
+      ],
+      "workload_tier": "control",
+      "owner_policy": "server_resource_ownership_and_release_checks_required",
+      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "body_limit_bytes": 1048576,
+      "status": "LEGACY_CONTRACT_GAPS",
+      "gaps": [
+        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+      ],
+      "current_response_models": [
+        "200",
+        "422"
+      ],
+      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+    },
+    {
+      "operation_id": "studio_set_api_studio_sets__id__get",
+      "method": "GET",
+      "path": "/api/studio/sets/{id}",
+      "roles": [
+        "owner",
+        "reviewer"
+      ],
+      "workload_tier": "control",
+      "owner_policy": "server_resource_ownership_and_release_checks_required",
+      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "body_limit_bytes": 0,
+      "status": "LEGACY_CONTRACT_GAPS",
+      "gaps": [
+        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+      ],
+      "current_response_models": [
+        "200",
+        "422"
+      ],
+      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+    },
+    {
+      "operation_id": "update_set_api_studio_sets__id__put",
+      "method": "PUT",
+      "path": "/api/studio/sets/{id}",
+      "roles": [
+        "owner",
+        "reviewer"
+      ],
+      "workload_tier": "control",
+      "owner_policy": "server_resource_ownership_and_release_checks_required",
+      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "body_limit_bytes": 1048576,
+      "status": "LEGACY_CONTRACT_GAPS",
+      "gaps": [
+        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+      ],
+      "current_response_models": [
+        "200",
+        "422"
+      ],
+      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+    },
+    {
+      "operation_id": "upload_api_studio_sets__id__files_post",
+      "method": "POST",
+      "path": "/api/studio/sets/{id}/files",
+      "roles": [
+        "owner",
+        "reviewer"
+      ],
+      "workload_tier": "control",
+      "owner_policy": "server_resource_ownership_and_release_checks_required",
+      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "body_limit_bytes": 0,
+      "status": "LEGACY_CONTRACT_GAPS",
+      "gaps": [
+        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+      ],
+      "current_response_models": [
+        "200",
+        "422"
+      ],
+      "note": "Upload route is held before parsing. Proposed 52MiB total is NOT an enforced upload path."
+    },
+    {
+      "operation_id": "source_page_api_studio_files__id__page__page__get",
+      "method": "GET",
+      "path": "/api/studio/files/{id}/page/{page}",
+      "roles": [
+        "owner",
+        "reviewer"
+      ],
+      "workload_tier": "control",
+      "owner_policy": "server_resource_ownership_and_release_checks_required",
+      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "body_limit_bytes": 0,
+      "status": "LEGACY_CONTRACT_GAPS",
+      "gaps": [
+        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+      ],
+      "current_response_models": [
+        "200",
+        "422"
+      ],
+      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+    },
+    {
+      "operation_id": "source_text_api_studio_files__id__text__page__get",
+      "method": "GET",
+      "path": "/api/studio/files/{id}/text/{page}",
+      "roles": [
+        "owner",
+        "reviewer"
+      ],
+      "workload_tier": "control",
+      "owner_policy": "server_resource_ownership_and_release_checks_required",
+      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "body_limit_bytes": 0,
+      "status": "LEGACY_CONTRACT_GAPS",
+      "gaps": [
+        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+      ],
+      "current_response_models": [
+        "200",
+        "422"
+      ],
+      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+    },
+    {
+      "operation_id": "source_download_api_studio_files__id__download_get",
+      "method": "GET",
+      "path": "/api/studio/files/{id}/download",
+      "roles": [
+        "owner",
+        "reviewer"
+      ],
+      "workload_tier": "control",
+      "owner_policy": "server_resource_ownership_and_release_checks_required",
+      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "body_limit_bytes": 0,
+      "status": "LEGACY_CONTRACT_GAPS",
+      "gaps": [
+        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+      ],
+      "current_response_models": [
+        "200",
+        "422"
+      ],
+      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+    },
+    {
+      "operation_id": "extract_api_studio_sets__id__extract_post",
+      "method": "POST",
+      "path": "/api/studio/sets/{id}/extract",
+      "roles": [
+        "owner",
+        "reviewer"
+      ],
+      "workload_tier": "batch",
+      "owner_policy": "server_resource_ownership_and_release_checks_required",
+      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "body_limit_bytes": 1048576,
+      "status": "LEGACY_CONTRACT_GAPS",
+      "gaps": [
+        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+      ],
+      "current_response_models": [
+        "200",
+        "422"
+      ],
+      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+    },
+    {
+      "operation_id": "add_question_api_studio_sets__id__questions_post",
+      "method": "POST",
+      "path": "/api/studio/sets/{id}/questions",
+      "roles": [
+        "owner",
+        "reviewer"
+      ],
+      "workload_tier": "control",
+      "owner_policy": "server_resource_ownership_and_release_checks_required",
+      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "body_limit_bytes": 1048576,
+      "status": "LEGACY_CONTRACT_GAPS",
+      "gaps": [
+        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+      ],
+      "current_response_models": [
+        "200",
+        "422"
+      ],
+      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+    },
+    {
+      "operation_id": "edit_question_api_studio_sets__id__questions__qid__put",
+      "method": "PUT",
+      "path": "/api/studio/sets/{id}/questions/{qid}",
+      "roles": [
+        "owner",
+        "reviewer"
+      ],
+      "workload_tier": "control",
+      "owner_policy": "server_resource_ownership_and_release_checks_required",
+      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "body_limit_bytes": 1048576,
+      "status": "LEGACY_CONTRACT_GAPS",
+      "gaps": [
+        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+      ],
+      "current_response_models": [
+        "200",
+        "422"
+      ],
+      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+    },
+    {
+      "operation_id": "approve_question_api_studio_sets__id__questions__qid__approve_post",
+      "method": "POST",
+      "path": "/api/studio/sets/{id}/questions/{qid}/approve",
+      "roles": [
+        "owner",
+        "reviewer"
+      ],
+      "workload_tier": "control",
+      "owner_policy": "server_resource_ownership_and_release_checks_required",
+      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "body_limit_bytes": 1048576,
+      "status": "LEGACY_CONTRACT_GAPS",
+      "gaps": [
+        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+      ],
+      "current_response_models": [
+        "200",
+        "422"
+      ],
+      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+    },
+    {
+      "operation_id": "publish_api_studio_sets__id__publish_post",
+      "method": "POST",
+      "path": "/api/studio/sets/{id}/publish",
+      "roles": [
+        "owner"
+      ],
+      "workload_tier": "control",
+      "owner_policy": "server_resource_ownership_and_release_checks_required",
+      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "body_limit_bytes": 1048576,
+      "status": "LEGACY_CONTRACT_GAPS",
+      "gaps": [
+        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+      ],
+      "current_response_models": [
+        "200",
+        "422"
+      ],
+      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+    },
+    {
+      "operation_id": "withdraw_api_studio_sets__id__withdraw_post",
+      "method": "POST",
+      "path": "/api/studio/sets/{id}/withdraw",
+      "roles": [
+        "owner"
+      ],
+      "workload_tier": "control",
+      "owner_policy": "server_resource_ownership_and_release_checks_required",
+      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "body_limit_bytes": 1048576,
+      "status": "LEGACY_CONTRACT_GAPS",
+      "gaps": [
+        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+      ],
+      "current_response_models": [
+        "200",
+        "422"
+      ],
+      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+    },
+    {
+      "operation_id": "subset_api_studio_sets__id__subset_post",
+      "method": "POST",
+      "path": "/api/studio/sets/{id}/subset",
+      "roles": [
+        "owner",
+        "reviewer"
+      ],
+      "workload_tier": "control",
+      "owner_policy": "server_resource_ownership_and_release_checks_required",
+      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "body_limit_bytes": 1048576,
+      "status": "LEGACY_CONTRACT_GAPS",
+      "gaps": [
+        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+      ],
+      "current_response_models": [
+        "200",
+        "422"
+      ],
+      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+    },
+    {
+      "operation_id": "preview_asset_api_studio_sets__id__questions__qid__asset__kind___index__get",
+      "method": "GET",
+      "path": "/api/studio/sets/{id}/questions/{qid}/asset/{kind}/{index}",
+      "roles": [
+        "owner",
+        "reviewer"
+      ],
+      "workload_tier": "control",
+      "owner_policy": "server_resource_ownership_and_release_checks_required",
+      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "body_limit_bytes": 0,
+      "status": "LEGACY_CONTRACT_GAPS",
+      "gaps": [
+        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+      ],
+      "current_response_models": [
+        "200",
+        "422"
+      ],
+      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+    },
+    {
+      "operation_id": "save_answer_api_attempts__id__answers__qid__put",
+      "method": "PUT",
+      "path": "/api/attempts/{id}/answers/{qid}",
+      "roles": [
+        "authenticated_owner_of_resource"
+      ],
+      "workload_tier": "live",
+      "owner_policy": "server_resource_ownership_and_release_checks_required",
+      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "body_limit_bytes": 1048576,
+      "status": "LEGACY_CONTRACT_GAPS",
+      "gaps": [
+        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+      ],
+      "current_response_models": [
+        "200",
+        "422"
+      ],
+      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+    },
+    {
+      "operation_id": "my_sets_api_my_sets_get",
+      "method": "GET",
+      "path": "/api/my/sets",
+      "roles": [
+        "authenticated_owner_of_resource"
+      ],
+      "workload_tier": "normal",
+      "owner_policy": "server_resource_ownership_and_release_checks_required",
+      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "body_limit_bytes": 0,
+      "status": "LEGACY_CONTRACT_GAPS",
+      "gaps": [
+        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+      ],
+      "current_response_models": [
+        "200",
+        "422"
+      ],
+      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+    },
+    {
+      "operation_id": "my_set_api_my_sets__id__get",
+      "method": "GET",
+      "path": "/api/my/sets/{id}",
+      "roles": [
+        "authenticated_owner_of_resource"
+      ],
+      "workload_tier": "normal",
+      "owner_policy": "server_resource_ownership_and_release_checks_required",
+      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "body_limit_bytes": 0,
+      "status": "LEGACY_CONTRACT_GAPS",
+      "gaps": [
+        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+      ],
+      "current_response_models": [
+        "200",
+        "422"
+      ],
+      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+    },
+    {
+      "operation_id": "preflight_api_sets__id__preflight_post",
+      "method": "POST",
+      "path": "/api/sets/{id}/preflight",
+      "roles": [
+        "authenticated_owner_of_resource"
+      ],
+      "workload_tier": "live",
+      "owner_policy": "server_resource_ownership_and_release_checks_required",
+      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "body_limit_bytes": 1048576,
+      "status": "LEGACY_CONTRACT_GAPS",
+      "gaps": [
+        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+      ],
+      "current_response_models": [
+        "200",
+        "422"
+      ],
+      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+    },
+    {
+      "operation_id": "start_api_sets__id__start_post",
+      "method": "POST",
+      "path": "/api/sets/{id}/start",
+      "roles": [
+        "authenticated_owner_of_resource"
+      ],
+      "workload_tier": "live",
+      "owner_policy": "server_resource_ownership_and_release_checks_required",
+      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "body_limit_bytes": 1048576,
+      "status": "LEGACY_CONTRACT_GAPS",
+      "gaps": [
+        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+      ],
+      "current_response_models": [
+        "200",
+        "422"
+      ],
+      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+    },
+    {
+      "operation_id": "history_api_attempts_get",
+      "method": "GET",
+      "path": "/api/attempts",
+      "roles": [
+        "authenticated_owner_of_resource"
+      ],
+      "workload_tier": "normal",
+      "owner_policy": "server_resource_ownership_and_release_checks_required",
+      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "body_limit_bytes": 0,
+      "status": "LEGACY_CONTRACT_GAPS",
+      "gaps": [
+        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+      ],
+      "current_response_models": [
+        "200",
+        "422"
+      ],
+      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+    },
+    {
+      "operation_id": "read_attempt_api_attempts__id__get",
+      "method": "GET",
+      "path": "/api/attempts/{id}",
+      "roles": [
+        "authenticated_owner_of_resource"
+      ],
+      "workload_tier": "live",
+      "owner_policy": "server_resource_ownership_and_release_checks_required",
+      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "body_limit_bytes": 0,
+      "status": "LEGACY_CONTRACT_GAPS",
+      "gaps": [
+        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+      ],
+      "current_response_models": [
+        "200",
+        "422"
+      ],
+      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+    },
+    {
+      "operation_id": "visit_question_api_attempts__id__visit_post",
+      "method": "POST",
+      "path": "/api/attempts/{id}/visit",
+      "roles": [
+        "authenticated_owner_of_resource"
+      ],
+      "workload_tier": "live",
+      "owner_policy": "server_resource_ownership_and_release_checks_required",
+      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "body_limit_bytes": 1048576,
+      "status": "LEGACY_CONTRACT_GAPS",
+      "gaps": [
+        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+      ],
+      "current_response_models": [
+        "200",
+        "422"
+      ],
+      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+    },
+    {
+      "operation_id": "submit_api_attempts__id__submit_post",
+      "method": "POST",
+      "path": "/api/attempts/{id}/submit",
+      "roles": [
+        "authenticated_owner_of_resource"
+      ],
+      "workload_tier": "live",
+      "owner_policy": "server_resource_ownership_and_release_checks_required",
+      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "body_limit_bytes": 1048576,
+      "status": "LEGACY_CONTRACT_GAPS",
+      "gaps": [
+        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+      ],
+      "current_response_models": [
+        "200",
+        "422"
+      ],
+      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+    },
+    {
+      "operation_id": "results_api_attempts__id__results_get",
+      "method": "GET",
+      "path": "/api/attempts/{id}/results",
+      "roles": [
+        "authenticated_owner_of_resource"
+      ],
+      "workload_tier": "live",
+      "owner_policy": "server_resource_ownership_and_release_checks_required",
+      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "body_limit_bytes": 0,
+      "status": "LEGACY_CONTRACT_GAPS",
+      "gaps": [
+        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+      ],
+      "current_response_models": [
+        "200",
+        "422"
+      ],
+      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+    },
+    {
+      "operation_id": "asset_api_attempts__id__questions__qid__asset__kind___index__get",
+      "method": "GET",
+      "path": "/api/attempts/{id}/questions/{qid}/asset/{kind}/{index}",
+      "roles": [
+        "authenticated_owner_of_resource"
+      ],
+      "workload_tier": "live",
+      "owner_policy": "server_resource_ownership_and_release_checks_required",
+      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "body_limit_bytes": 0,
+      "status": "LEGACY_CONTRACT_GAPS",
+      "gaps": [
+        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+      ],
+      "current_response_models": [
+        "200",
+        "422"
+      ],
+      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+    },
+    {
+      "operation_id": "retry_api_attempts__id__retry_post",
+      "method": "POST",
+      "path": "/api/attempts/{id}/retry",
+      "roles": [
+        "authenticated_owner_of_resource"
+      ],
+      "workload_tier": "live",
+      "owner_policy": "server_resource_ownership_and_release_checks_required",
+      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "body_limit_bytes": 1048576,
+      "status": "LEGACY_CONTRACT_GAPS",
+      "gaps": [
+        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+      ],
+      "current_response_models": [
+        "200",
+        "422"
+      ],
+      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+    },
+    {
+      "operation_id": "report_api_attempts__id__report_post",
+      "method": "POST",
+      "path": "/api/attempts/{id}/report",
+      "roles": [
+        "authenticated_owner_of_resource"
+      ],
+      "workload_tier": "batch",
+      "owner_policy": "server_resource_ownership_and_release_checks_required",
+      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "body_limit_bytes": 1048576,
+      "status": "LEGACY_CONTRACT_GAPS",
+      "gaps": [
+        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+      ],
+      "current_response_models": [
+        "200",
+        "422"
+      ],
+      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+    },
+    {
+      "operation_id": "status_api_jobs__id__get",
+      "method": "GET",
+      "path": "/api/jobs/{id}",
+      "roles": [
+        "authenticated_owner_of_resource"
+      ],
+      "workload_tier": "batch",
+      "owner_policy": "server_resource_ownership_and_release_checks_required",
+      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "body_limit_bytes": 0,
+      "status": "LEGACY_CONTRACT_GAPS",
+      "gaps": [
+        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+      ],
+      "current_response_models": [
+        "200",
+        "422"
+      ],
+      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+    },
+    {
+      "operation_id": "retry_job_api_jobs__id__retry_post",
+      "method": "POST",
+      "path": "/api/jobs/{id}/retry",
+      "roles": [
+        "authenticated_owner_of_resource"
+      ],
+      "workload_tier": "batch",
+      "owner_policy": "server_resource_ownership_and_release_checks_required",
+      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "body_limit_bytes": 1048576,
+      "status": "LEGACY_CONTRACT_GAPS",
+      "gaps": [
+        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+      ],
+      "current_response_models": [
+        "200",
+        "422"
+      ],
+      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+    },
+    {
+      "operation_id": "download_api_jobs__id__download_get",
+      "method": "GET",
+      "path": "/api/jobs/{id}/download",
+      "roles": [
+        "authenticated_owner_of_resource"
+      ],
+      "workload_tier": "batch",
+      "owner_policy": "server_resource_ownership_and_release_checks_required",
+      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "body_limit_bytes": 0,
+      "status": "LEGACY_CONTRACT_GAPS",
+      "gaps": [
+        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+      ],
+      "current_response_models": [
+        "200",
+        "422"
+      ],
+      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+    },
+    {
+      "operation_id": "cron_api_cron_maintenance_post",
+      "method": "POST",
+      "path": "/api/cron/maintenance",
+      "roles": [
+        "cron_service"
+      ],
+      "workload_tier": "maintenance",
+      "owner_policy": "server_resource_ownership_and_release_checks_required",
+      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "body_limit_bytes": 1048576,
+      "status": "LEGACY_CONTRACT_GAPS",
+      "gaps": [
+        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+      ],
+      "current_response_models": [
+        "200"
+      ],
+      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+    },
+    {
+      "operation_id": "update_access_api_studio_reviewers_post",
+      "method": "POST",
+      "path": "/api/studio/reviewers",
+      "roles": [
+        "owner"
+      ],
+      "workload_tier": "control",
+      "owner_policy": "server_resource_ownership_and_release_checks_required",
+      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "body_limit_bytes": 1048576,
+      "status": "LEGACY_CONTRACT_GAPS",
+      "gaps": [
+        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+      ],
+      "current_response_models": [
+        "200",
+        "422"
+      ],
+      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+    },
+    {
+      "operation_id": "profiles_api_studio_profiles_get",
+      "method": "GET",
+      "path": "/api/studio/profiles",
+      "roles": [
+        "owner",
+        "reviewer"
+      ],
+      "workload_tier": "control",
+      "owner_policy": "server_resource_ownership_and_release_checks_required",
+      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "body_limit_bytes": 0,
+      "status": "LEGACY_CONTRACT_GAPS",
+      "gaps": [
+        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+      ],
+      "current_response_models": [
+        "200"
+      ],
+      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+    },
+    {
+      "operation_id": "regrade_api_studio_sets__id__regrade_post",
+      "method": "POST",
+      "path": "/api/studio/sets/{id}/regrade",
+      "roles": [
+        "owner"
+      ],
+      "workload_tier": "batch",
+      "owner_policy": "server_resource_ownership_and_release_checks_required",
+      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "body_limit_bytes": 1048576,
+      "status": "LEGACY_CONTRACT_GAPS",
+      "gaps": [
+        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+      ],
+      "current_response_models": [
+        "200",
+        "422"
+      ],
+      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+    },
+    {
+      "operation_id": "internal_capacity_profile_v1",
+      "method": "GET",
+      "path": "/api/internal/capacity/profile",
+      "roles": [
+        "owner",
+        "reviewer"
+      ],
+      "workload_tier": "control",
+      "owner_policy": "server_resource_ownership_and_release_checks_required",
+      "idempotency_mode": "read_only",
+      "body_limit_bytes": 0,
+      "status": "IMPLEMENTED_TYPED_REFERENCE_READ",
+      "gaps": [],
+      "current_response_models": [
+        "200"
+      ],
+      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+    },
+    {
+      "operation_id": "internal_safety_status_v1",
+      "method": "GET",
+      "path": "/api/internal/safety/status",
+      "roles": [
+        "owner",
+        "reviewer"
+      ],
+      "workload_tier": "control",
+      "owner_policy": "server_resource_ownership_and_release_checks_required",
+      "idempotency_mode": "read_only",
+      "body_limit_bytes": 0,
+      "status": "IMPLEMENTED_TYPED_REFERENCE_READ",
+      "gaps": [],
+      "current_response_models": [
+        "200"
+      ],
+      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+    }
+  ],
+  "complete_target_contract": false
+}
