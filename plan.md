@@ -2,108 +2,232 @@
 
 ## 1) Objectives
 
-## Execution updates and capacity change
-- Core isolation complete: /app/test_reports/iteration_3.json, 43 checks passed using actual supplied PDFs; private storage verified and full 77-page report produced. No content has been academically approved or publicly published.
-- Latest user requirement supersedes original capacity goal: architect for **500,000+ concurrent students from launch**. This is an unverified capacity target, not a preview capability claim. Separate API-backed domains, bounded durable heavy-work queue, immutable reviewed content versions, secret isolation, indexed atomic answer writes, frontend route splitting, and module regression gates are required. Production infrastructure provisioning and realistic sustained/burst load tests at this scale remain external release gates. No paid infrastructure purchase or production deployment is authorized.
-- Approved Phase 1 is implemented as subphases A core, B full app, C QA. Phases numbered in the execution outline below are work stages, not expansion of the approved feature scope. Approved broader revision and analytics remain future.
+Deliver a premium landing page + working practice MVP for **JEE Main** and **BITSAT** students, built on the supplied PDFs as the base guide, with:
 
-- Deliver the full Phase 1 MVP exactly as approved in **/app/plan/plan.md** and **/app/plan/source_review.md** (no scope downgrades; Phase 2/3 remain explicitly future-only).
-- Core guarantee: **every question is paired with its correct approved solution** on results and in a **single downloadable Results & Solutions PDF** per attempt.
-- Enforce content trust gates: rights confirmation, reviewer approval, publication/withdrawal, immutable attempt snapshots, and **no keys/solutions exposed during active attempts**.
-- Private document handling: source PDFs remain private; student reports are private and served only via app authorization.
+- **World-class engineering practices**: bounded contexts, strict API boundaries, vaulting/catalog separation, durable job queue for heavy work, immutable attempt snapshots.
+- **Scale target**: architect for **500,000 (5 lakh) concurrent students**.
+  - This remains an **unverified architecture goal** until realistic load tests + infra provisioning are performed.
+  - The MVP must avoid synchronous heavy work (PDF generation, regrade, extraction) on request threads.
+- **Core product guarantees**:
+  - Exact **question ↔ matched solution pairing** (per question, per attempt).
+  - **Single downloadable PDF report** per attempt (results + matched solutions).
+  - **Offline answer recovery**: student drafts persist locally; server-acknowledged responses are scored.
+  - **No key/solution leakage during an active attempt** (including via direct URL guessing).
+- **Auth requirements (non-negotiable)**:
+  - **Students**: phone-number only (no OTP, no password).
+  - **Staff/Owner**: secure password-based auth, separate entrance and authorization checks.
+- **Theme requirement (updated)**:
+  - **Matte maroon** theme supersedes all teal requirements (primary `#5C0025`, hover `#4A001E`, focus/ring `#8B1D3D`, soft `#F6E9EE`).
+
+## Execution updates and capacity change
+
+- Core backend architecture already modularized into bounded contexts (`auth`, `catalog`, `content`, `attempts`, `answers`, `packs`, `reports`, `scoring`, `jobs`, `corrections`) to support scale and vaulting.
+- Core extraction + 75-question workflow + scoring + PDF report generation have been implemented and validated.
+- **Capacity goal** remains: architect for 500,000+ concurrent from launch. This is **not a claim**, only an architectural intent; infra + load tests remain external release gates.
+- No environment variables or infrastructure settings will be modified in this phase.
+
+### Latest approved changes and execution evidence
+
+- Student auth is phone-only (no OTP/password/email). Staff login remains secure.
+- Offline draft persistence exists (`localStorage` drafts keyed by user + attempt) and is designed to avoid data loss on refresh.
+- Report generation is queued via `jobs.py` (durable job records; report download via job download endpoint).
+- **Theme change approved**: switch from teal-blue to **matte maroon** across tokens.
+  - Binding design spec updated in `/app/design_guidelines.md`.
+
+### Current work status (session continuation)
+
+User confirmed continuation priorities:
+
+A. **Reproduce and fix the Player blocker** (P0) — **COMPLETED**
+
+B. **Verify offline recovery + submission + versioned scoring + matched PDF** end-to-end (P1) — **COMPLETED**
+
+C. **Polish navigation + Exam Details** on desktop/mobile without architecture changes (P1) — **IN PROGRESS**
+
+D. **Withdraw only identified QA fixtures** and record evidence; separate readiness vs unverified concurrency (P2) — **PENDING**
 
 ## 2) Implementation Steps
 
 ### Phase 1 — Core POC in isolation (must be rock-solid before full app)
+
 User stories:
-1. As an owner, I can upload the Tejas200 questions+solutions PDFs and store them privately.
+1. As an owner, I can upload the questions+solutions PDFs and store them privately.
 2. As a reviewer, I can define Q1–75 and bind each to an exact solution entry with source page refs (no ambiguous matches).
 3. As a student, I can start an attempt and answer SCQ + numerical (including 5-digit answers) without seeing keys/solutions.
 4. As a student, I get correct scoring (+4/−1/0) and per-question review with the matched solution.
 5. As a student, I can download a single PDF report containing score + every Q in attempt order + my response + correct answer + marks + matched solution.
 
 Steps:
-- **POC-1: Private storage + secure serving**
-  - Implement platform object storage integration (init once; DB is source of truth; no public URLs; serve via backend).
-  - Validate upload constraints: PDF only, <=50MB, <=300 pages, reject encrypted/password PDFs with actionable error.
-- **POC-2: Deterministic content extraction + pairing scaffold (no AI dependency)**
-  - Local PDF parsing/rendering pipeline using PyMuPDF/pdfplumber:
-    - Extract per-page text + render page images for reviewer source verification.
-    - Create “draft question records” for Q1–75 with subject blocks (Math/Phy/Chem) and type (SCQ vs INTEGER) per source.
-    - Create “draft solution records” for Q1–75 from solutions PDF; prevent duplicates from answer table.
-  - Pairing rule: match by paper identity + question number; flag missing/duplicate/conflicting.
-- **POC-3: Attempt snapshot + scoring + deadline correctness**
-  - Create attempt start endpoint that snapshots: set version, question order, option order, rules, and deadline (server time).
-  - Save answers incrementally with idempotency; mark states (answered/cleared/review).
-  - Enforce timed deadline: only server-acknowledged responses before deadline count; late drafts are stored as late but not scored.
-  - Submit is idempotent; generate submission receipt.
-- **POC-4: Results view model + PDF report generation**
-  - Compute score breakdown + accuracy definition (correct/attempted; N/A if attempted=0).
-  - Generate downloadable PDF (paginated) that embeds:
-    - header: exam + set identity + attempt date + rules
-    - summary metrics
-    - for each question in original attempt order: question, options (if any), student response, correct answer, marks, matched solution, source refs.
-  - Store report PDF privately; allow download only to the owning student (or authorized staff).
-- Stop and fix until: (a) all 75 Q have 1:1 solution matches, (b) report PDF renders, (c) no key leakage during attempt.
+
+- **POC-1: Private storage + secure serving** (IMPLEMENTED)
+  - Platform object storage integration; no public URLs; backend proxies/serves assets.
+  - Upload constraints: PDF validation, size and error messages.
+
+- **POC-2: Deterministic content extraction + pairing scaffold (no AI dependency)** (IMPLEMENTED)
+  - Extraction/pairing pipeline built; reviewed content stored with per-question solution pairing.
+  - Pairing rule: paper identity + question number, with reviewer gating.
+
+- **POC-3: Attempt snapshot + scoring + deadline correctness** (IMPLEMENTED + VERIFIED)
+  - Attempt start snapshots content version and rules; server-time deadlines.
+  - Incremental answer acknowledgement endpoint uses optimistic revisions and DB-time deadline fencing.
+  - Late drafts are retained client-side but are not scored.
+
+- **POC-4: Results view model + PDF report generation** (IMPLEMENTED + VERIFIED)
+  - Results compute summary + per-question outcomes.
+  - Report generation is queued (`jobs.py`), stored privately, downloadable only by the owning student.
+
+Stop and fix until:
+- (a) all 75 Q have 1:1 solution matches, (b) report PDF renders and downloads, (c) no key leakage during attempt.
 
 ### Phase 2 — V1 App Development (build full product around proven core)
+
 User stories:
 1. As a visitor, I can view a premium landing page and understand practice → results → solutions → improve.
 2. As a visitor, I can browse published sets for JEE Main/BITSAT without an account and see honest availability.
-3. As a student, I can sign up/sign in (email+password) and see a simple home + attempt history.
+3. As a student, I can sign in with **phone-number only** and see a simple home + attempt history.
 4. As a student, I can do a full-paper attempt with navigator, mark-for-review, clear response, autosave state, and submit confirmation.
 5. As a reviewer, I can upload PDFs, review/correct extracted content with source-page evidence, approve/publish/withdraw sets with audit trail.
 
-Steps:
-- Replace legacy JEE Advanced admin module entrypoints with Tejas MVP app (archive legacy code but do not expose it publicly).
+Steps (current MVP already has most of these; remaining work is stabilization/polish):
+
 - **Backend (FastAPI + Mongo)**
-  - Auth: email/password JWT; role-based access (student vs reviewer/admin); bootstrap owner/reviewer creds (stored securely; displayed once).
-  - Data model (minimal but complete): users, files, content_sets, questions, solutions, pairings, set_versions, attempts, attempt_answers, reports, audit_logs.
-  - Content Studio APIs: upload, parse status, review/edit fields, pairing status, publish/withdraw, versioning.
-  - Student APIs: list published sets, start/resume attempt, save answer, submit, results, download report.
-- **Frontend (React)**
-  - New information architecture:
+  - Keep bounded contexts intact.
+  - Student APIs: list published sets (public + authenticated “my sets”), start/resume attempt, save answer, submit, results, report job enqueue + download.
+  - Staff APIs: Studio CRUD, review/approve, publish/withdraw, regrade job enqueue.
+
+- **Frontend (React SPA)**
+  - Keep existing information architecture:
     - Landing (public)
     - Explore sets (public)
-    - Auth (signup/login)
-    - Student: Home, Set detail, Player, Results, Attempt history
-    - Reviewer: Content Studio dashboard, Set editor (Q list + solution pairing), Publish/Withdraw, Audit
-  - Apply design tokens: #2563EB #0B1F3A #F5F9FF #14243A #52637A #D7E2F0 #1D4ED8; accessible focus + reduced motion.
+    - Login (student phone-only) + Owner login (staff)
+    - Student: Home, Set detail, Player, Results
+    - Staff: Studio dashboard + set editor
+  - Apply updated design tokens: **matte maroon** (supersedes teal-blue).
   - Player UX: quiet workspace, clear save state, robust navigator, submission confirmation, no solutions shown.
-  - BITSAT: show category but honest “no published papers yet”.
+  - BITSAT: keep honest empty state if no published sets.
+
 - **Publication gates**
-  - Require rights confirmation fields (including permission for downloadable personal reports) before publish.
+  - Rights confirmation required before publish.
   - Block publish if missing any approved question/answer/solution pairing.
-- Conclude with 1 full end-to-end run: upload → review/pair → publish → student attempt → results → download PDF.
+  - Preserve immutability: published content changes create new versions; attempts retain original snapshots.
+
+Conclude Phase 2 only after:
+- At least 1 complete end-to-end run: browse → login → set detail preflight → attempt → results → report generation → report download.
 
 ### Phase 3 — Comprehensive testing, hardening, and regression
+
 User stories:
-1. As a student, I never see solutions/keys during an active attempt (even via direct URL guessing).
-2. As a student, refresh/reconnect doesn’t lose saved answers, and timer/deadline stays correct.
-3. As a reviewer, I can withdraw a set and it disappears for new attempts without altering past attempts.
+1. As a student, I never see solutions/keys during an active attempt.
+2. As a student, refresh/reconnect doesn’t lose saved answers; timer/deadline stays correct.
+3. As a reviewer, withdraw removes set for new attempts without altering past attempts.
 4. As a student, my downloadable report is private and cannot be accessed by other students.
-5. As an owner, I can see an audit trail for uploads, edits, publish/withdraw, and scoring/report generation.
+5. As an owner, I can see an audit trail for uploads, edits, publish/withdraw, scoring/report jobs.
 
 Steps:
 - Automated backend tests:
-  - auth/role checks; object storage proxy serving; upload validation; pairing validation; idempotent start/submit.
-  - timing: deadline enforcement + late answer handling.
-  - scoring: SCQ + INTEGER, +4/−1/0, five-digit numeric acceptance.
-  - immutability: attempt snapshot not mutated by later edits.
-- Frontend E2E tests (Playwright): public browse, signup/login, attempt flow, results filters, download report.
-- Security review: no public file URLs; no keys in frontend payloads; strict CORS; rate limits basic.
-- Performance sanity: report generation progress + retry; large PDF handling within constraints.
+  - Auth/role checks; object storage proxy; upload validation.
+  - Catalogue restriction logic: `audience=restricted` including allowed phones.
+  - Attempt lifecycle: idempotent start/submit; deadline fence; answer write conflicts.
+  - Scoring: MCQ + INTEGER; +4/−1/0; five-digit and signed integer acceptance.
+  - Immutability: attempts are not mutated by later content edits.
+- Frontend E2E tests (Playwright or existing screenshot/testing harness):
+  - Public browse → student phone login → open set detail → device check → start attempt → answer a few questions → offline simulation → submit → results filters → report download.
+- Security review:
+  - No public file URLs; no keys/solutions in active attempt payload; strict CORS; basic rate limiting.
+- Performance sanity:
+  - Report generation uses job queue; retry works; large PDF handling within constraints.
 
 ## 3) Next Actions
-1. Implement Phase 1 POC scripts/endpoints to prove: private storage, 75 Q↔75 solutions pairing, attempt scoring, and report PDF generation.
-2. Run POC with the supplied Tejas200 Paper01 PDFs and fix until all checks pass.
-3. Build V1 app UI/UX around the proven core (landing → explore → auth → player → results → report; reviewer studio).
-4. Execute testing agent runs and iterate until stable.
+
+**Continuation Phases (explicit priority order):**
+
+### A) Reproduce + fix Player blocker / fixture access (P0) — COMPLETED
+1. ✅ Reproduced iteration-10 reported issue and validated current behavior.
+2. ✅ Verified access control correctness:
+   - restricted fixture appears for authenticated allowed phone via `/api/my/sets` and `/api/my/sets/{id}`.
+   - public `/api/sets/{id}` remains correctly blocked.
+3. ✅ Confirmed SetDetail “Start Attempt” reaches `/preflight` then `/start` reliably.
+4. ✅ Confirmed Player start-to-first-question and full submission works on desktop.
+
+**Evidence**
+- `/app/test_reports/iteration_11.json`.
+
+### B) Offline recovery + submission + versioned scoring + matched PDF validation (P1) — COMPLETED
+Scope covered:
+1. ✅ Disconnect while answering:
+   - drafts persist to localStorage;
+   - periodic flush + on-online flush;
+   - UI reflects pending vs saved.
+2. ✅ Refresh/reload mid-attempt:
+   - drafts survive refresh;
+   - attempt reload merges acknowledged answers and retains unacknowledged drafts.
+3. ✅ Conflict handling:
+   - second tab can cause 409 conflict;
+   - conflict UI + discard restores server truth while retaining local drafts until user decides.
+4. ✅ Deadline/late behavior:
+   - forced deadline expiry + reconnect;
+   - late drafts retained but not accepted/scored;
+   - Results shows clear disclosure for late/unacknowledged drafts.
+   - Important schema note: timed duration uses **`rules.minutes`** (not a top-level `duration`).
+5. ✅ Submission idempotency:
+   - repeated submit returns stable receipt/attempt state.
+6. ✅ Versioned scoring validation:
+   - original score + corrected key score both supported;
+   - Results UI does not keep stale score/report CTA when `score_version` changes or is invalid (AbortController + clearing old state).
+7. ✅ PDF report proof:
+   - report job queued and downloaded;
+   - contains full attempt in order with matched solutions;
+   - privacy enforced: other phone cannot access attempt/results/report.
+
+**Key implementation hardening already applied (frontend correctness)**
+- Results fetch uses AbortController and clears old data on `scoreVersion` change.
+- Report download component is keyed per attempt+scoreVersion and guarded on unmount.
+- `useAttempt` reconnect recovery loads attempt if missing then flushes; prevents initial-load race.
+
+**Evidence**
+- Offline/reload/conflict: `/app/test_reports/iteration_13.json`.
+- Versioned scoring + report immutability + privacy: `/app/test_reports/iteration_14.json`.
+- Timed late draft scenario (real browser run) includes attempt id `ce6d7a7e-0d8a-4c83-b9c2-b4e6f03ccaf3` and shows `?late=true` with disclosure; late-draft UI now has `data-testid="late-draft-notice"` for reliable QA.
+
+### C) Matte maroon theme + navigation/Exam Details polish (P1) — IN PROGRESS
+Goals (no architecture changes, no auth changes):
+1. Apply matte maroon tokens in `/frontend/src/App.css` and `/frontend/src/index.css`.
+2. Sweep and replace remaining teal/blue hard-codes using mapping in `/app/design_guidelines.md`.
+3. Polish SetDetail (Exam Details): font sizing, spacing, CTA hierarchy, responsive layout (mobile-first clarity).
+4. Navigation polish:
+   - simplify top-nav labels;
+   - consistent back links;
+   - remove visual noise, keep “quiet workspace” feel.
+5. Regression gates while polishing:
+   - **must not** break phone-only login,
+   - **must not** expose keys/solutions,
+   - **must not** introduce synchronous heavy work.
+
+Validation for Phase C:
+- Desktop + mobile screenshots on Landing, Explore, SetDetail, Player, Results.
+- Ensure no horizontal overflow on mobile.
+
+### D) Withdraw QA fixtures + seal evidence (P2) — PENDING
+1. Identify QA-only fixtures precisely (no accidental removal of real reviewed sets).
+2. Withdraw or restrict them per policy.
+3. Record evidence: what was withdrawn, why, and what remains published.
+4. Update readiness notes clearly separating:
+   - Architecture readiness (bounded contexts + job queue) vs
+   - Proven scale (requires load test).
+
+**Known fixture to withdraw**
+- `qa-timed-browser-4f80a7eb-b74e-4b6d-8bdb-f586487ba564` (temporary restricted set created for timed offline test).
+
+**Note on earlier false alarm**
+- Iteration-15 “duration bug” was a test harness schema error; correct field is `rules.minutes`.
 
 ## 4) Success Criteria
-- POC: 75 questions imported as drafts; 75 solutions imported; **100% unambiguous pairings** or explicit holds; no duplicates from answer table.
-- Student attempt: autosave works across refresh; timed deadline enforced server-side; submit idempotent with receipt.
-- Results: correct metrics (marks, accuracy definition, skipped handling) and per-question matched solutions.
-- Download: one PDF per attempt containing the complete attempt in order with question + response + correct answer + marks + matched solution; private access enforced.
-- Landing + explore: honest availability, no fabricated claims, BITSAT empty state handled.
-- Reviewer gates: rights confirmation required; publish/withdraw + audit; past attempts unchanged by later edits.
+
+- Player unblocked: a student can open a permitted published set and complete an attempt in the UI. ✅ (iteration_11)
+- Offline recovery: refresh/disconnect does not lose drafts; server-acknowledged saves are consistent; late drafts are clearly disclosed and not scored. ✅ (iteration_13 + timed late draft proof)
+- Results: correct metrics (marks, accuracy definition, skipped handling) and per-question matched solutions. ✅ baseline verified; ✅ versioned corrections validated (iteration_14)
+- Download: one PDF per attempt containing the complete attempt in order with question + response + correct answer + marks + matched solution; private access enforced. ✅ (iteration_12/14)
+- Landing + explore: honest availability, no fabricated claims; BITSAT empty state handled. ✅ baseline; **polish in progress**
+- Reviewer gates: rights confirmation required; publish/withdraw + audit; past attempts unchanged by later edits. ✅ baseline; **fixture withdrawal pending**
+- Theme: **matte maroon** applied consistently; typography/spacing polished; navigation simple and elegant. **IN PROGRESS (Phase C)**
+- Capacity: plan explicitly states 500k concurrency is **architectural intent only**, not proven without load tests. ✅ maintained

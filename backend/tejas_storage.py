@@ -2,7 +2,9 @@
 
 import os, threading, time
 import requests
-from functools import lru_cache
+from tejas.cache import ByteCache
+
+_source_cache = ByteCache(32 * 1024 * 1024)
 
 BASE = (
     os.environ.get("INTEGRATION_PROXY_URL") or ""
@@ -72,6 +74,8 @@ def put_object(path, data, content_type="application/pdf"):
     return request("PUT", path, data, content_type).json()["path"]
 
 
-@lru_cache(maxsize=8)
 def get_object(path):
-    return request("GET", path).content
+    cached = _source_cache.get(path)
+    if cached is not None:
+        return cached
+    return _source_cache.put(path, request("GET", path).content)

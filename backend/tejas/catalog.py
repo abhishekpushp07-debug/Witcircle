@@ -1,5 +1,7 @@
-"""Bounded, source-free catalogue projection. Never retrieve keys for discovery."""
+"""Bounded, source-free catalogue projections and access filtering before pagination."""
 
+from datetime import datetime, timezone
+import re
 from .db import sets
 
 PROJECT = {
@@ -16,12 +18,49 @@ PROJECT = {
     "created_at": 1,
     "audience": 1,
     "allowed_emails": 1,
+    "allowed_phones": 1,
     "expires": 1,
     "questions.number": 1,
     "questions.type": 1,
     "questions.subject": 1,
     "questions.approved": 1,
+    "questions.disposition": 1,
 }
+
+
+def available(user=None, exam="", search=""):
+    audiences = [{"audience": "all"}]
+    if user:
+        if user.get("email"):
+            audiences.append(
+                {"audience": "restricted", "allowed_emails": user["email"]}
+            )
+        if user.get("phone"):
+            audiences.append(
+                {"audience": "restricted", "allowed_phones": user["phone"]}
+            )
+    query = {
+        "status": "published",
+        "$and": [
+            {"$or": audiences},
+            {
+                "$or": [
+                    {"expires": {"$exists": False}},
+                    {"expires": ""},
+                    {
+                        "expires": {
+                            "$gte": datetime.now(timezone.utc).date().isoformat()
+                        }
+                    },
+                ]
+            },
+        ],
+    }
+    if exam:
+        query["exam"] = exam
+    if search:
+        query["title"] = {"$regex": re.escape(search[:100]), "$options": "i"}
+    return query
 
 
 async def page(query, page=1, size=20):
@@ -32,3 +71,10 @@ async def page(query, page=1, size=20):
         .limit(size)
         .to_list(size)
     )
+
+
+async def counts(query):
+    rows = await sets.aggregate(
+        [{"$match": query}, {"$group": {"_id": "$exam", "count": {"$sum": 1}}}]
+    ).to_list(10)
+    return {r["_id"]: r["count"] for r in rows}

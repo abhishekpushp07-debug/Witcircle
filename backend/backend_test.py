@@ -64,7 +64,7 @@ class TejasAPITester:
             "/api/auth/login",
             json={
                 "email": "owner@tejas-platform.com",
-                "password": "L3eAGpSD0nQjrK80hMcIcZ1V",
+                "password": __import__('dotenv').dotenv_values('/app/backend/.env')['ADMIN_PASSWORD'],
                 "name": "Owner"
             }
         )

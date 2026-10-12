@@ -4,15 +4,16 @@ import bcrypt, jwt
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from pydantic import BaseModel, Field, EmailStr, field_validator
 from starlette.concurrency import run_in_threadpool
-from .db import db, users, sessions, uid, now, get
+from pymongo.errors import DuplicateKeyError
+from .db import db, users, sessions, uid, now
 
-router = APIRouter(prefix="/api/auth", tags=["Accounts"])
+router = APIRouter(prefix="/api/auth", tags=["Staff accounts and sessions"])
 
 
 class Credentials(BaseModel):
     email: EmailStr
     password: str = Field(min_length=10, max_length=64)
-    name: str = Field(default="Student", min_length=1, max_length=80)
+    name: str = Field(default="Reviewer", min_length=1, max_length=80)
     exam: str = "JEE Main"
     consent: bool = False
 
@@ -20,12 +21,16 @@ class Credentials(BaseModel):
     @classmethod
     def password_bytes(cls, value):
         if len(value.encode()) > 72:
-            raise ValueError("Use a password of at most 72 UTF-8 bytes.")
+            raise ValueError("Use at most 72 UTF-8 bytes for the password.")
         return value
 
 
 def view(u):
-    return {k: u[k] for k in ["id", "name", "email", "role", "exam"] if k in u}
+    return {
+        k: u[k]
+        for k in ["id", "name", "email", "phone", "role", "exam", "access_type"]
+        if k in u
+    }
 
 
 def hashpw(p):
@@ -38,7 +43,13 @@ def verify(p, h):
 
 def token(u, sid, kind, seconds):
     return jwt.encode(
-        {"sub": u["id"], "sid": sid, "type": kind, "exp": int(now()) + seconds},
+        {
+            "sub": u["id"],
+            "sid": sid,
+            "type": kind,
+            "access_type": u.get("access_type", "staff_password"),
+            "exp": int(now()) + seconds,
+        },
         os.environ["JWT_SECRET"],
         algorithm="HS256",
     )
@@ -63,6 +74,7 @@ async def new_session(u, response):
         {
             "id": sid,
             "user_id": u["id"],
+            "access_type": u.get("access_type", "staff_password"),
             "expires_at": datetime.now(timezone.utc) + timedelta(days=7),
         }
     )
@@ -70,34 +82,49 @@ async def new_session(u, response):
     return view(u)
 
 
+async def identity(p):
+    coll = (
+        db.tejas_phone_profiles if p.get("access_type") == "unverified_phone" else users
+    )
+    u = await coll.find_one({"id": p["sub"]}, {"_id": 0, "password_hash": 0})
+    if not u:
+        raise ValueError()
+    if p.get("access_type") == "unverified_phone":
+        u["role"] = "student"
+        u["access_type"] = "unverified_phone"
+    return u
+
+
 async def current(request: Request):
-    tok = request.cookies.get("access_token")
     try:
-        p = jwt.decode(tok, os.environ["JWT_SECRET"], algorithms=["HS256"])
+        p = jwt.decode(
+            request.cookies.get("access_token"),
+            os.environ["JWT_SECRET"],
+            algorithms=["HS256"],
+        )
         if p["type"] != "access":
             raise ValueError()
-        sess = await sessions.find_one(
+        if not await sessions.find_one(
             {
                 "id": p["sid"],
                 "user_id": p["sub"],
                 "expires_at": {"$gt": datetime.now(timezone.utc)},
             }
-        )
-        if not sess:
+        ):
             raise ValueError()
-        u = await users.find_one({"id": p["sub"]}, {"_id": 0, "password_hash": 0})
-        if not u:
-            raise ValueError()
-        return u
+        return await identity(p)
     except (jwt.PyJWTError, ValueError, KeyError, TypeError):
-        raise HTTPException(401, "Sign in to continue. Your saved work is retained.")
+        raise HTTPException(
+            401, "Enter your number again to continue. Saved work is retained."
+        )
 
 
 async def staff(u=Depends(current)):
-    if u["role"] not in ["owner", "reviewer"]:
-        raise HTTPException(
-            403, "Content Studio is restricted to authorized reviewers."
-        )
+    if u.get("access_type") == "unverified_phone" or u["role"] not in [
+        "owner",
+        "reviewer",
+    ]:
+        raise HTTPException(403, "Use authorized staff login to enter Content Studio.")
     return u
 
 
@@ -110,62 +137,62 @@ async def owner(u=Depends(staff)):
 
 
 @router.post("/register")
-async def register(data: Credentials, response: Response):
-    if not data.consent:
-        raise HTTPException(
-            400, "Please acknowledge the privacy notice to create an account."
-        )
-    if data.exam not in ["JEE Main", "BITSAT"]:
-        raise HTTPException(400, "Choose JEE Main or BITSAT.")
-    u = {
-        "id": uid(),
-        "email": str(data.email).lower(),
-        "name": data.name.strip(),
-        "exam": data.exam,
-        "role": "student",
-        "password_hash": await run_in_threadpool(hashpw, data.password),
-        "created_at": now(),
-        "consent_at": now(),
-    }
-    from pymongo.errors import DuplicateKeyError
-
-    try:
-        await users.insert_one(u)
-    except DuplicateKeyError:
-        raise HTTPException(
-            409,
-            "An account cannot be created with these details. Try signing in instead.",
-        )
-    return await new_session(u, response)
+async def register():
+    raise HTTPException(
+        410,
+        "Student entry now uses only a mobile number at /api/auth/phone. Staff accounts are issued by the owner.",
+    )
 
 
 @router.post("/login")
-async def login(data: Credentials, request: Request, response: Response):
+async def login(data: Credentials, response: Response):
     email = str(data.email).lower()
-    key = hashlib.sha256((request.client.host + ":" + email).encode()).hexdigest()
+    window = int(now() // 900)
+    key = hashlib.sha256(f"staff:{email}:{window}".encode()).hexdigest()
     limit = await db.tejas_login_limits.find_one({"_id": key})
-    if (
-        limit
-        and limit.get("count", 0) >= 5
-        and limit["expires_at"].replace(tzinfo=timezone.utc)
-        > datetime.now(timezone.utc)
-    ):
+    if limit and limit.get("count", 0) >= 5:
         raise HTTPException(429, "Too many sign-in attempts. Please wait 15 minutes.")
     u = await users.find_one({"email": email})
-    if not u or not await run_in_threadpool(verify, data.password, u["password_hash"]):
+    if (
+        not u
+        or u.get("role") not in ["owner", "reviewer"]
+        or not await run_in_threadpool(verify, data.password, u["password_hash"])
+    ):
         await db.tejas_login_limits.update_one(
             {"_id": key},
             {
                 "$inc": {"count": 1},
                 "$set": {
-                    "expires_at": datetime.now(timezone.utc) + timedelta(minutes=15)
+                    "expires_at": datetime.now(timezone.utc) + timedelta(minutes=30)
                 },
             },
             upsert=True,
         )
-        raise HTTPException(401, "Email or password is incorrect.")
+        raise HTTPException(
+            401,
+            "Staff email or password is incorrect. Students can enter with their mobile number.",
+        )
     await db.tejas_login_limits.delete_one({"_id": key})
     return await new_session(u, response)
+
+
+@router.get("/session")
+async def session(request: Request, response: Response):
+    if not request.cookies.get("access_token") and not request.cookies.get(
+        "refresh_token"
+    ):
+        return {"user": None}
+    try:
+        return {"user": view(await current(request))}
+    except HTTPException as exc:
+        if exc.status_code != 401:
+            raise
+    try:
+        return {"user": await refresh(request, response)}
+    except HTTPException as exc:
+        if exc.status_code != 401:
+            raise
+        return {"user": None}
 
 
 @router.get("/me")
@@ -191,11 +218,11 @@ async def refresh(request: Request, response: Response):
             }
         ):
             raise ValueError()
-        u = await get(users, p["sub"])
+        u = await identity(p)
         cookies(response, u, p["sid"])
         return view(u)
     except (jwt.PyJWTError, ValueError, KeyError, TypeError):
-        raise HTTPException(401, "Your session has ended. Sign in again.")
+        raise HTTPException(401, "Your session has ended. Enter again to continue.")
 
 
 @router.post("/logout")
@@ -207,9 +234,10 @@ async def logout(request: Request, response: Response):
                 os.environ["JWT_SECRET"],
                 algorithms=["HS256"],
             )
+        except (jwt.PyJWTError, ValueError, TypeError):
+            p = None
+        if p and p.get("sid"):
             await sessions.delete_one({"id": p["sid"]})
-        except Exception:
-            pass
         response.delete_cookie(
             name, path="/", secure=True, httponly=True, samesite="lax"
         )
@@ -221,23 +249,30 @@ async def preferences(data: dict, u=Depends(current)):
     exam = data.get("exam")
     if exam not in ["JEE Main", "BITSAT"]:
         raise HTTPException(400, "Choose a supported exam.")
-    await users.update_one({"id": u["id"]}, {"$set": {"exam": exam}})
+    coll = (
+        db.tejas_phone_profiles if u.get("access_type") == "unverified_phone" else users
+    )
+    await coll.update_one({"id": u["id"]}, {"$set": {"exam": exam}})
     return {"exam": exam}
 
 
 async def seed_owner():
     email = os.environ["ADMIN_EMAIL"].lower()
     if not await users.find_one({"email": email}):
-        await users.insert_one(
-            {
-                "id": uid(),
-                "email": email,
-                "name": "Tejas Owner",
-                "role": "owner",
-                "exam": "JEE Main",
-                "password_hash": await run_in_threadpool(
-                    hashpw, os.environ["ADMIN_PASSWORD"]
-                ),
-                "created_at": now(),
-            }
-        )
+        try:
+            await users.insert_one(
+                {
+                    "id": uid(),
+                    "email": email,
+                    "name": "Tejas Owner",
+                    "role": "owner",
+                    "exam": "JEE Main",
+                    "access_type": "staff_password",
+                    "password_hash": await run_in_threadpool(
+                        hashpw, os.environ["ADMIN_PASSWORD"]
+                    ),
+                    "created_at": now(),
+                }
+            )
+        except DuplicateKeyError:
+            pass

@@ -7,7 +7,17 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from tejas import auth, content, attempts, jobs, reviewers
+from tejas import (
+    auth,
+    content,
+    attempts,
+    jobs,
+    reviewers,
+    phone,
+    profiles,
+    corrections,
+    answers,
+)
 from tejas.db import indexes, client
 from tejas.contracts import EnvelopeResponse, error_response, request_id
 from tejas_storage import StorageError
@@ -91,5 +101,15 @@ async def health():
     return {"status": "ok", "service": "Tejas Exam Platform", "version": "1.0.0"}
 
 
-for module in [auth, content, attempts, jobs, reviewers]:
+for module in [
+    auth,
+    phone,
+    content,
+    answers,
+    attempts,
+    jobs,
+    reviewers,
+    profiles,
+    corrections,
+]:
     app.include_router(module.router)

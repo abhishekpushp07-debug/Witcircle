@@ -45,6 +45,10 @@ async def get(coll, id):
         from .packs import hydrate
 
         d = await hydrate(d)
+    if coll.name == "tejas_attempts" and d.get("status") == "completed":
+        ledger = await db.tejas_ledgers.find_one({"id": id}, {"_id": 0})
+        if ledger:
+            d["ledger"] = ledger
     return d
 
 
@@ -62,7 +66,20 @@ async def audit(actor, action, resource, detail=""):
 
 
 async def indexes():
-    for c in [users, sessions, sets, attempts, files, jobs, audits]:
+    await db.tejas_phone_profiles.create_index("id", unique=True)
+    await db.tejas_phone_profiles.create_index("phone", unique=True)
+    await db.tejas_phone_limits.create_index("expires_at", expireAfterSeconds=0)
+    for c in [
+        users,
+        sessions,
+        sets,
+        attempts,
+        files,
+        jobs,
+        audits,
+        db.tejas_ledgers,
+        db.tejas_score_versions,
+    ]:
         await c.create_index("id", unique=True)
     await users.create_index("email", unique=True)
     await sessions.create_index("expires_at", expireAfterSeconds=0)
@@ -83,3 +100,9 @@ async def indexes():
     await jobs.create_index([("status", 1), ("lease_until", 1)])
     await audits.create_index([("resource", 1), ("at", -1)])
     await db.tejas_login_limits.create_index("expires_at", expireAfterSeconds=0)
+    await db.tejas_score_versions.create_index(
+        [("attempt_id", 1), ("user_id", 1), ("created_at", -1)]
+    )
+    await attempts.create_index([("set_id", 1), ("status", 1), ("version", 1)])
+    await jobs.create_index([("set_id", 1), ("created_at", -1)])
+    await files.create_index([("set_id", 1), ("created_at", -1)])

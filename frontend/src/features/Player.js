@@ -1,21 +1,445 @@
-import React,{useEffect,useState,useRef,useCallback} from 'react';
-import {Link,useNavigate,useParams} from 'react-router-dom';
-import {ArrowLeft,ArrowRight,Flag,Check,CheckCircle2 as CloudCheck,CloudOff,Clock3,Send,Loader2,RotateCcw,ChevronDown} from 'lucide-react';
-import {api,post,put} from '../lib/api';
-import {useAuth} from '../lib/auth';
-import {Logo,Loading,ErrorBox,Badge,Confirm} from '../components/Shared';
-import {QuestionContent,MathText} from '../components/QuestionContent';
-export default function Player(){const {id}=useParams();const {user}=useAuth();const nav=useNavigate();const [a,setA]=useState(null);const [index,setIndex]=useState(0);const [error,setError]=useState('');const [pending,setPending]=useState({});const [saving,setSaving]=useState(false);const [online,setOnline]=useState(navigator.onLine);const [seconds,setSeconds]=useState(null);const [confirm,setConfirm]=useState(false);const [submitting,setSubmitting]=useState(false);const [navOpen,setNavOpen]=useState(false);const [conflict,setConflict]=useState(false);const data=useRef(null);const drafts=useRef({});const running=useRef(false);const clock=useRef(0);const timer=useRef(null);const storage=`tejas-draft-${user.id}-${id}`;
- const persist=useCallback(()=>{setPending({...drafts.current});try{localStorage.setItem(storage,JSON.stringify(drafts.current));}catch{setError('Device storage is unavailable. Stay connected; pending drafts cannot survive a refresh.');}},[storage]);
- const load=useCallback(async()=>{try{const d=await api('/attempts/'+id);clock.current=d.server_now*1000-Date.now();data.current=d;setA(d);let stored={};try{stored=JSON.parse(localStorage.getItem(storage)||'{}');}catch{}for(const [qid,v] of Object.entries(stored)){if(d.answers[qid]?.request_id===v.request_id)delete stored[qid];}drafts.current=stored;persist();if(d.status==='completed'){nav('/results/'+id+(Object.keys(stored).length?'?late=true':''),{replace:true});}}catch(e){setError(e.message);}},[id,nav,persist,storage]);
- useEffect(()=>{load();},[load]);
- const flush=useCallback(async()=>{if(running.current||!navigator.onLine||!data.current||conflict)return;running.current=true;setSaving(true);try{for(const qid of Object.keys(drafts.current)){const draft=drafts.current[qid];if(!draft)continue;try{const res=await put(`/attempts/${id}/answers/${qid}`,draft);data.current.answers[qid]=res.accepted;setA({...data.current,answers:{...data.current.answers}});clock.current=res.server_now*1000-Date.now();if(drafts.current[qid]?.request_id===draft.request_id)delete drafts.current[qid];else if(drafts.current[qid])drafts.current[qid].revision=res.accepted.revision+1;persist();setError('');}catch(e){setError(e.message);if(e.status===409){const latest=await api('/attempts/'+id);if(latest.status==='completed'){nav('/results/'+id+'?late=true');return;}if(latest.answers[qid]?.request_id===draft.request_id){data.current=latest;setA(latest);if(drafts.current[qid]?.request_id===draft.request_id)delete drafts.current[qid];persist();}else setConflict(true);}break;}}}finally{running.current=false;setSaving(false);}},[id,conflict,persist,nav]);
- useEffect(()=>{const on=()=>{setOnline(true);flush();};const off=()=>setOnline(false);window.addEventListener('online',on);window.addEventListener('offline',off);const retry=setInterval(flush,5000);return()=>{window.removeEventListener('online',on);window.removeEventListener('offline',off);clearInterval(retry);clearTimeout(timer.current);};},[flush]);
- useEffect(()=>{if(!a?.deadline)return;let ended=false;const tick=()=>{const left=Math.max(0,Math.ceil((a.deadline*1000-Date.now()-clock.current)/1000));setSeconds(left);if(left===0&&!ended&&navigator.onLine){ended=true;post('/attempts/'+id+'/submit').then(()=>nav('/results/'+id+(Object.keys(drafts.current).length?'?late=true':''))).catch(e=>{setError(e.message);ended=false;});}};tick();const t=setInterval(tick,1000);return()=>clearInterval(t);},[a?.deadline,id,nav]);
- function edit(qid,change){if(seconds===0||conflict)return;const old=drafts.current[qid]||data.current.answers[qid]||{value:'',marked:false};drafts.current[qid]={value:old.value,marked:old.marked,...change,revision:(data.current.answers[qid]?.revision||0)+1,request_id:crypto.randomUUID()};persist();clearTimeout(timer.current);timer.current=setTimeout(flush,350);}
- async function submit(){setSubmitting(true);setError('');try{await flush();if(Object.keys(drafts.current).length)throw new Error('There are pending answers. Reconnect and wait for acknowledgement before submitting.');const receipt=await post('/attempts/'+id+'/submit');localStorage.removeItem(storage);nav('/results/'+receipt.id);}catch(e){setError(e.message);setConfirm(false);}finally{setSubmitting(false);}}
- useEffect(()=>{const warn=e=>{if(Object.keys(drafts.current).length){e.preventDefault();e.returnValue='';}};window.addEventListener('beforeunload',warn);return()=>window.removeEventListener('beforeunload',warn);},[]);
- if(!a)return <div className="container page"><ErrorBox error={error} retry={load}/>{!error&&<Loading/>}</div>;
- const q=a.questions[index];const current=pending[q.id]||a.answers[q.id]||{};const all={...a.answers,...pending};const answered=a.questions.filter(x=>all[x.id]?.value).length;const marked=a.questions.filter(x=>all[x.id]?.marked).length;const nPending=Object.keys(pending).length;const time=seconds===null?'Untimed':`${Math.floor(seconds/3600).toString().padStart(2,'0')}:${Math.floor(seconds%3600/60).toString().padStart(2,'0')}:${(seconds%60).toString().padStart(2,'0')}`;
- return <div className="player-layout"><header className="player-header"><Logo/><div className="player-title"><strong>{a.title}</strong><span>{a.exam} · {a.mode==='preview'?'Unapproved private preview':a.mode==='retry'?'Untimed revision · repeated exposure':'Practice'}</span></div><div className={'player-timer '+(seconds!==null&&seconds<300?'urgent':'')}><Clock3 size={18}/><span>{time}</span></div></header><div className="player-savebar"><Link to="/home" data-testid="player-home"><ArrowLeft size={14}/> My practice</Link><span data-testid="player-save-state-indicator" role="status" className={nPending?'pending':'saved'}>{!online?<CloudOff size={16}/>:saving?<Loader2 size={16} className="spin"/>:<CloudCheck size={16}/>} {!online?`Offline · ${nPending} pending`:saving?'Saving…':nPending?`${nPending} pending · not yet acknowledged`:'All responses saved'}</span><span className="player-progress">{answered} / {a.count} answered</span></div><div className="player-body"><aside className={'question-navigator '+(navOpen?'open':'')}><button className="navigator-heading" data-testid="player-navigator-toggle" onClick={()=>setNavOpen(!navOpen)} aria-expanded={navOpen}><strong>Question navigator</strong><ChevronDown size={18}/></button><div className="navigator-content">{Array.from(new Set(a.questions.map(x=>x.subject))).map(subject=><div className="nav-subject" key={subject}><h4>{subject}</h4><div className="number-grid">{a.questions.map((x,i)=>x.subject!==subject?null:<button key={x.id} data-testid={'player-question-nav-'+x.number} className={(index===i?'current ':'')+(all[x.id]?.value?'answered ':'')+(all[x.id]?.marked?'marked ':'')+(pending[x.id]?'pending-answer':'')} aria-label={`Question ${x.number}, ${all[x.id]?.value?'answered':'unanswered'}${all[x.id]?.marked?', marked for review':''}${pending[x.id]?', pending save':''}`} aria-current={index===i?'step':undefined} onClick={()=>{setIndex(i);setNavOpen(false);}}>{x.number}{all[x.id]?.marked?<Flag size={8}/>:all[x.id]?.value?<Check size={9}/>:null}</button>)}</div></div>)}<div className="nav-legend"><span><i className="legend-answered"/>✓ Answered</span><span><i/>Unanswered</span><span><i className="legend-marked"/>⚑ For review</span><span><i className="legend-pending"/>Pending save</span></div><button className="btn btn-primary full-width" data-testid="player-submit-button" onClick={()=>setConfirm(true)} disabled={seconds===0||!online}><Send size={17}/> Review & submit</button><p className="navigator-note">The navigator never changes question order. Skipped questions receive 0 marks.</p></div></aside><section className="player-question-area"><ErrorBox error={error}/>{conflict&&<div className="notice amber"><span>Another saved version exists. Local drafts are retained until you choose to discard them.</span><button className="btn btn-secondary" data-testid="discard-conflicting-drafts" onClick={()=>{drafts.current={};persist();setConflict(false);load();}}>Use server-saved answers</button></div>}{seconds===0&&<div className="notice amber">Time has ended. Pending drafts cannot be scored. Reconnect to retrieve your result.</div>}<article className="card question-card"><div className="question-topline"><Badge>{q.subject}</Badge><span>{q.type==='integer'?'Integer answer':'Single correct'} · +{a.rules.correct} / {a.rules.wrong}</span></div><div className="question-heading"><h2>Question {q.number}</h2><button className={'btn btn-quiet '+(current.marked?'review-active':'')} data-testid="player-mark-review-toggle" aria-pressed={!!current.marked} disabled={seconds===0||conflict} onClick={()=>edit(q.id,{marked:!current.marked})}><Flag size={17}/>{current.marked?'Marked for review':'Mark for review'}</button></div><div data-testid="player-question-stem"><QuestionContent question={q} base={`/attempts/${id}/questions/${q.id}`}/></div><fieldset disabled={seconds===0||conflict} className="answer-fieldset"><legend>{q.type==='mcq'?'Select one answer':'Enter your integer answer'}</legend>{q.type==='mcq'?<div className="answer-options">{Object.entries(q.options||{}).map(([key,value])=><label key={key} className={'answer-option '+(current.value===key?'selected':'')}><input type="radio" name={q.id} value={key} checked={current.value===key} onChange={()=>edit(q.id,{value:key})} data-testid={'player-option-'+key}/><span className="option-index">{key}</span><span>{q.render_mode==='source'?`Option ${key} (as shown above)`:value}</span>{current.value===key&&<CheckCircle/>}</label>)}</div>:<><input className="numerical-input" type="text" inputMode="text" aria-label="Integer answer" data-testid="player-numerical-input" placeholder="e.g. 13440" maxLength={21} value={current.value||''} onChange={e=>{if(/^[+-]?\d{0,20}$/.test(e.target.value))edit(q.id,{value:e.target.value});}}/><p className="input-hint">Exact integer. Five-digit answers are accepted. No decimal rounding.</p></>}</fieldset><button className="text-button clear-answer" data-testid="player-clear-response-button" disabled={!current.value||seconds===0||conflict} onClick={()=>edit(q.id,{value:''})}><RotateCcw size={14}/> Clear response</button><div className="question-navigation"><button className="btn btn-secondary" data-testid="player-previous" disabled={index===0} onClick={()=>setIndex(index-1)}><ArrowLeft size={17}/> Previous</button><span>{index+1} of {a.count}</span>{index<a.count-1?<button className="btn btn-primary" data-testid="player-next" onClick={()=>setIndex(index+1)}>Next question <ArrowRight size={17}/></button>:<button className="btn btn-primary" data-testid="player-finish" disabled={seconds===0||!online} onClick={()=>setConfirm(true)}>Review & submit <Send size={17}/></button>}</div></article><p className="practice-note">Go at your own pace within the stated time. Accuracy is a better goal than guessing your rank.</p></section></div><Confirm open={confirm} onClose={()=>setConfirm(false)} title="Ready to submit your attempt?" button="Submit & see results" busy={submitting} onConfirm={submit}><p>Submission is final. Your result and correctly matched solutions will be available immediately afterward.</p><div className="submission-stats"><span><strong>{answered}</strong>Answered</span><span><strong>{a.count-answered}</strong>Unanswered</span><span><strong>{marked}</strong>For review</span></div>{nPending>0&&<p className="warning-text">{nPending} response(s) are still pending. They must be acknowledged before submission.</p>}<p>Unanswered questions earn 0 marks. Marked questions are scored using their saved response.</p></Confirm></div>}
-function CheckCircle(){return <span className="selected-tick"><Check size={16}/></span>}
+import React, { useEffect, useState } from "react";
+import { ThemeToggle } from '../components/ThemeToggle';
+import { Link, useParams } from "react-router-dom";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Flag,
+  Check,
+  CheckCircle2,
+  CloudOff,
+  Clock3,
+  Send,
+  Loader2,
+  RotateCcw,
+  ChevronDown,
+} from "lucide-react";
+import { useAuth } from "../lib/auth";
+import { Logo, Loading, ErrorBox, Badge, Confirm } from "../components/Shared";
+import { QuestionContent } from "../components/QuestionContent";
+import { useAttempt } from "./practice/useAttempt";
+
+export default function Player() {
+  const { id } = useParams();
+  const { user } = useAuth();
+  const {
+    attempt: a,
+    pending,
+    error,
+    setError,
+    saving,
+    online,
+    seconds,
+    conflict,
+    load,
+    edit,
+    visit,
+    discard,
+    submit,
+  } = useAttempt(id, user);
+  const [index, setIndex] = useState(0),
+    [confirm, setConfirm] = useState(false),
+    [submitting, setSubmitting] = useState(false),
+    [navOpen, setNavOpen] = useState(false),
+    [blocked, setBlocked] = useState({});
+  const q = a?.questions[index];
+  const questionId = q?.id;
+  useEffect(() => {
+    if (questionId) visit(questionId);
+  }, [questionId, visit, online]);
+  async function doSubmit() {
+    setSubmitting(true);
+    try {
+      await submit();
+    } catch (e) {
+      setError(e.message);
+      setConfirm(false);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+  if (!a)
+    return (
+      <div className="container page">
+        <ErrorBox error={error} retry={load} />
+        {!error && <Loading />}
+      </div>
+    );
+  const current = pending[q.id] || a.answers[q.id] || {},
+    all = { ...a.answers, ...pending };
+  const answered = a.questions.filter((x) =>
+    String(all[x.id]?.value || "").trim(),
+  ).length;
+  const committed = a.questions.filter((x) =>
+    String(a.answers[x.id]?.value || "").trim(),
+  ).length;
+  const marked = a.questions.filter((x) => all[x.id]?.marked).length,
+    nPending = Object.keys(pending).length;
+  const time =
+    seconds === null
+      ? "Untimed"
+      : `${Math.floor(seconds / 3600)
+          .toString()
+          .padStart(2, "0")}:${Math.floor((seconds % 3600) / 60)
+          .toString()
+          .padStart(2, "0")}:${(seconds % 60).toString().padStart(2, "0")}`;
+  const assetBlocked = Object.keys(blocked).some((k) =>
+    k.startsWith(q.id + ":"),
+  );
+  const locked = seconds === 0 || conflict || assetBlocked;
+  function assetState(i, failed) {
+    setBlocked((old) => {
+      const b = { ...old };
+      if (failed) b[q.id + ":" + i] = true;
+      else delete b[q.id + ":" + i];
+      return b;
+    });
+  }
+  return (
+    <div className="player-layout">
+      <header className="player-header">
+        <Logo />
+        <div className="player-title">
+          <strong>{a.title}</strong>
+          <span>
+            {a.exam} ·{" "}
+            {a.mode === "preview"
+              ? "Unapproved private preview"
+              : a.mode === "retry"
+                ? "Untimed revision · repeated exposure"
+                : "Nonofficial practice"}
+          </span>
+        </div>
+        <ThemeToggle />
+        <div
+          className={
+            "player-timer " +
+            (seconds !== null && seconds < 300 ? "urgent" : "")
+          }
+        >
+          <Clock3 size={18} />
+          <span data-testid="player-timer">{time}</span>
+        </div>
+      </header>
+      <div className="player-savebar">
+        <Link to="/home" data-testid="player-home">
+          <ArrowLeft size={14} /> My practice
+        </Link>
+        <span
+          data-testid="player-save-state-indicator"
+          role="status"
+          className={nPending ? "pending" : "saved"}
+        >
+          {!online ? (
+            <CloudOff size={16} />
+          ) : saving ? (
+            <Loader2 size={16} className="spin" />
+          ) : (
+            <CheckCircle2 size={16} />
+          )}{" "}
+          {!online
+            ? `Offline · ${nPending} pending`
+            : saving
+              ? "Saving…"
+              : nPending
+                ? `${nPending} pending · not yet acknowledged`
+                : "All responses saved"}
+        </span>
+        <span className="player-progress">
+          {committed} / {a.count} saved answers
+        </span>
+      </div>
+      <p className="compact-practice-note">
+        Compact mobile practice · Server time controls the deadline
+      </p>
+      <div className="player-body">
+        <aside className={"question-navigator " + (navOpen ? "open" : "")}>
+          <button
+            className="navigator-heading"
+            data-testid="player-navigator-toggle"
+            onClick={() => setNavOpen(!navOpen)}
+            aria-expanded={navOpen}
+          >
+            <strong>Question navigator</strong>
+            <ChevronDown size={18} />
+          </button>
+          <div className="navigator-content">
+            {Array.from(new Set(a.questions.map((x) => x.subject))).map(
+              (subject) => (
+                <div className="nav-subject" key={subject}>
+                  <h4>{subject}</h4>
+                  <div className="number-grid">
+                    {a.questions.map((x, i) =>
+                      x.subject !== subject ? null : (
+                        <button
+                          key={x.id}
+                          data-testid={"player-question-nav-" + x.number}
+                          className={
+                            (index === i ? "current " : "") +
+                            (all[x.id]?.value?.trim() ? "answered " : "") +
+                            (all[x.id]?.marked ? "marked " : "") +
+                            (a.visited?.includes(x.id) ? "visited " : "") +
+                            (pending[x.id] ? "pending-answer" : "")
+                          }
+                          aria-label={`Question ${x.number}, ${all[x.id]?.value?.trim() ? "answered" : a.visited?.includes(x.id) ? "visited, unanswered" : "not visited"}${all[x.id]?.marked ? ", marked for review" : ""}${pending[x.id] ? ", pending save" : ""}`}
+                          aria-current={index === i ? "step" : undefined}
+                          onClick={() => {
+                            setIndex(i);
+                            setNavOpen(false);
+                          }}
+                        >
+                          {x.number}
+                          {all[x.id]?.marked ? (
+                            <Flag size={8} />
+                          ) : all[x.id]?.value?.trim() ? (
+                            <Check size={9} />
+                          ) : null}
+                        </button>
+                      ),
+                    )}
+                  </div>
+                </div>
+              ),
+            )}
+            <div className="nav-legend">
+              <span>
+                <i />
+                Not visited
+              </span>
+              <span>
+                <i className="legend-visited" />
+                Visited · blank
+              </span>
+              <span>
+                <i className="legend-answered" />✓ Answered
+              </span>
+              <span>
+                <i className="legend-marked" />⚑ For review
+              </span>
+              <span>
+                <i className="legend-both" />✓ + ⚑ Both
+              </span>
+              <span>
+                <i className="legend-pending" />
+                Pending save
+              </span>
+            </div>
+            <button
+              className="btn btn-primary full-width"
+              data-testid="player-submit-button"
+              onClick={() => setConfirm(true)}
+              disabled={seconds === 0 || !online}
+            >
+              <Send size={17} /> Review & submit
+            </button>
+            <p className="navigator-note">
+              Free navigation · Original order preserved. Skipped questions
+              receive 0 marks.
+            </p>
+          </div>
+        </aside>
+        <section className="player-question-area">
+          <ErrorBox error={error} />
+          {conflict && (
+            <div className="notice amber">
+              <span>
+                Another saved version exists. Local drafts are retained until
+                you choose to discard them.
+              </span>
+              <button
+                className="btn btn-secondary"
+                data-testid="discard-conflicting-drafts"
+                onClick={discard}
+              >
+                Use server-saved answers
+              </button>
+            </div>
+          )}
+          {seconds === 0 && (
+            <div className="notice amber">
+              Time has ended. Pending drafts cannot be scored. Reconnect to
+              retrieve your result.
+            </div>
+          )}
+          <article className="card question-card">
+            <div className="question-topline">
+              <Badge>{q.subject}</Badge>
+              <span>
+                {q.type === "integer" ? "Integer answer" : "Single correct"} · +
+                {a.rules.correct} / {a.rules.wrong}
+              </span>
+            </div>
+            <div className="question-heading">
+              <h2>Question {q.number}</h2>
+              <button
+                className={
+                  "btn btn-quiet " + (current.marked ? "review-active" : "")
+                }
+                data-testid="player-mark-review-toggle"
+                aria-pressed={!!current.marked}
+                disabled={locked}
+                onClick={() => edit(q.id, { marked: !current.marked })}
+              >
+                <Flag size={17} />
+                {current.marked ? "Marked for review" : "Mark for review"}
+              </button>
+            </div>
+            <div data-testid="player-question-stem">
+              <QuestionContent
+                question={q}
+                base={`/attempts/${id}/questions/${q.id}`}
+                onAssetError={(i) => assetState(i, true)}
+                onAssetLoad={(i) => assetState(i, false)}
+              />
+            </div>
+            {assetBlocked && (
+              <div className="notice amber">
+                A required source image did not load. Retry it above before
+                answering; do not guess missing content.
+              </div>
+            )}
+            <fieldset disabled={locked} className="answer-fieldset">
+              <legend>
+                {q.type === "mcq"
+                  ? "Select one answer"
+                  : "Enter your integer answer"}
+              </legend>
+              {q.type === "mcq" ? (
+                <div className="answer-options">
+                  {Object.entries(q.options || {}).map(([key, value]) => (
+                    <label
+                      key={key}
+                      className={
+                        "answer-option " +
+                        (current.value === key ? "selected" : "")
+                      }
+                    >
+                      <input
+                        type="radio"
+                        name={q.id}
+                        value={key}
+                        checked={current.value === key}
+                        onChange={() => edit(q.id, { value: key })}
+                        data-testid={"player-option-" + key}
+                      />
+                      <span className="option-index">{key}</span>
+                      <span>
+                        {q.render_mode === "source"
+                          ? `Option ${key} (as shown above)`
+                          : value}
+                      </span>
+                      {current.value === key && (
+                        <span className="selected-tick">
+                          <Check size={16} />
+                        </span>
+                      )}
+                    </label>
+                  ))}
+                </div>
+              ) : (
+                <>
+                  <input
+                    className="numerical-input"
+                    type="text"
+                    inputMode="text"
+                    aria-label="Integer answer"
+                    data-testid="player-numerical-input"
+                    placeholder="e.g. 13440"
+                    maxLength={30}
+                    value={current.value || ""}
+                    onChange={(e) => edit(q.id, { value: e.target.value })}
+                  />
+                  <p className="input-hint">
+                    Exact integer. Zero, negatives, leading zeros and five-digit
+                    answers are accepted. No decimal rounding.
+                  </p>
+                </>
+              )}
+            </fieldset>
+            <button
+              className="text-button clear-answer"
+              data-testid="player-clear-response-button"
+              disabled={!current.value || locked}
+              onClick={() => edit(q.id, { value: "" })}
+            >
+              <RotateCcw size={14} /> Clear response
+            </button>
+            <div className="question-navigation">
+              <button
+                className="btn btn-secondary"
+                data-testid="player-previous"
+                disabled={index === 0}
+                onClick={() => setIndex(index - 1)}
+              >
+                <ArrowLeft size={17} /> Previous
+              </button>
+              <span>
+                {index + 1} of {a.count}
+              </span>
+              {index < a.count - 1 ? (
+                <button
+                  className="btn btn-primary"
+                  data-testid="player-next"
+                  onClick={() => setIndex(index + 1)}
+                >
+                  Next question <ArrowRight size={17} />
+                </button>
+              ) : (
+                <button
+                  className="btn btn-primary"
+                  data-testid="player-finish"
+                  disabled={seconds === 0 || !online}
+                  onClick={() => setConfirm(true)}
+                >
+                  Review & submit <Send size={17} />
+                </button>
+              )}
+            </div>
+          </article>
+          <p className="practice-note">
+            Focus on the question. This is home practice, not a proctored
+            examination or an official readiness prediction.
+          </p>
+        </section>
+      </div>
+      <Confirm
+        open={confirm}
+        onClose={() => setConfirm(false)}
+        title="Ready to submit your attempt?"
+        button="Submit & see results"
+        busy={submitting}
+        onConfirm={doSubmit}
+      >
+        <p>
+          Submission is final. Your result and matched solutions are released
+          afterward.
+        </p>
+        <div className="submission-stats">
+          <span>
+            <strong>{answered}</strong>Answered
+          </span>
+          <span>
+            <strong>{a.count - answered}</strong>Unanswered
+          </span>
+          <span>
+            <strong>{marked}</strong>For review
+          </span>
+        </div>
+        <p>
+          <strong>{nPending}</strong> unsaved draft(s). {committed} answers are
+          currently acknowledged by the server.
+        </p>
+        {nPending > 0 && (
+          <p className="warning-text">
+            Pending responses must be acknowledged before submission. Invalid
+            integer drafts need correction.
+          </p>
+        )}
+        <p>
+          Unanswered questions earn 0 marks. Marked questions are scored using
+          their saved response.
+        </p>
+      </Confirm>
+    </div>
+  );
+}

@@ -1,22 +1,14 @@
 [
   {
-    "content": "Phase 1A: Real-source core proof and 43 testing-agent checks",
+    "content": "Replace teal palette with matte-maroon tokens and readable light/dark typography",
     "status": "completed"
   },
   {
-    "content": "Phase 1B: Complete modular UI/API feature implementation",
+    "content": "Simplify navigation and polish Exam Details using existing Shadcn controls",
     "status": "completed"
   },
   {
-    "content": "Phase 1C: Review end-to-end testing report and resolve reported issues",
+    "content": "Build and verify desktop/mobile appearance plus recovery/version regression; inspect menu overflow",
     "status": "in_progress"
-  },
-  {
-    "content": "Phase 1C: Re-verify every fixed user story and mobile layout",
-    "status": "pending"
-  },
-  {
-    "content": "Phase 1C: Capacity evidence and module release gates documented without untested claims",
-    "status": "pending"
   }
 ]

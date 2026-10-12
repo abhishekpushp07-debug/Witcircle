@@ -1,7 +1,197 @@
-import React,{useState} from 'react';
-import {Link,useNavigate,useSearchParams} from 'react-router-dom';
-import {ArrowRight,ShieldCheck,BookOpen,FileCheck2,LockKeyhole,Loader2} from 'lucide-react';
-import {post} from '../lib/api';
-import {useAuth} from '../lib/auth';
-import {Field,ErrorBox,SelectField} from '../components/Shared';
-export default function Auth({signup=false}){const {setUser}=useAuth();const nav=useNavigate();const [params]=useSearchParams();const [data,setData]=useState({name:'',email:'',password:'',exam:'JEE Main',consent:false});const [error,setError]=useState('');const [busy,setBusy]=useState(false);const change=k=>e=>setData({...data,[k]:e.target.value});async function submit(e){e.preventDefault();setBusy(true);setError('');try{const u=await post(signup?'/auth/register':'/auth/login',{...data,name:data.name||'Student'});setUser(u);const next=params.get('next');nav(next?.startsWith('/')&&!next.startsWith('//')?next:'/home');}catch(e){setError(e.message);}finally{setBusy(false);}}return <div className="container auth-layout"><div className="auth-story"><span className="eyebrow">YOUR OWN SPACE TO LEARN</span><h1>Every attempt<br/>has something<br/>to teach you.</h1><p>Keep your practice, your explanations, and your next steps together.</p>{[[BookOpen,'Pick up where you left off'],[FileCheck2,'Understand your results'],[LockKeyhole,'Keep your learning private']].map(([Icon,t])=><div className="auth-point" key={t}><Icon size={20}/>{t}</div>)}<span className="auth-footnote">No score guarantees. No unnecessary personal details.</span></div><div className="auth-card"><span className="auth-icon"><ShieldCheck size={25}/></span><h2>{signup?'Make room for progress.':'Welcome back.'}</h2><p>{signup?'Create your Tejas account to save your practice.':'Your next step starts right where you left off.'}</p><ErrorBox error={error}/><form onSubmit={submit}>{signup&&<Field id="signup-name" label="Your name" autoComplete="name" required maxLength={80} value={data.name} onChange={change('name')}/>}<Field id={signup?'signup-email-input':'login-email-input'} label="Email address" type="email" autoComplete="email" placeholder="you@example.com" required value={data.email} onChange={change('email')}/><Field id={signup?'signup-password-input':'login-password-input'} label="Password" type="password" autoComplete={signup?'new-password':'current-password'} minLength={10} maxLength={64} required hint={signup?'Use at least 10 characters.':''} value={data.password} onChange={change('password')}/>{signup&&<><SelectField id="signup-exam" label="Your focus" value={data.exam} onChange={v=>setData({...data,exam:v})} options={['JEE Main','BITSAT']}/><label className="checkbox-label"><input data-testid="signup-consent" type="checkbox" required checked={data.consent} onChange={e=>setData({...data,consent:e.target.checked})}/><span>I’ve read the <Link data-testid="signup-privacy" to="/privacy">privacy notice</Link> and agree to store my account and practice records. If I need guardian permission, I have it.</span></label></>}<button className="btn btn-primary full-width" disabled={busy} data-testid={signup?'signup-submit-button':'login-submit-button'}>{busy?<Loader2 className="spin" size={18}/>:null}{signup?'Create account':'Log in'}<ArrowRight size={18}/></button></form><p className="auth-switch">{signup?'Already have an account?':'New to Tejas?'} <Link data-testid="auth-switch" to={(signup?'/login':'/signup')+(params.get('next')?'?next='+encodeURIComponent(params.get('next')):'')}>{signup?'Log in':'Create an account'}</Link></p><small>Email verification and email-based password recovery are not included in this release. Keep your password somewhere safe.</small></div></div>}
+import React, { useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import {
+  ArrowRight,
+  BookOpen,
+  FileCheck2,
+  RotateCcw,
+  Loader2,
+  Phone,
+  ShieldCheck,
+} from "lucide-react";
+import { post } from "../lib/api";
+import { useAuth } from "../lib/auth";
+import { Field, ErrorBox } from "../components/Shared";
+export default function Auth({ staff = false }) {
+  const { setUser } = useAuth();
+  const nav = useNavigate();
+  const [params] = useSearchParams();
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  async function submit(e) {
+    e.preventDefault();
+    setBusy(true);
+    setError("");
+    try {
+      const u = await post(
+        staff ? "/auth/login" : "/auth/phone",
+        staff ? { email, password } : { phone },
+      );
+      if (staff && !["owner", "reviewer"].includes(u.role))
+        throw new Error(
+          "This is the staff entrance. Use mobile-number entry for student practice.",
+        );
+      setUser(u);
+      const next = params.get("next");
+      nav(
+        next?.startsWith("/") && !next.startsWith("//")
+          ? next
+          : staff
+            ? "/studio"
+            : "/home",
+      );
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <div className="container auth-layout">
+      <div className="auth-story">
+        <span className="eyebrow">LESS FRICTION. MORE LEARNING.</span>
+        <h1>
+          Your next step.
+          <br />
+          Just one number
+          <br />
+          away.
+        </h1>
+        <p>
+          Practice, understand your results, and return to your learning—all in
+          one place.
+        </p>
+        {[
+          [BookOpen, "One number. Straight into practice."],
+          [FileCheck2, "Every question, its own explanation."],
+          [RotateCcw, "Come back and pick up where you left off."],
+        ].map(([Icon, t]) => (
+          <div className="auth-point" key={t}>
+            <Icon size={20} />
+            {t}
+          </div>
+        ))}
+        <span className="auth-footnote">
+          No score guarantees. Just a clearer way forward.
+        </span>
+      </div>
+      <div className="auth-card phone-auth-card">
+        <span className="auth-icon">
+          {staff ? <ShieldCheck size={25} /> : <Phone size={24} />}
+        </span>
+        <h2>{staff ? "Content Studio." : "Let’s get you started."}</h2>
+        <p>
+          {staff
+            ? "Authorized owners and reviewers only."
+            : "Your mobile number is all you need."}
+        </p>
+        <ErrorBox error={error} />
+        <form onSubmit={submit}>
+          {staff ? (
+            <>
+              <Field
+                id="login-email-input"
+                label="Staff email"
+                type="email"
+                autoComplete="username"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+              <Field
+                id="login-password-input"
+                label="Password"
+                type="password"
+                autoComplete="current-password"
+                minLength={10}
+                maxLength={64}
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </>
+          ) : (
+            <>
+              <label className="field" htmlFor="student-login-phone-input">
+                <span>Mobile number</span>
+                <div className="phone-input-shell">
+                  {!phone.trim().startsWith("+") && (
+                    <span className="country-prefix">+91</span>
+                  )}
+                  <input
+                    id="student-login-phone-input"
+                    data-testid="student-login-phone-input"
+                    type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
+                    placeholder="98765 43210"
+                    maxLength={32}
+                    required
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    aria-describedby="phone-access-note"
+                  />
+                </div>
+                <small>
+                  Outside India? Include your country code, starting with +.
+                </small>
+              </label>
+              <p
+                className="phone-disclosure"
+                id="phone-access-note"
+                data-testid="student-login-no-otp-notice"
+              >
+                No OTP or password. Anyone entering this number can access its
+                saved practice and results.
+              </p>
+            </>
+          )}
+          <button
+            className="btn btn-primary full-width"
+            disabled={busy}
+            data-testid={
+              staff ? "login-submit-button" : "student-login-continue-button"
+            }
+          >
+            {busy ? <Loader2 className="spin" size={18} /> : null}
+            {busy
+              ? "Opening your space…"
+              : staff
+                ? "Open Content Studio"
+                : "Continue"}
+            <ArrowRight size={18} />
+          </button>
+        </form>
+        {staff ? (
+          <p className="auth-switch">
+            Here to practice?{" "}
+            <Link data-testid="student-entry-link" to="/login">
+              Use your mobile number
+            </Link>
+          </p>
+        ) : (
+          <>
+            <p className="phone-consent">
+              By continuing, you agree to store this number and your practice
+              records as described in our{" "}
+              <Link data-testid="phone-privacy" to="/privacy">
+                privacy notice
+              </Link>
+              .
+            </p>
+            <Link
+              className="staff-login-link"
+              data-testid="staff-login-link"
+              to="/owner-login"
+            >
+              Staff login <ArrowRight size={12} />
+            </Link>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}

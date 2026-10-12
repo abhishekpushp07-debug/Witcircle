@@ -1,8 +1,112 @@
-import React,{useEffect,useState,useRef} from 'react';
-import {Link,useParams,useSearchParams,useNavigate} from 'react-router-dom';
-import {ArrowRight,CheckCircle2,Wifi,Clock3,ShieldCheck,Loader2,Triangle} from 'lucide-react';
-import {api,post} from '../lib/api';
-import {useAuth} from '../lib/auth';
-import {PageTitle,Badge,Loading,ErrorBox,Field} from '../components/Shared';
-import {MathText} from '../components/QuestionContent';
-export default function SetDetail(){const {id}=useParams();const [params]=useSearchParams();const preview=params.get('preview')==='true';const {user}=useAuth();const nav=useNavigate();const [s,setS]=useState(null);const [error,setError]=useState('');const [checked,setChecked]=useState(false);const [confirmed,setConfirmed]=useState(false);const [value,setValue]=useState('');const [busy,setBusy]=useState(false);const key=useRef(sessionStorage.getItem('tejas-start-'+id)||crypto.randomUUID());useEffect(()=>{sessionStorage.setItem('tejas-start-'+id,key.current);api(preview?'/studio/sets/'+id:(user?'/my/sets/':'/sets/')+id).then(d=>setS(d)).catch(e=>setError(e.message));},[id,preview,user]);async function check(){setBusy(true);setError('');try{localStorage.setItem('tejas-device-check','ok');if(localStorage.getItem('tejas-device-check')!=='ok')throw new Error('Browser storage is unavailable. Enable local storage to protect pending drafts.');localStorage.removeItem('tejas-device-check');await post('/sets/'+id+'/preflight',{preview,test_response:value});setChecked(true);}catch(e){setError(e.message);}finally{setBusy(false);}}async function start(){setBusy(true);try{const a=await post('/sets/'+id+'/start',{preview,device_checked:confirmed,start_key:key.current});sessionStorage.removeItem('tejas-start-'+id);nav(a.status==='completed'?'/results/'+a.id:'/attempts/'+a.id);}catch(e){setError(e.message);setBusy(false);}}if(!s)return <div className="container page"><ErrorBox error={error}/>{!error&&<Loading/>}</div>;const count=s.count??s.questions?.length;return <div className="container page"><Link className="breadcrumb" data-testid="set-back" to={preview?'/studio/'+id:'/exams'}>← {preview?'Back to Content Studio':'Back to practice sets'}</Link><PageTitle eyebrow={preview?'PRIVATE REVIEWER PREVIEW · NOT APPROVED CONTENT':`${s.exam.toUpperCase()} · NONOFFICIAL PRACTICE`} title={s.title} description={s.source}/>{preview&&<div className="notice amber">This is a private draft preview. Questions and answers may still require review. This attempt does not publish the paper or approve its content.</div>}<div className="preflight-grid"><section className="card instructions"><Badge>{s.exam} · Practice for {s.year||'your preparation'}</Badge><h2>Know the rules. Then begin.</h2><div className="instruction-facts"><div><strong>{count}</strong><span>Questions</span></div><div><strong>{s.rules.minutes||'No'}</strong><span>{s.rules.minutes?'Minutes':'time limit'}</span></div><div><strong>{count*s.rules.correct}</strong><span>Maximum marks</span></div></div><div className="marks-rule"><span>+{s.rules.correct} correct</span><span>{s.rules.wrong} incorrect</span><span>0 unanswered</span></div><h3>Before you start</h3><ul><li>Each question has one correct option, or an integer entry where stated.</li><li>{s.rules.numeric_rule}</li><li>Keep the original question and option order. Mark for review and return to any question.</li><li>Only server-acknowledged answers are saved for scoring. New offline edits remain pending.</li><li>{s.rules.minutes?'The timer does not pause. Refreshing or disconnecting never extends the deadline. Answers received after the deadline are not scored.':'This is untimed practice. Your saved attempt can be resumed.'}</li><li>Solutions are released after submission. Submission is final and produces a recoverable receipt.</li><li>Your report includes every question, regardless of on-screen filters.</li></ul><div className="notice"><Clock3 size={19}/><span>Reading these instructions and checking your device will not start the clock.</span></div></section><aside className="card device-check" data-testid="set-preflight-checklist"><span className="icon-tile"><Wifi size={24}/></span><h2>A quick device check.</h2><p>Check notation, a simple diagram, entry and saving before you begin.</p><div className="device-sample"><MathText text={'$x^2 + y^2 = r^2$'}/><svg viewBox="0 0 180 65" role="img" aria-label="Device check diagram: a right triangle with sides a, b and c"><path d="M35 10v45h110Z" fill="none" stroke="#2563EB" strokeWidth="2"/><text x="17" y="38">a</text><text x="84" y="51">b</text><text x="90" y="27">c</text></svg><small>Device-check illustration, not a practice question.</small></div><Field id="device-test-answer" label="Try entering an integer" placeholder="Type a number to test entry" value={value} onChange={e=>setValue(e.target.value)}/>{user?<><button className="btn btn-secondary full-width" data-testid="preflight-run-check" disabled={busy} onClick={check}>{busy?<Loader2 className="spin" size={17}/>:checked?<CheckCircle2 size={17}/>:<Wifi size={17}/>} {checked?'Connection & assets verified':'Check connection, assets & save'}</button><label className="checkbox-label"><input data-testid="preflight-acknowledge" type="checkbox" checked={confirmed} onChange={e=>setConfirmed(e.target.checked)}/><span>I can read the notation and diagram. I understand the rules and network policy.</span></label><ErrorBox error={error}/><button className="btn btn-primary full-width" data-testid="set-preflight-start-button" disabled={!checked||!confirmed||busy} onClick={start}>Start {preview?'private preview':'attempt'} <ArrowRight size={18}/></button></>:<Link className="btn btn-primary full-width" data-testid="preflight-login" to={'/login?next='+encodeURIComponent('/sets/'+id)}>Sign in to start <ArrowRight size={17}/></Link>}<small><ShieldCheck size={14}/> Your answers and results are private.</small></aside></div></div>}
+import React, { useEffect, useState, useRef } from 'react';
+import { Link, useParams, useSearchParams, useNavigate } from 'react-router-dom';
+import { ArrowLeft, ArrowRight, CheckCircle2, Wifi, Clock3, ShieldCheck, Loader2, FileQuestion, Flag, Save, FileDown } from 'lucide-react';
+import { api, post } from '../lib/api';
+import { useAuth } from '../lib/auth';
+import { PageTitle, Badge, Loading, ErrorBox, Field } from '../components/Shared';
+import { MathText } from '../components/QuestionContent';
+import { Button } from '../components/ui/button';
+import { Checkbox } from '../components/ui/checkbox';
+import { Card } from '../components/ui/card';
+
+export default function SetDetail() {
+  const { id } = useParams();
+  const [params] = useSearchParams();
+  const preview = params.get('preview') === 'true';
+  const { user, checking } = useAuth();
+  const userId = user?.id;
+  const nav = useNavigate();
+  const [s, setS] = useState(null);
+  const [error, setError] = useState('');
+  const [checked, setChecked] = useState(false);
+  const [confirmed, setConfirmed] = useState(false);
+  const [value, setValue] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [retry, setRetry] = useState(0);
+  const key = useRef(null);
+  useEffect(() => {
+    const controller = new AbortController();
+    setS(null); setError(''); setChecked(false); setConfirmed(false);
+    if (!checking) {
+      key.current = sessionStorage.getItem('tejas-start-' + id) || crypto.randomUUID();
+      sessionStorage.setItem('tejas-start-' + id, key.current);
+      const path = preview ? '/studio/sets/' + id : (userId ? '/my/sets/' : '/sets/') + id;
+      api(path, { signal: controller.signal })
+        .then(d => { if (!controller.signal.aborted) setS(d); })
+        .catch(e => { if (!controller.signal.aborted) setError(e.message); });
+    }
+    return () => controller.abort();
+  }, [id, preview, userId, checking, retry]);
+  async function check() {
+    setBusy(true); setError('');
+    try {
+      localStorage.setItem('tejas-device-check', 'ok');
+      if (localStorage.getItem('tejas-device-check') !== 'ok') throw new Error('Enable browser storage to protect pending answer drafts.');
+      localStorage.removeItem('tejas-device-check');
+      await post('/sets/' + id + '/preflight', { preview, test_response: value });
+      setChecked(true);
+    } catch (e) { setError(e.message); }
+    finally { setBusy(false); }
+  }
+  async function start() {
+    setBusy(true); setError('');
+    try {
+      const a = await post('/sets/' + id + '/start', { preview, device_checked: confirmed, start_key: key.current });
+      sessionStorage.removeItem('tejas-start-' + id);
+      nav(a.status === 'completed' ? '/results/' + a.id : '/attempts/' + a.id);
+    } catch (e) { setError(e.message); setBusy(false); }
+  }
+  if (!s) return <div className="container page"><ErrorBox error={error} retry={() => setRetry(v => v + 1)} />{!error && <Loading />}</div>;
+  const count = s.count ?? s.questions?.length;
+  const minutes = s.rules.minutes;
+  return (
+    <div className="container page set-detail" data-testid="set-detail-page">
+      <Link className="breadcrumb" data-testid="set-back" to={preview ? '/studio/' + id : '/exams'}><ArrowLeft size={15} /> {preview ? 'Back to Content Studio' : 'Back to practice sets'}</Link>
+      <PageTitle eyebrow={preview ? 'PRIVATE REVIEW · NOT APPROVED CONTENT' : `${s.exam.toUpperCase()} · INDEPENDENT PRACTICE`} title={s.title} description={s.source} />
+      {preview && <div className="notice amber" data-testid="private-preview-notice">Private draft preview. Questions and solutions still require review. Starting does not approve or publish this paper.</div>}
+      <div className="preflight-grid">
+        <Card className="card instructions" data-testid="set-instructions">
+          <div className="preflight-step-label" data-testid="preflight-rules-step"><span>01</span> Get familiar</div>
+          <h2 data-testid="set-instructions-heading">Your practice, at a glance.</h2>
+          <Badge>{s.exam} · Practice for {s.year || 'your preparation'}</Badge>
+          <div className="instruction-facts" data-testid="set-facts">
+            <div><FileQuestion size={18} /><strong data-testid="set-question-count">{count}</strong><span>Questions</span></div>
+            <div><Clock3 size={18} /><strong data-testid="set-duration">{minutes ? (minutes < 1 ? minutes * 60 : minutes) : 'No limit'}</strong><span>{minutes ? (minutes < 1 ? 'Seconds' : 'Minutes') : 'Untimed practice'}</span></div>
+            <div><Flag size={18} /><strong data-testid="set-maximum-marks">{s.maximum ?? count * s.rules.correct}</strong><span>Maximum marks</span></div>
+          </div>
+          <div className="marks-rule" data-testid="set-marking-rule"><span>+{s.rules.correct} correct</span><span>{s.rules.wrong} incorrect</span><span>0 unanswered</span></div>
+          <h3 data-testid="set-before-start-heading">A few things to know</h3>
+          <ul data-testid="set-instructions-list">
+            <li>One correct option per question, or an integer entry where stated. Mark for review and return to any question.</li>
+            <li>{s.rules.numeric_rule}</li>
+            <li>{minutes ? 'The timer keeps running during a disconnect. Only answers received before the deadline are scored.' : 'This is untimed practice. Come back to your saved attempt whenever you need.'}</li>
+            <li>Submitting is final. Your result, matched solutions and full PDF report become available afterward.</li>
+          </ul>
+          <div className="notice preflight-recovery" data-testid="preflight-offline-recovery-notice"><Save size={19} /><span><strong>Your drafts stay on this device.</strong> Offline edits remain pending until the server acknowledges them. Check the save status before submitting.</span></div>
+          <details className="profile-details"><summary data-testid="practice-profile-details">About this practice profile</summary><p>Free navigation · Original question order · Exact integers · Solutions after submission. This custom profile is not an official-year exam simulation. Your PDF includes every question, regardless of review filters.</p></details>
+        </Card>
+        <Card className="card device-check" data-testid="set-preflight-checklist">
+          <div className="preflight-step-label" data-testid="preflight-device-step"><span>02</span> Check & begin</div>
+          <h2 data-testid="device-check-heading">Ready when you are.</h2>
+          <p data-testid="device-check-description">Check that the notation and diagram look clear, then try an answer below.</p>
+          <div className="device-sample" data-testid="device-check-sample">
+            <MathText text={'$x^2 + y^2 = r^2$'} />
+            <svg viewBox="0 0 180 65" role="img" aria-label="Device check: a right triangle with sides a, b and c"><path d="M35 10v45h110Z" fill="none" stroke="var(--brand-text)" strokeWidth="2" /><text x="17" y="38">a</text><text x="84" y="51">b</text><text x="90" y="27">c</text></svg>
+            <small>Display check only, not a practice question.</small>
+          </div>
+          <Field id="device-test-answer" label="Try entering an integer" placeholder="For example, 25" value={value} onChange={e => setValue(e.target.value)} />
+          {user ? <>
+            <Button variant="outline" className="btn btn-secondary full-width" data-testid="preflight-run-check" disabled={busy} onClick={check}>{busy ? <Loader2 className="spin" size={17} /> : checked ? <CheckCircle2 size={17} /> : <Wifi size={17} />}{checked ? 'Device check passed' : 'Check my device'}</Button>
+            {checked && <p className="device-check-success" role="status" data-testid="preflight-check-success">Connection, source images and saving verified.</p>}
+            <label className="checkbox-label" htmlFor="preflight-consent"><Checkbox id="preflight-consent" className="preflight-checkbox" data-testid="preflight-acknowledge" checked={confirmed} onCheckedChange={v => setConfirmed(v === true)} /><span>I can read the content and understand the rules and offline saving policy.</span></label>
+            <ErrorBox error={error} />
+            <Button className="btn btn-primary full-width" data-testid="set-preflight-start-button" disabled={!checked || !confirmed || busy} onClick={start}>{busy ? <Loader2 className="spin" size={18} /> : null}Start {preview ? 'private preview' : 'attempt'}<ArrowRight size={18} /></Button>
+          </> : <Button asChild className="btn btn-primary full-width"><Link data-testid="preflight-login" to={'/login?next=' + encodeURIComponent('/sets/' + id)}>Sign in to start<ArrowRight size={17} /></Link></Button>}
+          <small className="preflight-clock-note" data-testid="preflight-clock-notice"><Clock3 size={14} /> The clock starts only when your attempt opens.</small>
+          <small data-testid="preflight-profile-notice"><ShieldCheck size={14} /> Saved to this number’s practice profile.</small>
+        </Card>
+      </div>
+      <div className="preflight-report-note" data-testid="preflight-report-note"><FileDown size={17} /> One complete PDF. Every question, your response and its matched solution.</div>
+    </div>
+  );
+}

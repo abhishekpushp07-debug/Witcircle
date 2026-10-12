@@ -1,6 +1,6 @@
 """Source-aware, review-only PDF segmentation, deterministic scoring and complete reports."""
 
-import re, uuid, html
+import re, uuid
 import fitz
 import numpy as np
 
@@ -9,6 +9,9 @@ RULES = {
     "correct": 4,
     "wrong": -1,
     "skipped": 0,
+    "navigation": "free",
+    "numeric_policy": "integer_exact",
+    "solution_release": "after_submit",
     "numeric_rule": "Exact integer value; signs and leading zeros accepted; up to 20 digits. No rounding.",
 }
 
@@ -39,7 +42,7 @@ def validate_pdf(data):
 
 def segment_pdf(data, solution=False):
     doc = validate_pdf(data)
-    anchors, sections = [], []
+    anchors, sections, barriers = [], [], []
     current_subject = ""
     for pi, page in enumerate(doc):
         pix = page.get_pixmap(colorspace=fitz.csGRAY)
@@ -54,13 +57,21 @@ def segment_pdf(data, solution=False):
                 ):
                     current_subject = text.split(" ")[0].title()
                     sections.append((pi, line["bbox"][1]))
-                m = re.match(r"^Q\s*(\d+)\.\s*(.*)", text)
-                if (
-                    not m
-                    or (solution and not re.match(r"Answer\s*:", m[2], re.I))
-                    or (not solution and re.match(r"Answer\s*:", m[2], re.I))
+                if line["bbox"][1] >= 40 and (
+                    ("ANSWER KEY" in text.upper() and len(text) < 100)
+                    or text.upper()
+                    in ["DETAILED SOLUTIONS", "KEY AND SOLUTIONS", "SOLUTIONS"]
                 ):
+                    barriers.append(
+                        {
+                            "page": pi,
+                            "top": 48 if line["bbox"][1] < 200 else line["bbox"][1] - 4,
+                        }
+                    )
+                m = re.match(r"^Q\s*(\d+)\.\s*(.*)", text)
+                if not m:
                     continue
+                is_solution = bool(re.match(r"Answer\s*:", m[2], re.I))
                 y = line["bbox"][1]
                 # Find full-width whitespace above the stem; preserves elevated integrals and determinants.
                 top = max(40, int(y) - 2)
@@ -68,6 +79,9 @@ def segment_pdf(data, solution=False):
                     if np.min(pixels[row, 40 : min(pix.width - 35, 560)]) > 245:
                         top = max(40, row - 2)
                         break
+                barriers.append({"page": pi, "top": top})
+                if solution != is_solution:
+                    continue
                 anchors.append(
                     {
                         "number": int(m[1]),
@@ -84,6 +98,15 @@ def segment_pdf(data, solution=False):
             if idx + 1 < len(anchors)
             else {"page": len(doc) - 1, "top": doc[-1].rect.height - 48}
         )
+        cutoffs = [
+            b
+            for b in barriers + [{"page": p, "top": y - 8} for p, y in sections]
+            if (a["page"], a["top"])
+            < (b["page"], b["top"])
+            <= (end["page"], end["top"])
+        ]
+        if cutoffs:
+            end = min(cutoffs, key=lambda b: (b["page"], b["top"]))
         refs = []
         texts = []
         for pi in range(a["page"], end["page"] + 1):
@@ -136,7 +159,11 @@ def build_questions(
         ]
         s = matches[0] if len(matches) == 1 else {}
         number = q["number"]
-        kind = "mcq" if re.search(r"\([1A]\)", q["text"]) else "integer"
+        labels = set(re.findall(r"\(([1-4A-D])\)", q["text"]))
+        family = (
+            "1234" if set("1234") <= labels else "ABCD" if set("ABCD") <= labels else ""
+        )
+        kind = "mcq" if family else "integer"
         if known_tejas:
             kind = "mcq" if (number - 1) % 25 < 20 else "integer"
         subject = q["subject"] or (
@@ -148,10 +175,15 @@ def build_questions(
         label = lines[1] if len(lines) > 1 else ""
         opts = {}
         if kind == "mcq":
-            chunks = re.split(r"\(([1-4A-D])\)", q["text"])
-            # Only a suggestion; source crops and reviewer verification remain mandatory.
+            chosen = family or "1234"
+            chunks = re.split(r"\(([" + chosen + r"])\)", q["text"])
+            # Choose one complete option family. A–D figure labels are not extra options
+            # when the actual response choices are numbered 1–4.
             for j in range(1, len(chunks) - 1, 2):
-                opts[chunks[j]] = chunks[j + 1].strip()
+                opts[chunks[j]] = (
+                    chunks[j + 1].strip()
+                    or f"Source option {chunks[j]} (see original figure; description needs review)"
+                )
         issues = []
         if len(matches) != 1:
             issues.append("Missing or ambiguous solution match")
@@ -206,80 +238,25 @@ def public_question(q):
 
 
 def normalize_answer(value, kind):
-    value = str(value).strip()
-    if not value:
-        return ""
-    if kind == "integer":
-        if not re.fullmatch(r"[+-]?\d{1,20}", value):
-            raise ValueError(
-                "Enter an integer (up to 20 digits). Decimals and expressions are not accepted."
-            )
-        return str(int(value))
-    return value
+    from tejas.scoring import canonical
+
+    return canonical(value, kind)
 
 
 def score_attempt(attempt):
-    rules = attempt["rules"]
-    rows = []
-    for q in attempt["questions"]:
-        response = attempt.get("answers", {}).get(q["id"], {})
-        value = response.get("value", "")
-        correct = bool(value) and normalize_answer(
-            value, q["type"]
-        ) == normalize_answer(q["answer"], q["type"])
-        state = "skipped" if not value else "correct" if correct else "incorrect"
-        marks = (
-            rules["skipped"]
-            if state == "skipped"
-            else rules["correct"] if correct else rules["wrong"]
-        )
-        rows.append(
-            {
-                **q,
-                "response": value,
-                "marked": response.get("marked", False),
-                "outcome": state,
-                "marks": marks,
-            }
-        )
-    n = len(rows)
-    c = sum(r["outcome"] == "correct" for r in rows)
-    w = sum(r["outcome"] == "incorrect" for r in rows)
-    tried = c + w
-    summary = {
-        "score": sum(r["marks"] for r in rows),
-        "maximum": n * rules["correct"],
-        "correct": c,
-        "incorrect": w,
-        "skipped": n - tried,
-        "attempted": tried,
-        "attempt_rate": round(100 * tried / n, 1) if n else 0,
-        "accuracy": round(100 * c / tried, 1) if tried else None,
-        "penalties": -w * min(0, rules["wrong"]),
-        "total_seconds": max(
-            0,
-            round(
-                attempt.get("submitted_at", attempt["started_at"])
-                - attempt["started_at"]
-            ),
-        ),
-    }
-    for category in ["subject", "topic"]:
-        groups = {}
-        for r in rows:
-            name = r.get(category) or "Unlabelled"
-            g = groups.setdefault(
-                name, {"count": 0, "correct": 0, "attempted": 0, "score": 0}
-            )
-            g["count"] += 1
-            g["correct"] += int(r["outcome"] == "correct")
-            g["attempted"] += int(r["outcome"] != "skipped")
-            g["score"] += r["marks"]
-        summary[category + "s"] = groups
-    return {"summary": summary, "questions": rows}
+    from tejas.scoring import score
+
+    ledger = attempt.get("ledger")
+    if ledger:
+        rows = {r["id"]: r for r in ledger["rows"]}
+        return {
+            "summary": ledger["summary"],
+            "questions": [{**q, **rows[q["id"]]} for q in attempt["questions"]],
+        }
+    return score(attempt)
 
 
-def crop_png(data, ref, scale=2):
+def _render_crop_png(data, ref, scale=2):
     doc = validate_pdf(data)
     p = ref["page"] - 1
     if p < 0 or p >= len(doc):
@@ -294,95 +271,22 @@ def crop_png(data, ref, scale=2):
     )
 
 
+from tejas.cache import ByteCache
+
+_crop_cache = ByteCache(32 * 1024 * 1024)
+
+
+def crop_png(data, ref, scale=2):
+    import hashlib
+
+    key = (hashlib.sha256(data).digest(), ref["page"], tuple(ref["rect"]), scale)
+    cached = _crop_cache.get(key)
+    if cached is not None:
+        return cached
+    return _crop_cache.put(key, _render_crop_png(data, ref, scale))
+
+
 def generate_report(attempt, file_loader):
-    result = score_attempt(attempt)
-    out = fitz.open()
-    blue = (0.145, 0.388, 0.922)
-    navy = (0.043, 0.122, 0.227)
+    from tejas.reports import render_report
 
-    def newpage(title):
-        page = out.new_page(width=595, height=842)
-        page.draw_rect(fitz.Rect(0, 0, 595, 8), color=blue, fill=blue)
-        page.insert_text(
-            (40, 39), "TEJAS / RESULTS & SOLUTIONS", fontsize=10, color=blue
-        )
-        page.insert_textbox(fitz.Rect(40, 55, 555, 100), title, fontsize=15, color=navy)
-        return page
-
-    p = newpage(attempt["title"])
-    s = result["summary"]
-    r = attempt["rules"]
-    from datetime import datetime, timezone
-
-    text = f"{attempt['exam']} | Nonofficial practice | Content version {attempt.get('version',1)}\nAttempt: {attempt['id']}\nStarted: {datetime.fromtimestamp(attempt['started_at'],timezone.utc).isoformat()}\nScore: {s['score']} / {s['maximum']}\nCorrect: {s['correct']} | Incorrect: {s['incorrect']} | Skipped: {s['skipped']}\nAttempt rate: {s['attempt_rate']}% | Accuracy: {str(s['accuracy'])+'%' if s['accuracy'] is not None else 'Not applicable (no attempts)'}\nAccuracy = correct / attempted. Penalties: {s['penalties']} marks\nElapsed: {s['total_seconds']} seconds\nRules: +{r['correct']} correct, {r['wrong']} wrong, {r['skipped']} unanswered\nNumerical: {r['numeric_rule']}\n\nComplete attempt: {len(result['questions'])} questions in original delivery order, including skipped questions.\nEach question is followed by its matched solution.\nPersonal study copy. Downloaded files are outside Tejas access controls.\nAttribution: {attempt.get('attribution','Owner-supplied content')}"
-    p.insert_textbox(fitz.Rect(40, 115, 555, 760), text, fontsize=11, lineheight=1.65)
-    for q in result["questions"]:
-        p = newpage(f"Question {q['number']} | {q['subject']}")
-        y = 108
-        p.insert_text(
-            (40, y),
-            f"Your answer: {q['response'] or 'Unanswered'} | Correct: {q['answer']} | Marks: {q['marks']} | {q['outcome'].title()}",
-            fontsize=10,
-        )
-        y += 24
-        for label, refs, plain in [
-            ("Question", q.get("q_refs", []), q["text"]),
-            ("Matched solution", q.get("s_refs", []), q["solution"]),
-        ]:
-            if y > 730:
-                p = newpage(f"Question {q['number']} continued")
-                y = 110
-            p.insert_text((40, y), label, fontsize=12, color=blue)
-            y += 14
-            if q.get("render_mode") == "source" and refs:
-                for ref in refs:
-                    raw = file_loader(ref["file_id"])
-                    clip = fitz.Rect(ref["rect"])
-                    scale = min(1, 515 / clip.width)
-                    h = clip.height * scale
-                    if y + h > 780:
-                        p = newpage(f"Question {q['number']} | {label} continued")
-                        y = 110
-                    # Rasterized isolated crop: no hidden neighboring PDF content is embedded.
-                    if h > 650:
-                        scale = 650 / clip.height
-                        h = 650
-                    p.insert_image(
-                        fitz.Rect(40, y, 40 + clip.width * scale, y + h),
-                        stream=crop_png(raw, ref, 2),
-                    )
-                    y += h + 16
-                    p.insert_text(
-                        (40, y),
-                        f"Source: {ref['file_id']} | page {ref['page']}",
-                        fontsize=7,
-                        color=(0.32, 0.38, 0.48),
-                    )
-                    y += 24
-            else:
-                if label == "Question" and q.get("type") == "mcq":
-                    plain += "\n\n" + "\n".join(
-                        f"({key}) {value}"
-                        for key, value in q.get("options", {}).items()
-                    )
-                # Split long text into paragraph chunks, retaining all text and Unicode.
-                for chunk in [plain[i : i + 1800] for i in range(0, len(plain), 1800)]:
-                    if y > 400:
-                        p = newpage(f"Question {q['number']} | {label} continued")
-                        y = 110
-                    spare, sc = p.insert_htmlbox(
-                        fitz.Rect(40, y, 555, 775),
-                        '<div style="font-size:11pt">'
-                        + html.escape(chunk).replace("\n", "<br>")
-                        + "</div>",
-                    )
-                    y = 775 - spare + 20
-    total = len(out)
-    for i, p in enumerate(out):
-        p.insert_text(
-            (40, 819),
-            f"Private study report | {i+1} / {total}",
-            fontsize=8,
-            color=(0.32, 0.38, 0.48),
-        )
-    return out.tobytes(garbage=4, deflate=True)
+    return render_report(attempt, file_loader)

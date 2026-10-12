@@ -1,4 +1,4 @@
-import copy, hashlib, re
+import copy, hashlib
 from datetime import datetime, timezone
 from fastapi import (
     APIRouter,
@@ -28,6 +28,8 @@ class SetInput(BaseModel):
     attribution: str = Field(default="", max_length=300)
     audience: str = "all"
     allowed_emails: list[str] = []
+    allowed_phones: list[str] = []
+    profile_mode: str = "practice"
     expires: str = ""
     rights_upload: bool = False
     rights_publish: bool = False
@@ -61,9 +63,21 @@ def valid_rules(r):
             400,
             "Rules require 0–1440 minutes, positive correct marks, nonpositive wrong marks, and zero unanswered marks.",
         )
+    if (
+        r.get("navigation", "free") != "free"
+        or r.get("numeric_policy", "integer_exact") != "integer_exact"
+        or r.get("solution_release", "after_submit") != "after_submit"
+    ):
+        raise HTTPException(
+            400,
+            "Unsupported profile policy. Current practice uses free navigation, exact integers and post-submission solutions.",
+        )
     return {
         **r,
-        "numeric_rule": "Exact integer value; signs and leading zeros accepted; up to 20 digits. No rounding.",
+        "navigation": "free",
+        "numeric_policy": "integer_exact",
+        "solution_release": "after_submit",
+        "numeric_rule": "Exact integer value; signs, Unicode minus and leading zeros accepted; up to 20 digits. No decimals or rounding.",
     }
 
 
@@ -74,7 +88,13 @@ def permitted(s, u=None):
     ):
         return False
     if s.get("audience") == "restricted":
-        return bool(u and u["email"] in s.get("allowed_emails", []))
+        return bool(
+            u
+            and (
+                (u.get("email") and u["email"] in s.get("allowed_emails", []))
+                or (u.get("phone") and u["phone"] in s.get("allowed_phones", []))
+            )
+        )
     return True
 
 
@@ -100,21 +120,22 @@ def summary(s):
         "approved_count": sum(q.get("approved", False) for q in qs),
         "subjects": list(dict.fromkeys(q["subject"] for q in qs if q.get("subject"))),
         "types": {t: sum(q["type"] == t for q in qs) for t in ["mcq", "integer"]},
-        "maximum": len(qs) * s["rules"]["correct"],
+        "maximum": sum(q.get("disposition", "standard") != "dropped" for q in qs)
+        * s["rules"]["correct"],
     }
 
 
 @router.get("/sets")
 async def catalogue(exam: str = "", q: str = "", page: int = 1):
-    f = {"status": "published", "audience": "all"}
-    if exam:
-        f["exam"] = exam
-    if q:
-        f["title"] = {"$regex": re.escape(q[:100]), "$options": "i"}
-    from .catalog import page as catalogue_page
+    from .catalog import available, counts, page as catalogue_page
 
+    f = available(exam=exam, search=q)
     data = await catalogue_page(f, page)
-    return {"items": [summary(s) for s in data if permitted(s)], "page": page}
+    return {
+        "items": [summary(s) for s in data],
+        "page": page,
+        "counts": await counts(f),
+    }
 
 
 @router.get("/sets/{id}")
@@ -131,13 +152,20 @@ async def set_detail(id: str):
 async def studio_sets(u=Depends(staff)):
     from .catalog import page
 
-    return [summary(s) for s in await page({}, size=100)]
+    return [summary(s) for s in await page({"qa_only": {"$ne": True}}, size=100)]
 
 
 @router.post("/studio/sets")
 async def create_set(data: SetInput, u=Depends(staff)):
     if data.exam not in ["JEE Main", "BITSAT"]:
         raise HTTPException(400, "Choose JEE Main or BITSAT.")
+    if data.profile_mode != "practice":
+        raise HTTPException(
+            400,
+            "Official simulation profiles are not activated. Create a custom practice set.",
+        )
+    if "rules" not in data.model_fields_set and data.exam == "BITSAT":
+        data.rules = {**data.rules, "correct": 3}
     r = valid_rules(data.rules)
     s = {
         **data.model_dump(),
@@ -194,6 +222,14 @@ async def update_set(id: str, data: SetInput, u=Depends(staff)):
             400,
             "Explain this correction. The set will return to review; existing attempts remain unchanged.",
         )
+    if s.get("qa_only") and data.audience != "restricted":
+        raise HTTPException(400, "QA-only content cannot be published to all students.")
+    if data.profile_mode != "practice":
+        raise HTTPException(400, "Only nonofficial practice profiles are available.")
+    if data.allowed_phones:
+        from .phone import normalize_phone
+
+        data.allowed_phones = [normalize_phone(p) for p in data.allowed_phones]
     fields = {**data.model_dump(), "rules": valid_rules(data.rules), "status": "draft"}
     await sets.update_one({"id": id}, {"$set": fields, "$inc": {"revision": 1}})
     await audit(
@@ -306,7 +342,12 @@ async def extract(id: str, data: dict, bg: BackgroundTasks, u=Depends(staff)):
         "extract",
         u["id"],
         id,
-        {"qfile": qf["id"], "sfile": sf["id"], "known_tejas": False},
+        {
+            "qfile": qf["id"],
+            "sfile": sf["id"],
+            "known_tejas": False,
+            "revision": s["revision"],
+        },
     )
     bg.add_task(run_job, j["id"])
     return j
@@ -348,6 +389,24 @@ def question_issues(q, exam):
             issues.append(
                 "Reviewed accessible question and solution descriptions are required"
             )
+    disposition = q.get("disposition", "standard")
+    if disposition not in ["standard", "dropped", "bonus_all", "multiple_accepted"]:
+        issues.append("Unresolved scoring disposition: keep under review")
+    if disposition == "multiple_accepted":
+        accepted = q.get("accepted_answers", [])
+        if not isinstance(accepted, list) or not accepted:
+            issues.append("Multiple-accepted policy needs verified accepted answers")
+        else:
+            for value in accepted:
+                try:
+                    normalized = normalize_answer(value, q.get("type"))
+                    if not normalized or (
+                        q.get("type") == "mcq"
+                        and normalized not in q.get("options", {})
+                    ):
+                        raise ValueError()
+                except ValueError:
+                    issues.append("Invalid accepted answer in scoring policy")
     if not q.get("solution_number"):
         issues.append("Confirm the matched source solution number")
     return issues
@@ -429,6 +488,8 @@ async def edit_question(id: str, qid: str, data: dict, u=Depends(staff)):
         "accessible_text",
         "solution_accessible_text",
         "review_note",
+        "disposition",
+        "accepted_answers",
     ]
     q = {**old, **{k: v for k, v in data.items() if k in allowed}, "approved": False}
     if (
@@ -463,9 +524,16 @@ async def approve_question(id: str, qid: str, u=Depends(staff)):
     issues = question_issues(q, s["exam"])
     if issues:
         raise HTTPException(400, "; ".join(issues))
+    if q.get("render_mode") == "typed":
+        from .reports import validate_typed_math
+
+        try:
+            await run_in_threadpool(validate_typed_math, q)
+        except ValueError as exc:
+            raise HTTPException(400, str(exc))
     await validate_refs(s, q)
-    await sets.update_one(
-        {"id": id, "questions.id": qid},
+    res = await sets.update_one(
+        {"id": id, "questions.id": qid, "revision": s["revision"]},
         {
             "$set": {
                 "questions.$.approved": True,
@@ -476,6 +544,10 @@ async def approve_question(id: str, qid: str, u=Depends(staff)):
             "$inc": {"revision": 1},
         },
     )
+    if not res.modified_count:
+        raise HTTPException(
+            409, "Content changed during approval. Reload and review the new version."
+        )
     await audit(
         u["id"],
         f"Q{q['number']} approved",
@@ -504,7 +576,9 @@ async def publish(id: str, data: dict, u=Depends(owner)):
             400,
             "Source, attribution, upload, publication and personal-report permissions are required.",
         )
-    if s.get("audience") == "restricted" and not s.get("allowed_emails"):
+    if s.get("audience") == "restricted" and not (
+        s.get("allowed_emails") or s.get("allowed_phones")
+    ):
         raise HTTPException(400, "Add the permitted student email addresses.")
     if (
         s.get("expires")
@@ -523,6 +597,11 @@ async def publish(id: str, data: dict, u=Depends(owner)):
         raise HTTPException(
             400, "Duplicate section/question identities must be resolved."
         )
+    from .profiles import seal_profile
+
+    if s.get("qa_only") and s.get("audience") != "restricted":
+        raise HTTPException(400, "QA content must remain restricted.")
+    await seal_profile(s)
     for q in s["questions"]:
         await validate_refs(s, q)
     s["version"] = s.get("version", 0) + 1

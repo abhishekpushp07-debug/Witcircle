@@ -22,7 +22,11 @@ _capacity = asyncio.Semaphore(2)
 
 
 async def enqueue(kind, user_id, set_id, payload):
-    key = payload.get("attempt_id") if kind == "report" else set_id
+    key = (
+        payload["attempt_id"] + "-" + payload.get("score_version", "original")
+        if kind == "report"
+        else payload.get("key", set_id)
+    )
     id = kind + "-" + key
     j = {
         "id": id,
@@ -91,20 +95,36 @@ async def run_job(id):
                     sf["id"],
                     j["payload"].get("known_tejas", False),
                 )
-                await sets.update_one(
-                    {"id": j["set_id"]},
+                guard = {"id": j["set_id"]}
+                if "revision" in j["payload"]:
+                    guard["revision"] = j["payload"]["revision"]
+                updated = await sets.update_one(
+                    guard,
                     {
                         "$set": {"questions": qs, "status": "review"},
                         "$inc": {"revision": 1},
                     },
                 )
+                if not updated.modified_count:
+                    raise ValueError(
+                        "Draft changed during extraction. Existing reviewer edits were preserved; rerun from the current revision."
+                    )
                 message = (
                     f"{len(qs)} draft questions extracted. Human review is required."
                     if qs
                     else "No question boundaries detected. Add questions manually and select source regions."
                 )
+            elif j["kind"] == "regrade":
+                from .corrections import run_regrade
+
+                message = await run_regrade(j)
             elif j["kind"] == "report":
-                a = await get(attempts, j["payload"]["attempt_id"])
+                from .corrections import with_grade
+
+                a = await with_grade(
+                    await get(attempts, j["payload"]["attempt_id"]),
+                    j["payload"].get("score_version"),
+                )
                 ids = {
                     r["file_id"]
                     for q in a["questions"]
@@ -124,7 +144,7 @@ async def run_job(id):
                     {"id": id, "lease": lease}, {"$set": {"progress": 80}}
                 )
                 path = await run_in_threadpool(
-                    put_object, f"tejas/reports/{a['user_id']}/{a['id']}.pdf", pdf
+                    put_object, f"tejas/reports/{a['user_id']}/{id}.pdf", pdf
                 )
                 await jobs.update_one(
                     {"id": id, "lease": lease}, {"$set": {"path": path}}

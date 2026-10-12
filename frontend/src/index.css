@@ -1,5 +1,84 @@
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;500;600&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-@layer base{:root{--background:210 100% 98%;--foreground:215 45% 15%;--card:0 0% 100%;--card-foreground:215 45% 15%;--popover:0 0% 100%;--popover-foreground:215 45% 15%;--primary:217 91% 54%;--primary-foreground:0 0% 100%;--secondary:214 55% 96%;--secondary-foreground:215 45% 15%;--muted:214 55% 96%;--muted-foreground:215 20% 40%;--accent:214 55% 96%;--accent-foreground:215 45% 15%;--destructive:0 84% 55%;--destructive-foreground:0 0% 100%;--border:214 35% 88%;--input:214 35% 88%;--ring:217 91% 48%;--radius:.875rem;}*{@apply border-border;}body{margin:0;background:#F5F9FF;color:#14243A;font-family:'Public Sans',sans-serif;font-size:16px;-webkit-font-smoothing:antialiased;}h1,h2,h3,h4{font-family:'Manrope',sans-serif;}}
+@layer base {
+  :root {
+    color-scheme: light;
+    --background: 210 40% 98%;
+    --foreground: 205 45% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 205 45% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 205 45% 12%;
+    --primary: 338 100% 18%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 340 25% 95%;
+    --secondary-foreground: 205 45% 12%;
+    --muted: 210 25% 95%;
+    --muted-foreground: 205 18% 38%;
+    --accent: 340 25% 95%;
+    --accent-foreground: 205 45% 12%;
+    --destructive: 354 68% 42%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 214 20% 88%;
+    --input: 214 20% 88%;
+    --ring: 345 65% 33%;
+    --radius: 0.875rem;
+    --font-ui: 'Figtree', sans-serif;
+    --font-mono: 'Roboto Mono', monospace;
+    --text-xs: 0.75rem;
+    --text-sm: 0.875rem;
+    --text-base: 1rem;
+    --text-lg: 1.125rem;
+    --text-xl: 1.5rem;
+    --text-2xl: 2rem;
+    --text-title: clamp(1.75rem, 3vw, 2.5rem);
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-5: 1.25rem;
+    --space-6: 1.5rem;
+    --space-8: 2rem;
+    --space-10: 2.5rem;
+    --space-12: 3rem;
+    --space-16: 4rem;
+    --touch-target: 2.75rem;
+    --radius-sm: 0.5rem;
+    --radius-card: 1rem;
+    --z-header: 30;
+    --z-dropdown: 100;
+    --z-modal: 200;
+    --z-toast: 300;
+    --motion-fast: 180ms;
+  }
+  :root.dark {
+    color-scheme: dark;
+    --background: 330 10% 5%;
+    --foreground: 210 20% 98%;
+    --card: 330 12% 8%;
+    --card-foreground: 210 20% 98%;
+    --popover: 330 12% 8%;
+    --popover-foreground: 210 20% 98%;
+    --secondary: 330 10% 12%;
+    --secondary-foreground: 210 20% 98%;
+    --muted: 330 10% 12%;
+    --muted-foreground: 215 12% 78%;
+    --accent: 330 10% 16%;
+    --accent-foreground: 210 20% 98%;
+    --border: 330 10% 16%;
+    --input: 330 10% 16%;
+    --ring: 345 35% 78%;
+  }
+  * { @apply border-border; }
+  body {
+    margin: 0;
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: var(--font-ui);
+    font-size: var(--text-base);
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, h4 { font-family: var(--font-ui); }
+}

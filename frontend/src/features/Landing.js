@@ -1,16 +1,549 @@
-import React,{useEffect,useState} from 'react';
-import {Link} from 'react-router-dom';
-import {ArrowRight,ArrowUpRight,Check,CheckCircle2,ShieldCheck,FileCheck2,Download,MoveUpRight,BookOpen,RotateCcw,ChartNoAxesCombined,Plus,Minus,LockKeyhole,Atom,Orbit,Accessibility,CheckCircle2 as CloudCheck,ChevronRight} from 'lucide-react';
-import {api} from '../lib/api';
-import {Badge} from '../components/Shared';
-const faq=[['What can I practice on Tejas?','Tejas supports JEE Main and BITSAT practice sets with clearly stated rules. Only owner-supplied, reviewed and published sets appear in the catalogue. BITSAT papers will appear when suitable source content has been supplied and reviewed.'],['Is this an official exam platform?','No. Tejas is an independent preparation platform, not affiliated with NTA, JEE or BITS Pilani. Practice papers are not official examinations, verified official-pattern simulations or prediction guarantees.'],['What happens if my connection drops?','Answers acknowledged by the server are retained. New edits are kept as pending drafts on your device and retried when you reconnect. A timed attempt’s deadline continues; only answers received before that deadline are scored. Offline submission is not supported.'],['Can I download my questions and solutions?','Yes, after completing a published set with report permission. Your personal PDF includes the entire attempt, your responses, correct answers, marks and matched solutions—even skipped questions. Original source PDFs stay private.'],['Do I need an account to explore?','You can browse published sets without an account. Sign in to start an attempt, save answers and keep your personal results. Email verification and email-based password recovery are not available in this first release.']];
-function LearningIllustration(){return <div className="learning-illustration" aria-label="Workflow illustration: practice, understand results, review matched solutions and improve"><div className="illustration-grid"/><div className="orbital orbital-one"/><div className="orbital orbital-two"/><span className="illustration-label">A BETTER LEARNING LOOP</span><div className="practice-sheet"><div className="sheet-top"><span><span className="tiny-logo">t</span> YOUR PRACTICE SPACE</span><span className="tiny-dots">•••</span></div><div className="sheet-main"><div className="sheet-meta"><span>FOCUS ON THE QUESTION</span><span><LockKeyhole size={12}/> Private</span></div><h3>One question.<br/>Your full attention.</h3><div className="formula-illustration" aria-hidden="true"><span>∫</span><i>understand</i><sup>more</sup><div className="formula-underline"/></div><div className="sheet-rule"/><div className="sheet-check"><CheckCircle2 size={16}/><span>Choose. Review. Keep going.</span></div></div><div className="sheet-bottom"><CloudCheck size={15}/><span>Know when your answer is saved</span><ChevronRight size={16}/></div></div><div className="floating-solution"><span className="floating-icon"><FileCheck2 size={23}/></span><div><strong>Not just the answer.</strong><span>The reason behind it.</span></div><span className="solution-tick"><Check size={14}/></span></div><div className="floating-report"><span className="pdf-icon"><Download size={21}/></span><div><strong>Your learning, to keep.</strong><span>Results + matched solutions</span></div><span className="file-extension">PDF</span></div><svg className="loop-arrow" viewBox="0 0 120 100" aria-hidden="true"><path d="M10 10C90 4 104 34 86 76M72 65l13 15 15-12" fill="none" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" strokeDasharray="5 6"/></svg><div className="illustration-caption"><span className="blue-dot"/> Workflow illustration · Your progress starts with practice</div></div>}
-export default function Landing(){const [counts,setCounts]=useState(null);const [opened,setOpened]=useState(0);useEffect(()=>{api('/sets').then(d=>setCounts({'JEE Main':d.items.filter(s=>s.exam==='JEE Main').length,'BITSAT':d.items.filter(s=>s.exam==='BITSAT').length})).catch(()=>setCounts(null));},[]);return <>
-<section className="hero"><div className="container hero-grid"><div className="hero-copy"><div className="hero-eyebrow"><span className="blue-dot"/> BUILT AROUND HOW YOU LEARN</div><h1>Practice with purpose.<br/>Understand <span>every<br className="desktop-break"/> mistake.</span></h1><p className="hero-description">Go beyond a score. Turn every question into a clearer concept—with focused practice, meaningful results, and solutions that actually belong together.</p><div className="hero-buttons"><Link to="/exams" className="btn btn-primary btn-large" data-testid="landing-hero-start-practicing-button">Start practicing <ArrowUpRight size={19}/></Link><a className="btn btn-secondary btn-large" href="#how-it-works" data-testid="landing-hero-see-how-it-works-button">See how it works <ArrowRight size={18}/></a></div><div className="hero-note"><ShieldCheck size={16}/><span>Thoughtful practice. No rank promises. Just learning.</span></div></div><LearningIllustration/></div><div className="container hero-proof"><div><FileCheck2 size={20}/><span>Reviewed before publication</span></div><div><CloudCheck size={20}/><span>Clear answer-saving states</span></div><div><Download size={20}/><span>Complete take-away reports</span></div><div><Accessibility size={20}/><span>Made for different ways of learning</span></div></div></section>
-<section className="section exams-section" id="exams"><div className="container"><div className="section-heading"><div><span className="eyebrow">YOUR EXAM. YOUR NEXT STEP.</span><h2>A focused space for<br/>what you’re preparing for.</h2></div><p>Different goals. The same care for every question,<br className="desktop-break"/> every explanation, and every attempt.</p></div><div className="exam-card-grid">{[['JEE Main','Build clarity across the core.','Mathematics','Physics','Chemistry'],['BITSAT','Make every concept count.','PCM','English proficiency','Logical reasoning']].map((e,i)=><Link to={'/exams?exam='+encodeURIComponent(e[0])} className={'exam-card '+(i?'bits-card':'jee-card')} key={e[0]} data-testid={i?'landing-exam-bitsat-card':'landing-exam-jee-card'}><div className="exam-card-top"><span className="exam-symbol">{i?<Orbit size={31}/>:<Atom size={31}/>}</span><Badge tone={counts?.[e[0]]?'green':'neutral'}>{counts===null?'Explore availability':counts[e[0]]?`${counts[e[0]]} published ${counts[e[0]]===1?'set':'sets'}`:i?'Awaiting reviewed papers':'Papers in review'}</Badge></div><h3>{e[0]} <ArrowUpRight size={25}/></h3><p>{e[1]}</p><div className="subject-tags">{e.slice(2).map(s=><span key={s}>{s}</span>)}</div><div className="exam-card-bottom"><span>Explore practice sets</span><ArrowRight size={19}/></div></Link>)}</div><p className="availability-note"><span className="small-dot"/> Only reviewed, published content is available to practice. No papers are invented to fill a catalogue.</p></div></section>
-<section id="how-it-works" className="section how-section"><div className="container"><div className="center-heading"><span className="eyebrow">LESS GUESSWORK. MORE UNDERSTANDING.</span><h2>Don’t just finish a paper.<br/>Complete the learning loop.</h2><p>A score tells you where you are. Understanding tells you where to go next.</p></div><div className="steps-grid">{[[BookOpen,'01','Practice with focus','Choose a reviewed set, understand its rules, and work through one question at a time.'],[ChartNoAxesCombined,'02','See the full picture','Know what you got right, what you skipped, and how your marks were calculated.'],[FileCheck2,'03','Understand the why','Review each question with its own worked solution, original notation, and explanation.'],[RotateCcw,'04','Make it stick','Retry incorrect or skipped questions. Keep your complete report for offline revision.']].map(([Icon,n,title,text])=><article className="step" key={n}><div className="step-icon"><Icon size={24}/><span>{n}</span></div><h3>{title}</h3><p>{text}</p></article>)}</div></div></section>
-<section className="section" id="our-standard"><div className="container standard-grid"><div className="standard-visual"><div className="quality-top"><span className="eyebrow">THE CONTENT CHECKPOINT</span><ShieldCheck size={25}/></div><h3>Trust isn’t a badge.<br/>It’s a process.</h3>{['Original source preserved','Question & answer checked','The right solution, matched','Reviewed. Then published.'].map((t,i)=><div className="quality-step" key={t}><span>{String(i+1).padStart(2,'0')}</span><strong>{t}</strong><Check size={17}/></div>)}<div className="quality-note"><LockKeyhole size={15}/> Source files stay private. Uncertain content stays in review.</div></div><div className="standard-copy"><span className="eyebrow">THE TEJAS STANDARD</span><h2>Your effort deserves<br/>content you can trust.</h2><p>A missing sign can change an answer. A mismatched solution can change your understanding. We treat those details as essentials—not finishing touches.</p><div className="standard-item"><FileCheck2/><div><h4>Matched by identity, not by page order</h4><p>Each question is linked to its reviewed solution, even when source documents use different layouts.</p></div></div><div className="standard-item"><ShieldCheck/><div><h4>Review comes before release</h4><p>Rights, equations, diagrams, options, and answer keys are checked before a set reaches students.</p></div></div><div className="standard-item"><LockKeyhole/><div><h4>Your practice stays yours</h4><p>Private attempts and reports. No public profiles, unsupported percentiles, or admission guarantees.</p></div></div></div></div></section>
-<section className="section report-section"><div className="container report-grid"><div><span className="eyebrow">LEARNING DOESN’T END AT SUBMIT</span><h2>Take the understanding<br/>with you.</h2><p>Not just a scorecard. Your complete results-and-solutions PDF puts every question, your response, the correct answer, and its explanation in one place.</p><div className="report-checks"><span><Check size={17}/> Every question—including the ones you skipped</span><span><Check size={17}/> Original attempt order. Correctly paired solutions.</span><span><Check size={17}/> Save, print, and revisit in your own time</span></div><Link to="/exams" className="text-link" data-testid="report-explore">Find your next practice set <ArrowUpRight size={18}/></Link></div><div className="report-art" aria-label="Illustration of a complete personal study report"><div className="paper-back"/><div className="report-paper"><div className="report-paper-head"><span className="tiny-logo">t</span><span>YOUR PERSONAL STUDY COPY</span><Download size={19}/></div><h3>One attempt.<br/>The whole story.</h3><div className="report-paper-rule"/>{['Your score & marking rules','Each question & your response','The correct answer & explanation'].map((t,i)=><div className="report-line" key={t}><span>{String(i+1).padStart(2,'0')}</span><strong>{t}</strong></div>)}<div className="paper-foot"><span>RESULTS + MATCHED SOLUTIONS</span><span>PDF</span></div></div><span className="report-art-note">Complete report illustration</span></div></div></section>
-<section className="section faq-section"><div className="container faq-grid"><div><span className="eyebrow">A LITTLE MORE CLARITY</span><h2>Good questions.<br/>Straight answers.</h2><p>Know what to expect before<br/>you start your next attempt.</p></div><div className="faqs">{faq.map(([q,a],i)=><div className={'faq '+(opened===i?'faq-open':'')} key={q}><button aria-expanded={opened===i} aria-controls={'faq-answer-'+i} data-testid={'faq-'+i} onClick={()=>setOpened(opened===i?-1:i)}>{q}{opened===i?<Minus size={19}/>:<Plus size={19}/>}</button>{opened===i&&<p id={'faq-answer-'+i}>{a}</p>}</div>)}</div></div></section>
-<section className="cta-section"><div className="container cta-panel"><div><span className="eyebrow">ONE QUESTION AT A TIME</span><h2>Your next step is<br/>a little more understanding.</h2><p>Bring your curiosity. We’ll give your practice a place.</p></div><Link to="/exams" className="btn btn-white btn-large" data-testid="landing-final-cta">Explore practice sets <ArrowUpRight size={19}/></Link><span className="cta-decoration" aria-hidden="true">↗</span></div></section>
-</>}
+import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import {
+  ArrowRight,
+  ArrowUpRight,
+  Check,
+  CheckCircle2,
+  ShieldCheck,
+  FileCheck2,
+  Download,
+  MoveUpRight,
+  BookOpen,
+  RotateCcw,
+  ChartNoAxesCombined,
+  Plus,
+  Minus,
+  LockKeyhole,
+  Atom,
+  Orbit,
+  Accessibility,
+  CheckCircle2 as CloudCheck,
+  ChevronRight,
+} from "lucide-react";
+import { api } from "../lib/api";
+import { Badge } from "../components/Shared";
+const faq = [
+  [
+    "What can I practice on Tejas?",
+    "Tejas supports JEE Main and BITSAT practice sets with clearly stated rules. Only owner-supplied, reviewed and published sets appear in the catalogue. BITSAT papers will appear when suitable source content has been supplied and reviewed.",
+  ],
+  [
+    "Is this an official exam platform?",
+    "No. Tejas is an independent preparation platform, not affiliated with NTA, JEE or BITS Pilani. Practice papers are not official examinations, verified official-pattern simulations or prediction guarantees.",
+  ],
+  [
+    "What happens if my connection drops?",
+    "Answers acknowledged by the server are retained. New edits are kept as pending drafts on your device and retried when you reconnect. A timed attempt’s deadline continues; only answers received before that deadline are scored. Offline submission is not supported.",
+  ],
+  [
+    "Can I download my questions and solutions?",
+    "Yes, after completing a published set with report permission. Your personal PDF includes the entire attempt, your responses, correct answers, marks and matched solutions—even skipped questions. Original source PDFs stay private.",
+  ],
+  [
+    "Do I need an account to explore?",
+    "You can browse published sets without signing in. To save practice, enter your mobile number—no OTP, password or email. Anyone entering the same number can reopen its saved attempts and results.",
+  ],
+];
+function LearningIllustration() {
+  return (
+    <div
+      className="learning-illustration"
+      aria-label="Workflow illustration: practice, understand results, review matched solutions and improve"
+    >
+      <div className="illustration-grid" />
+      <div className="orbital orbital-one" />
+      <div className="orbital orbital-two" />
+      <span className="illustration-label">A BETTER LEARNING LOOP</span>
+      <div className="practice-sheet">
+        <div className="sheet-top">
+          <span>
+            <span className="tiny-logo">t</span> YOUR PRACTICE SPACE
+          </span>
+          <span className="tiny-dots">•••</span>
+        </div>
+        <div className="sheet-main">
+          <div className="sheet-meta">
+            <span>FOCUS ON THE QUESTION</span>
+            <span>
+              <LockKeyhole size={12} /> Practice
+            </span>
+          </div>
+          <h3>
+            One question.
+            <br />
+            Your full attention.
+          </h3>
+          <div className="formula-illustration" aria-hidden="true">
+            <span>∫</span>
+            <i>understand</i>
+            <sup>more</sup>
+            <div className="formula-underline" />
+          </div>
+          <div className="sheet-rule" />
+          <div className="sheet-check">
+            <CheckCircle2 size={16} />
+            <span>Choose. Review. Keep going.</span>
+          </div>
+        </div>
+        <div className="sheet-bottom">
+          <CloudCheck size={15} />
+          <span>Know when your answer is saved</span>
+          <ChevronRight size={16} />
+        </div>
+      </div>
+      <div className="floating-solution">
+        <span className="floating-icon">
+          <FileCheck2 size={23} />
+        </span>
+        <div>
+          <strong>Not just the answer.</strong>
+          <span>The reason behind it.</span>
+        </div>
+        <span className="solution-tick">
+          <Check size={14} />
+        </span>
+      </div>
+      <div className="floating-report">
+        <span className="pdf-icon">
+          <Download size={21} />
+        </span>
+        <div>
+          <strong>Your learning, to keep.</strong>
+          <span>Results + matched solutions</span>
+        </div>
+        <span className="file-extension">PDF</span>
+      </div>
+      <svg className="loop-arrow" viewBox="0 0 120 100" aria-hidden="true">
+        <path
+          d="M10 10C90 4 104 34 86 76M72 65l13 15 15-12"
+          fill="none"
+          stroke="var(--blue)"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeDasharray="5 6"
+        />
+      </svg>
+      <div className="illustration-caption">
+        <span className="blue-dot" /> Workflow illustration · Your progress
+        starts with practice
+      </div>
+    </div>
+  );
+}
+export default function Landing() {
+  const [counts, setCounts] = useState(null);
+  const [opened, setOpened] = useState(0);
+  useEffect(() => {
+    api("/sets")
+      .then((d) =>
+        setCounts({
+          "JEE Main": d.counts?.['JEE Main']||0,
+          BITSAT: d.counts?.BITSAT||0,
+        }),
+      )
+      .catch(() => setCounts(null));
+  }, []);
+  return (
+    <>
+      <section className="hero">
+        <div className="container hero-grid">
+          <div className="hero-copy">
+            <div className="hero-eyebrow">
+              <span className="blue-dot" /> BUILT AROUND HOW YOU LEARN
+            </div>
+            <h1>
+              Practice with purpose.
+              <br />
+              Understand{" "}
+              <span>
+                every
+                <br className="desktop-break" /> mistake.
+              </span>
+            </h1>
+            <p className="hero-description">
+              Go beyond a score. Turn every question into a clearer concept—with
+              focused practice, meaningful results, and solutions that actually
+              belong together.
+            </p>
+            <div className="hero-buttons">
+              <Link
+                to="/exams"
+                className="btn btn-primary btn-large"
+                data-testid="landing-hero-start-practicing-button"
+              >
+                Start practicing <ArrowUpRight size={19} />
+              </Link>
+              <a
+                className="btn btn-secondary btn-large"
+                href="#how-it-works"
+                data-testid="landing-hero-see-how-it-works-button"
+              >
+                See how it works <ArrowRight size={18} />
+              </a>
+            </div>
+            <div className="hero-note">
+              <ShieldCheck size={16} />
+              <span>Thoughtful practice. No rank promises. Just learning.</span>
+            </div>
+          </div>
+          <LearningIllustration />
+        </div>
+        <div className="container hero-proof">
+          <div>
+            <FileCheck2 size={20} />
+            <span>Reviewed before publication</span>
+          </div>
+          <div>
+            <CloudCheck size={20} />
+            <span>Clear answer-saving states</span>
+          </div>
+          <div>
+            <Download size={20} />
+            <span>Complete take-away reports</span>
+          </div>
+          <div>
+            <Accessibility size={20} />
+            <span>Made for different ways of learning</span>
+          </div>
+        </div>
+      </section>
+      <section className="section exams-section" id="exams">
+        <div className="container">
+          <div className="section-heading">
+            <div>
+              <span className="eyebrow">YOUR EXAM. YOUR NEXT STEP.</span>
+              <h2>
+                A focused space for
+                <br />
+                what you’re preparing for.
+              </h2>
+            </div>
+            <p>
+              Different goals. The same care for every question,
+              <br className="desktop-break" /> every explanation, and every
+              attempt.
+            </p>
+          </div>
+          <div className="exam-card-grid">
+            {[
+              [
+                "JEE Main",
+                "Build clarity across the core.",
+                "Mathematics",
+                "Physics",
+                "Chemistry",
+              ],
+              [
+                "BITSAT",
+                "Make every concept count.",
+                "PCM",
+                "English proficiency",
+                "Logical reasoning",
+              ],
+            ].map((e, i) => (
+              <Link
+                to={"/exams?exam=" + encodeURIComponent(e[0])}
+                className={"exam-card " + (i ? "bits-card" : "jee-card")}
+                key={e[0]}
+                data-testid={
+                  i ? "landing-exam-bitsat-card" : "landing-exam-jee-card"
+                }
+              >
+                <div className="exam-card-top">
+                  <span className="exam-symbol">
+                    {i ? <Orbit size={31} /> : <Atom size={31} />}
+                  </span>
+                  <Badge tone={counts?.[e[0]] ? "green" : "neutral"}>
+                    {counts === null
+                      ? "Explore availability"
+                      : counts[e[0]]
+                        ? `${counts[e[0]]} published ${counts[e[0]] === 1 ? "set" : "sets"}`
+                        : i
+                          ? "Awaiting reviewed papers"
+                          : "Papers in review"}
+                  </Badge>
+                </div>
+                <h3>
+                  {e[0]} <ArrowUpRight size={25} />
+                </h3>
+                <p>{e[1]}</p>
+                <div className="subject-tags">
+                  {e.slice(2).map((s) => (
+                    <span key={s}>{s}</span>
+                  ))}
+                </div>
+                <div className="exam-card-bottom">
+                  <span>Explore practice sets</span>
+                  <ArrowRight size={19} />
+                </div>
+              </Link>
+            ))}
+          </div>
+          <p className="availability-note">
+            <span className="small-dot" /> Only reviewed, published content is
+            available to practice. No papers are invented to fill a catalogue.
+          </p>
+        </div>
+      </section>
+      <section id="how-it-works" className="section how-section">
+        <div className="container">
+          <div className="center-heading">
+            <span className="eyebrow">LESS GUESSWORK. MORE UNDERSTANDING.</span>
+            <h2>
+              Don’t just finish a paper.
+              <br />
+              Complete the learning loop.
+            </h2>
+            <p>
+              A score tells you where you are. Understanding tells you where to
+              go next.
+            </p>
+          </div>
+          <div className="steps-grid">
+            {[
+              [
+                BookOpen,
+                "01",
+                "Practice with focus",
+                "Choose a reviewed set, understand its rules, and work through one question at a time.",
+              ],
+              [
+                ChartNoAxesCombined,
+                "02",
+                "See the full picture",
+                "Know what you got right, what you skipped, and how your marks were calculated.",
+              ],
+              [
+                FileCheck2,
+                "03",
+                "Understand the why",
+                "Review each question with its own worked solution, original notation, and explanation.",
+              ],
+              [
+                RotateCcw,
+                "04",
+                "Make it stick",
+                "Retry incorrect or skipped questions. Keep your complete report for offline revision.",
+              ],
+            ].map(([Icon, n, title, text]) => (
+              <article className="step" key={n}>
+                <div className="step-icon">
+                  <Icon size={24} />
+                  <span>{n}</span>
+                </div>
+                <h3>{title}</h3>
+                <p>{text}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+      <section className="section" id="our-standard">
+        <div className="container standard-grid">
+          <div className="standard-visual">
+            <div className="quality-top">
+              <span className="eyebrow">THE CONTENT CHECKPOINT</span>
+              <ShieldCheck size={25} />
+            </div>
+            <h3>
+              Trust isn’t a badge.
+              <br />
+              It’s a process.
+            </h3>
+            {[
+              "Original source preserved",
+              "Question & answer checked",
+              "The right solution, matched",
+              "Reviewed. Then published.",
+            ].map((t, i) => (
+              <div className="quality-step" key={t}>
+                <span>{String(i + 1).padStart(2, "0")}</span>
+                <strong>{t}</strong>
+                <Check size={17} />
+              </div>
+            ))}
+            <div className="quality-note">
+              <LockKeyhole size={15} /> Source files stay private. Uncertain
+              content stays in review.
+            </div>
+          </div>
+          <div className="standard-copy">
+            <span className="eyebrow">THE TEJAS STANDARD</span>
+            <h2>
+              Your effort deserves
+              <br />
+              content you can trust.
+            </h2>
+            <p>
+              A missing sign can change an answer. A mismatched solution can
+              change your understanding. We treat those details as
+              essentials—not finishing touches.
+            </p>
+            <div className="standard-item">
+              <FileCheck2 />
+              <div>
+                <h4>Matched by identity, not by page order</h4>
+                <p>
+                  Each question is linked to its reviewed solution, even when
+                  source documents use different layouts.
+                </p>
+              </div>
+            </div>
+            <div className="standard-item">
+              <ShieldCheck />
+              <div>
+                <h4>Review comes before release</h4>
+                <p>
+                  Rights, equations, diagrams, options, and answer keys are
+                  checked before a set reaches students.
+                </p>
+              </div>
+            </div>
+            <div className="standard-item">
+              <LockKeyhole />
+              <div>
+                <h4>Less friction. A simple way back.</h4>
+                <p>
+                  Enter a mobile number to save your practice. No OTP or
+                  password; anyone using that number can reopen its results.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section className="section report-section">
+        <div className="container report-grid">
+          <div>
+            <span className="eyebrow">LEARNING DOESN’T END AT SUBMIT</span>
+            <h2>
+              Take the understanding
+              <br />
+              with you.
+            </h2>
+            <p>
+              Not just a scorecard. Your complete results-and-solutions PDF puts
+              every question, your response, the correct answer, and its
+              explanation in one place.
+            </p>
+            <div className="report-checks">
+              <span>
+                <Check size={17} /> Every question—including the ones you
+                skipped
+              </span>
+              <span>
+                <Check size={17} /> Original attempt order. Correctly paired
+                solutions.
+              </span>
+              <span>
+                <Check size={17} /> Save, print, and revisit in your own time
+              </span>
+            </div>
+            <Link
+              to="/exams"
+              className="text-link"
+              data-testid="report-explore"
+            >
+              Find your next practice set <ArrowUpRight size={18} />
+            </Link>
+          </div>
+          <div
+            className="report-art"
+            aria-label="Illustration of a complete personal study report"
+          >
+            <div className="paper-back" />
+            <div className="report-paper">
+              <div className="report-paper-head">
+                <span className="tiny-logo">t</span>
+                <span>YOUR PERSONAL STUDY COPY</span>
+                <Download size={19} />
+              </div>
+              <h3>
+                One attempt.
+                <br />
+                The whole story.
+              </h3>
+              <div className="report-paper-rule" />
+              {[
+                "Your score & marking rules",
+                "Each question & your response",
+                "The correct answer & explanation",
+              ].map((t, i) => (
+                <div className="report-line" key={t}>
+                  <span>{String(i + 1).padStart(2, "0")}</span>
+                  <strong>{t}</strong>
+                </div>
+              ))}
+              <div className="paper-foot">
+                <span>RESULTS + MATCHED SOLUTIONS</span>
+                <span>PDF</span>
+              </div>
+            </div>
+            <span className="report-art-note">
+              Complete report illustration
+            </span>
+          </div>
+        </div>
+      </section>
+      <section className="section faq-section">
+        <div className="container faq-grid">
+          <div>
+            <span className="eyebrow">A LITTLE MORE CLARITY</span>
+            <h2>
+              Good questions.
+              <br />
+              Straight answers.
+            </h2>
+            <p>
+              Know what to expect before
+              <br />
+              you start your next attempt.
+            </p>
+          </div>
+          <div className="faqs">
+            {faq.map(([q, a], i) => (
+              <div
+                className={"faq " + (opened === i ? "faq-open" : "")}
+                key={q}
+              >
+                <button
+                  aria-expanded={opened === i}
+                  aria-controls={"faq-answer-" + i}
+                  data-testid={"faq-" + i}
+                  onClick={() => setOpened(opened === i ? -1 : i)}
+                >
+                  {q}
+                  {opened === i ? <Minus size={19} /> : <Plus size={19} />}
+                </button>
+                {opened === i && <p id={"faq-answer-" + i}>{a}</p>}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+      <section className="cta-section">
+        <div className="container cta-panel">
+          <div>
+            <span className="eyebrow">ONE QUESTION AT A TIME</span>
+            <h2>
+              Your next step is
+              <br />a little more understanding.
+            </h2>
+            <p>Bring your curiosity. We’ll give your practice a place.</p>
+          </div>
+          <Link
+            to="/exams"
+            className="btn btn-white btn-large"
+            data-testid="landing-final-cta"
+          >
+            Explore practice sets <ArrowUpRight size={19} />
+          </Link>
+          <span className="cta-decoration" aria-hidden="true">
+            ↗
+          </span>
+        </div>
+      </section>
+    </>
+  );
+}

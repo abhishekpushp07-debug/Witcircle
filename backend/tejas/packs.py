@@ -27,7 +27,33 @@ async def seal(questions):
         {
             k: v
             for k, v in q.items()
-            if k not in ["response", "outcome", "marks", "marked"]
+            if k
+            in {
+                "id",
+                "number",
+                "solution_number",
+                "section",
+                "subject",
+                "type",
+                "text",
+                "options",
+                "answer",
+                "solution",
+                "topic",
+                "difficulty",
+                "render_mode",
+                "q_refs",
+                "s_refs",
+                "approved",
+                "issues",
+                "accessible_text",
+                "solution_accessible_text",
+                "review_note",
+                "approved_by",
+                "approved_at",
+                "disposition",
+                "accepted_answers",
+            }
         }
         for q in questions
     ]
@@ -81,5 +107,9 @@ async def insert_attempt(a):
 
     a["pack_id"] = await seal(a["questions"])
     a["count"] = len(a["questions"])
+    a["response_schema"] = {
+        q["id"]: {"type": q["type"], "options": list(q.get("options", {}))}
+        for q in a["questions"]
+    }
     record = {k: v for k, v in a.items() if k not in ["questions", "_id"]}
     await attempts.insert_one(record)
