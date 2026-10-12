@@ -1,34 +1,34 @@
 [
   {
-    "content": "Establish Packet 1 source, API and data-boundary contracts with honest coverage gaps",
+    "content": "Implement and verify all 49 mounted API ingress contracts and Studio write allowlists",
     "status": "completed"
   },
   {
-    "content": "Implement fail-closed high-risk content containment without blocking student saves or grading",
+    "content": "Build exact source/evidence review validation and review the workload/SLO source pages",
     "status": "completed"
   },
   {
-    "content": "Add exact workload calculator, typed command schemas and staff-only readiness endpoints",
+    "content": "Implement race-safe staff generation fencing and guarded operator rotation tooling",
     "status": "completed"
   },
   {
-    "content": "Correct the isolated test harness and execute real-function audit regressions",
+    "content": "Run dependency scans, retain unresolved findings and correct unsafe test defaults",
     "status": "completed"
   },
   {
-    "content": "Run independent final verification and retain hashed evidence",
+    "content": "Verify backend flows and desktop/mobile UI; fix the mobile toast overflow",
     "status": "completed"
   },
   {
-    "content": "Complete atomic source-clause coverage and full per-operation contract review",
+    "content": "Complete remaining source review, target contracts and outstanding audit reproductions",
     "status": "pending"
   },
   {
-    "content": "Port remaining audit reproductions and complete dependency/advisory triage",
+    "content": "Close live security, dependency remediation and named operator approval gates",
     "status": "pending"
   },
   {
-    "content": "Close credential rotation and owner/operator approval gates before Packet 1 exit",
+    "content": "Implement subsequent packets and qualify the actual 500,000-attempt deployment",
     "status": "pending"
   }
 ]

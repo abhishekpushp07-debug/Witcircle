@@ -32382,7 +32382,7 @@
         27.0419921875
       ],
       "content_sha256": "42db479871e06fd7e03e4686bc143cab8b0d40aeeadb3a91578a60900ad512a4",
-      "review_status": "UNREVIEWED_SOURCE_BLOCK",
+      "review_status": "AGENT_PARTITIONED_NOT_INDEPENDENTLY_APPROVED",
       "mandatory_keyword_candidate": false,
       "warning": "Block may contain zero, one or several atomic clauses; keywords are not coverage"
     },
@@ -32397,7 +32397,7 @@
         107.02513885498047
       ],
       "content_sha256": "4ff5c3c3f2bec70a0d896d2e8f41a5d6be333bb9a8fdc03f7dd26ed58dcf80a0",
-      "review_status": "UNREVIEWED_SOURCE_BLOCK",
+      "review_status": "AGENT_PARTITIONED_NOT_INDEPENDENTLY_APPROVED",
       "mandatory_keyword_candidate": false,
       "warning": "Block may contain zero, one or several atomic clauses; keywords are not coverage"
     },
@@ -32412,7 +32412,7 @@
         144.0458984375
       ],
       "content_sha256": "fcdb4399cc7ae11d5c08b774b499ba8c1a7f5f73d6c51a52427ae72135fe2ac8",
-      "review_status": "UNREVIEWED_SOURCE_BLOCK",
+      "review_status": "AGENT_PARTITIONED_NOT_INDEPENDENTLY_APPROVED",
       "mandatory_keyword_candidate": false,
       "warning": "Block may contain zero, one or several atomic clauses; keywords are not coverage"
     },
@@ -32427,7 +32427,7 @@
         219.37738037109375
       ],
       "content_sha256": "4132d1c640e0079ac5fe8c4b88a9959a5f76e8cb9235df88a90f5ee19d4b5ad8",
-      "review_status": "UNREVIEWED_SOURCE_BLOCK",
+      "review_status": "AGENT_PARTITIONED_NOT_INDEPENDENTLY_APPROVED",
       "mandatory_keyword_candidate": false,
       "warning": "Block may contain zero, one or several atomic clauses; keywords are not coverage"
     },
@@ -32442,7 +32442,7 @@
         251.05641174316406
       ],
       "content_sha256": "904964bffd08b009aa9ea354ec45e3f172b4d4763d77f5191d07f29d6a6453e2",
-      "review_status": "UNREVIEWED_SOURCE_BLOCK",
+      "review_status": "AGENT_PARTITIONED_NOT_INDEPENDENTLY_APPROVED",
       "mandatory_keyword_candidate": false,
       "warning": "Block may contain zero, one or several atomic clauses; keywords are not coverage"
     },
@@ -32457,7 +32457,7 @@
         274.5751953125
       ],
       "content_sha256": "6597ad235efa0f0f550de26a373531c370b0e0233eb744bdd569683f39c1e59b",
-      "review_status": "UNREVIEWED_SOURCE_BLOCK",
+      "review_status": "AGENT_PARTITIONED_NOT_INDEPENDENTLY_APPROVED",
       "mandatory_keyword_candidate": false,
       "warning": "Block may contain zero, one or several atomic clauses; keywords are not coverage"
     },
@@ -32472,7 +32472,7 @@
         296.419189453125
       ],
       "content_sha256": "b5572830f6f0a8dda612041f63090b83d9b700bf13878387778b69ebd1f331ef",
-      "review_status": "UNREVIEWED_SOURCE_BLOCK",
+      "review_status": "AGENT_PARTITIONED_NOT_INDEPENDENTLY_APPROVED",
       "mandatory_keyword_candidate": false,
       "warning": "Block may contain zero, one or several atomic clauses; keywords are not coverage"
     },
@@ -32487,7 +32487,7 @@
         318.26318359375
       ],
       "content_sha256": "bed04389ccdb0c85e8a6350a3f56cccc45d3b6e7e4ef1e289bbebfff33275846",
-      "review_status": "UNREVIEWED_SOURCE_BLOCK",
+      "review_status": "AGENT_PARTITIONED_NOT_INDEPENDENTLY_APPROVED",
       "mandatory_keyword_candidate": false,
       "warning": "Block may contain zero, one or several atomic clauses; keywords are not coverage"
     },
@@ -32502,7 +32502,7 @@
         340.107177734375
       ],
       "content_sha256": "9e2f8be5214b52534940dfa3d257e0834d5328627db8f023b37008b6948d90c9",
-      "review_status": "UNREVIEWED_SOURCE_BLOCK",
+      "review_status": "AGENT_PARTITIONED_NOT_INDEPENDENTLY_APPROVED",
       "mandatory_keyword_candidate": false,
       "warning": "Block may contain zero, one or several atomic clauses; keywords are not coverage"
     },
@@ -32517,7 +32517,7 @@
         361.951171875
       ],
       "content_sha256": "56c1e98b0ed4e6eb32fff6a660a8985da26727bd6209558976af2a7acfe53def",
-      "review_status": "UNREVIEWED_SOURCE_BLOCK",
+      "review_status": "AGENT_PARTITIONED_NOT_INDEPENDENTLY_APPROVED",
       "mandatory_keyword_candidate": false,
       "warning": "Block may contain zero, one or several atomic clauses; keywords are not coverage"
     },
@@ -32532,7 +32532,7 @@
         383.795166015625
       ],
       "content_sha256": "7a66ef663677d1121d6c3477c3bf0d8afb6ca4a6ca96ab2873cc3f1fe17075aa",
-      "review_status": "UNREVIEWED_SOURCE_BLOCK",
+      "review_status": "AGENT_PARTITIONED_NOT_INDEPENDENTLY_APPROVED",
       "mandatory_keyword_candidate": false,
       "warning": "Block may contain zero, one or several atomic clauses; keywords are not coverage"
     },
@@ -32547,7 +32547,7 @@
         405.6391906738281
       ],
       "content_sha256": "273aed7db1ba2d9964a45e98f944d6011c16f22d47aa9b799178f5f3678eccaf",
-      "review_status": "UNREVIEWED_SOURCE_BLOCK",
+      "review_status": "AGENT_PARTITIONED_NOT_INDEPENDENTLY_APPROVED",
       "mandatory_keyword_candidate": false,
       "warning": "Block may contain zero, one or several atomic clauses; keywords are not coverage"
     },
@@ -32562,7 +32562,7 @@
         439.3271789550781
       ],
       "content_sha256": "6bcf12e110c59086a7241677ef685bf3ce435dc7e172382fe4eb7329b5911fbf",
-      "review_status": "UNREVIEWED_SOURCE_BLOCK",
+      "review_status": "AGENT_PARTITIONED_NOT_INDEPENDENTLY_APPROVED",
       "mandatory_keyword_candidate": false,
       "warning": "Block may contain zero, one or several atomic clauses; keywords are not coverage"
     },
@@ -32577,7 +32577,7 @@
         427.4831848144531
       ],
       "content_sha256": "4d45537bb1d78f0a3475eb047d0fdad132f589affcd9f98ed7e7896b111d58fc",
-      "review_status": "UNREVIEWED_SOURCE_BLOCK",
+      "review_status": "AGENT_PARTITIONED_NOT_INDEPENDENTLY_APPROVED",
       "mandatory_keyword_candidate": false,
       "warning": "Block may contain zero, one or several atomic clauses; keywords are not coverage"
     },
@@ -32592,7 +32592,7 @@
         469.3493957519531
       ],
       "content_sha256": "8cdb499d5a0ae899a2c5c9ff95cb2cdd47173ff30732f3c485c27c7ec0ba342e",
-      "review_status": "UNREVIEWED_SOURCE_BLOCK",
+      "review_status": "AGENT_PARTITIONED_NOT_INDEPENDENTLY_APPROVED",
       "mandatory_keyword_candidate": false,
       "warning": "Block may contain zero, one or several atomic clauses; keywords are not coverage"
     },
@@ -32607,7 +32607,7 @@
         546.1043701171875
       ],
       "content_sha256": "36bc7ad62aa3de8b5accaf86ba689f2a6689ce4f353e8dae31382abd4baaacb1",
-      "review_status": "UNREVIEWED_SOURCE_BLOCK",
+      "review_status": "AGENT_PARTITIONED_NOT_INDEPENDENTLY_APPROVED",
       "mandatory_keyword_candidate": false,
       "warning": "Block may contain zero, one or several atomic clauses; keywords are not coverage"
     },
@@ -32622,7 +32622,7 @@
         609.4723510742188
       ],
       "content_sha256": "4e49e9f72f18000ea7a23b1c9485f6aacd420b5cb563b4d6d136663a246cbc81",
-      "review_status": "UNREVIEWED_SOURCE_BLOCK",
+      "review_status": "AGENT_PARTITIONED_NOT_INDEPENDENTLY_APPROVED",
       "mandatory_keyword_candidate": false,
       "warning": "Block may contain zero, one or several atomic clauses; keywords are not coverage"
     },
@@ -32637,7 +32637,7 @@
         633.5662231445312
       ],
       "content_sha256": "289a7559a95be5c06f642de8d85da9bb3eccb40977568efbca70a6fcaaad9ea3",
-      "review_status": "UNREVIEWED_SOURCE_BLOCK",
+      "review_status": "AGENT_PARTITIONED_NOT_INDEPENDENTLY_APPROVED",
       "mandatory_keyword_candidate": true,
       "warning": "Block may contain zero, one or several atomic clauses; keywords are not coverage"
     },
@@ -32652,7 +32652,7 @@
         665.5492553710938
       ],
       "content_sha256": "56b162d31b6435d6e6261c3d3a6430b279668ffdd2c2f30facb4912cab1f2978",
-      "review_status": "UNREVIEWED_SOURCE_BLOCK",
+      "review_status": "AGENT_PARTITIONED_NOT_INDEPENDENTLY_APPROVED",
       "mandatory_keyword_candidate": false,
       "warning": "Block may contain zero, one or several atomic clauses; keywords are not coverage"
     },
@@ -32667,7 +32667,7 @@
         682.5363159179688
       ],
       "content_sha256": "a78920beb037176504221fd2a610ba75f098ade520f68ee6c339beac73fb3d59",
-      "review_status": "UNREVIEWED_SOURCE_BLOCK",
+      "review_status": "AGENT_PARTITIONED_NOT_INDEPENDENTLY_APPROVED",
       "mandatory_keyword_candidate": false,
       "warning": "Block may contain zero, one or several atomic clauses; keywords are not coverage"
     },
@@ -32682,7 +32682,7 @@
         812.8116455078125
       ],
       "content_sha256": "c4bb4831344f01cb799a69b936b9c215c357b450a562162d8faeea2fa498419f",
-      "review_status": "UNREVIEWED_SOURCE_BLOCK",
+      "review_status": "AGENT_PARTITIONED_NOT_INDEPENDENTLY_APPROVED",
       "mandatory_keyword_candidate": false,
       "warning": "Block may contain zero, one or several atomic clauses; keywords are not coverage"
     },
@@ -47592,7 +47592,7 @@
         27.0419921875
       ],
       "content_sha256": "42db479871e06fd7e03e4686bc143cab8b0d40aeeadb3a91578a60900ad512a4",
-      "review_status": "UNREVIEWED_SOURCE_BLOCK",
+      "review_status": "AGENT_PARTITIONED_NOT_INDEPENDENTLY_APPROVED",
       "mandatory_keyword_candidate": false,
       "warning": "Block may contain zero, one or several atomic clauses; keywords are not coverage"
     },
@@ -47607,7 +47607,7 @@
         107.02513885498047
       ],
       "content_sha256": "09b8718020d452c59c2480f90471d5a8a92cfd36578186b8a76389a8c1da2aec",
-      "review_status": "UNREVIEWED_SOURCE_BLOCK",
+      "review_status": "AGENT_PARTITIONED_NOT_INDEPENDENTLY_APPROVED",
       "mandatory_keyword_candidate": false,
       "warning": "Block may contain zero, one or several atomic clauses; keywords are not coverage"
     },
@@ -47622,7 +47622,7 @@
         144.0458984375
       ],
       "content_sha256": "0261ab1827399d0b3dbbb134be84b4186c252e422b897a297bafb5743e473807",
-      "review_status": "UNREVIEWED_SOURCE_BLOCK",
+      "review_status": "AGENT_PARTITIONED_NOT_INDEPENDENTLY_APPROVED",
       "mandatory_keyword_candidate": false,
       "warning": "Block may contain zero, one or several atomic clauses; keywords are not coverage"
     },
@@ -47637,7 +47637,7 @@
         231.164306640625
       ],
       "content_sha256": "55094134cb14429b218bee192173c0405a40bfa3b1e0bc47a57fe75c9dd3dbe7",
-      "review_status": "UNREVIEWED_SOURCE_BLOCK",
+      "review_status": "AGENT_PARTITIONED_NOT_INDEPENDENTLY_APPROVED",
       "mandatory_keyword_candidate": true,
       "warning": "Block may contain zero, one or several atomic clauses; keywords are not coverage"
     },
@@ -47652,7 +47652,7 @@
         262.2752990722656
       ],
       "content_sha256": "b04b3402288813cce41cacd7e11e02d7ba9a846e3e6782258d20dd8aedb6d2fc",
-      "review_status": "UNREVIEWED_SOURCE_BLOCK",
+      "review_status": "AGENT_PARTITIONED_NOT_INDEPENDENTLY_APPROVED",
       "mandatory_keyword_candidate": false,
       "warning": "Block may contain zero, one or several atomic clauses; keywords are not coverage"
     },
@@ -47667,7 +47667,7 @@
         363.73822021484375
       ],
       "content_sha256": "7030a8d1f83bcd7ddc9f0838bdc05abb4169b9e540b1a378ec676ea555d118d8",
-      "review_status": "UNREVIEWED_SOURCE_BLOCK",
+      "review_status": "AGENT_PARTITIONED_NOT_INDEPENDENTLY_APPROVED",
       "mandatory_keyword_candidate": true,
       "warning": "Block may contain zero, one or several atomic clauses; keywords are not coverage"
     },
@@ -47682,7 +47682,7 @@
         424.834228515625
       ],
       "content_sha256": "a2cbd101fd6315b3fc55f71eadf8768e59370e16d394be1bd97f85871839801e",
-      "review_status": "UNREVIEWED_SOURCE_BLOCK",
+      "review_status": "AGENT_PARTITIONED_NOT_INDEPENDENTLY_APPROVED",
       "mandatory_keyword_candidate": true,
       "warning": "Block may contain zero, one or several atomic clauses; keywords are not coverage"
     },
@@ -47697,7 +47697,7 @@
         448.9183044433594
       ],
       "content_sha256": "a5e9ba882a2ccf1e0c50dba5711aecdd596a80e64f60ca3abc2a404e33ba71cd",
-      "review_status": "UNREVIEWED_SOURCE_BLOCK",
+      "review_status": "AGENT_PARTITIONED_NOT_INDEPENDENTLY_APPROVED",
       "mandatory_keyword_candidate": false,
       "warning": "Block may contain zero, one or several atomic clauses; keywords are not coverage"
     },
@@ -47712,7 +47712,7 @@
         522.833251953125
       ],
       "content_sha256": "ec8d14637018e90de174f5a1afe965a67f0321f59b658cc08d793624f0984ab9",
-      "review_status": "UNREVIEWED_SOURCE_BLOCK",
+      "review_status": "AGENT_PARTITIONED_NOT_INDEPENDENTLY_APPROVED",
       "mandatory_keyword_candidate": true,
       "warning": "Block may contain zero, one or several atomic clauses; keywords are not coverage"
     },
@@ -47727,7 +47727,7 @@
         611.4772338867188
       ],
       "content_sha256": "5211e1793a09e9da9f3a9ed35683c0f57e0d4bc3e8eae5f08c915b6252560493",
-      "review_status": "UNREVIEWED_SOURCE_BLOCK",
+      "review_status": "AGENT_PARTITIONED_NOT_INDEPENDENTLY_APPROVED",
       "mandatory_keyword_candidate": true,
       "warning": "Block may contain zero, one or several atomic clauses; keywords are not coverage"
     },
@@ -47742,7 +47742,7 @@
         635.561279296875
       ],
       "content_sha256": "63c3209837f7d8e2d8a58c10c8cd164317e1d642fa0c77e48ad142db571d2f89",
-      "review_status": "UNREVIEWED_SOURCE_BLOCK",
+      "review_status": "AGENT_PARTITIONED_NOT_INDEPENDENTLY_APPROVED",
       "mandatory_keyword_candidate": false,
       "warning": "Block may contain zero, one or several atomic clauses; keywords are not coverage"
     },
@@ -47757,7 +47757,7 @@
         695.7022705078125
       ],
       "content_sha256": "6534c65eb3a77d38f22a79b5069588fc7872003c6487ad55ba744e1b15fbe7b0",
-      "review_status": "UNREVIEWED_SOURCE_BLOCK",
+      "review_status": "AGENT_PARTITIONED_NOT_INDEPENDENTLY_APPROVED",
       "mandatory_keyword_candidate": true,
       "warning": "Block may contain zero, one or several atomic clauses; keywords are not coverage"
     },
@@ -47772,7 +47772,7 @@
         719.2282104492188
       ],
       "content_sha256": "289a7559a95be5c06f642de8d85da9bb3eccb40977568efbca70a6fcaaad9ea3",
-      "review_status": "UNREVIEWED_SOURCE_BLOCK",
+      "review_status": "AGENT_PARTITIONED_NOT_INDEPENDENTLY_APPROVED",
       "mandatory_keyword_candidate": true,
       "warning": "Block may contain zero, one or several atomic clauses; keywords are not coverage"
     },
@@ -47787,7 +47787,7 @@
         736.6561889648438
       ],
       "content_sha256": "657395cb77666ccd5b54c86956ca8d9147dcfa1e69d6020b25c6876a442d05c5",
-      "review_status": "UNREVIEWED_SOURCE_BLOCK",
+      "review_status": "AGENT_PARTITIONED_NOT_INDEPENDENTLY_APPROVED",
       "mandatory_keyword_candidate": false,
       "warning": "Block may contain zero, one or several atomic clauses; keywords are not coverage"
     },
@@ -47802,7 +47802,7 @@
         753.0751953125
       ],
       "content_sha256": "63639fd47c26ea56f0eda707b18a790ac0b37de277705e7633fadb6d1a4ebbd7",
-      "review_status": "UNREVIEWED_SOURCE_BLOCK",
+      "review_status": "AGENT_PARTITIONED_NOT_INDEPENDENTLY_APPROVED",
       "mandatory_keyword_candidate": false,
       "warning": "Block may contain zero, one or several atomic clauses; keywords are not coverage"
     },
@@ -47817,7 +47817,7 @@
         769.4942016601562
       ],
       "content_sha256": "44246840f314efd3aeb7b65ab5336b624b50066a4610de4734a70f912f3b4b6f",
-      "review_status": "UNREVIEWED_SOURCE_BLOCK",
+      "review_status": "AGENT_PARTITIONED_NOT_INDEPENDENTLY_APPROVED",
       "mandatory_keyword_candidate": false,
       "warning": "Block may contain zero, one or several atomic clauses; keywords are not coverage"
     },
@@ -47832,7 +47832,7 @@
         812.8116455078125
       ],
       "content_sha256": "78ba90037a7e7273a6b7c1a2933dd3528e29508f4f2f7f3ddb6a393ac37faa12",
-      "review_status": "UNREVIEWED_SOURCE_BLOCK",
+      "review_status": "AGENT_PARTITIONED_NOT_INDEPENDENTLY_APPROVED",
       "mandatory_keyword_candidate": false,
       "warning": "Block may contain zero, one or several atomic clauses; keywords are not coverage"
     },

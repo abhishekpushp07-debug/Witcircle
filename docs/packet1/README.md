@@ -1,3 +1,6 @@
+> **Latest checkpoint:** read [CONTINUATION_STATUS.md](CONTINUATION_STATUS.md) first. It supersedes the earlier counts below: 49 executable ingress contracts, 143 passing tests plus 6 OPEN regressions repeated three times, 2 source pages / 38 blocks / 65 exact-span obligations, staff generation fencing, and unresolved dependency findings. Packet 1 and 500k qualification remain blocked. Earlier testing-agent scope violations and replacement evidence are explicitly recorded there.
+
+
 # Packet 1 — implemented foundation and remaining exit work
 
 **Status: IN PROGRESS; exit BLOCKED. 500,000 active-attempt capacity: UNQUALIFIED.**

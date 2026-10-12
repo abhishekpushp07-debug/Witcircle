@@ -6119,8 +6119,22 @@ body { background: var(--page); color: var(--ink); }
 input, textarea { color: var(--ink); }
 .loading { flex-wrap: wrap; }
 .loading-skeleton { flex-basis: 100%; max-width: 20rem; height: var(--space-2); }
-[data-sonner-toaster] { z-index: var(--z-toast); }
+[data-sonner-toaster] { z-index: var(--z-toast); transition: none !important; font-family: inherit; }
 [data-sonner-toast] { background: var(--surface-card) !important; border-color: var(--brand-line) !important; color: var(--ink) !important; }
+@media (max-width: 640px) {
+  [data-sonner-toaster][data-x-position="center"] {
+    left: var(--space-4) !important;
+    right: var(--space-4) !important;
+    width: calc(100% - var(--space-8)) !important;
+    transform: none !important;
+  }
+  [data-sonner-toaster][data-x-position="center"] [data-sonner-toast] {
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+  }
+}
+
 .set-detail .page-title { margin-bottom: var(--space-8); }
 .set-detail .page-title h1 { font-size: var(--text-title); line-height: 1.2; overflow-wrap: anywhere; }
 .set-detail .page-title p { font-size: var(--text-sm); max-width: 70ch; line-height: 1.7; }

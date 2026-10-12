@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated_at_utc": "2026-10-12T14:54:41.452483+00:00",
+  "generated_at_utc": "2026-10-12T18:14:22.329982+00:00",
   "sources": [
     {
       "name": "01_Product_Blue_Design_and_Master_Prompt.pdf",
@@ -32,6 +32,10 @@
   "block_count": 3299,
   "indexed_pages": 177,
   "fully_atomized_reviewed_pages": 0,
+  "exact_span_partitioned_pages": 2,
+  "exact_span_partitioned_blocks": 38,
+  "exact_span_bound_requirements": 65,
+  "exact_span_registry": "docs/packet1/review_ledger.v1.json",
   "reviewed_subset_obligations": 45,
   "analysis_feature_obligations": 60,
   "wp_gates": 13,

@@ -315,14 +315,11 @@ class TestOperationCatalogue:
         # Should indicate incomplete contract
         assert data["complete_target_contract"] is False
         
-        # Check routes have legacy status
-        routes = data["routes"]
-        legacy_routes = [r for r in routes if r["status"] == "LEGACY_CONTRACT_GAPS"]
-        
-        # Most routes should be legacy (not fully strict)
-        assert len(legacy_routes) > 0
-        
-        print(f"✓ Metadata indicates actual legacy ({len(legacy_routes)} legacy routes)")
+        routes = data['routes']
+        assert routes
+        assert all(r['status'] == 'IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS' for r in routes)
+        assert all(r['gaps'] for r in routes)
+        assert all('transaction' in ' '.join(r['gaps']).lower() for r in routes)
     
     def test_exact_runtime_catalogue_method_path_equality(self, docs_path):
         """Test exact runtime catalogue method/path set equality with actual server routes"""

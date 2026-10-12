@@ -6,225 +6,225 @@
       "method": "GET",
       "path": "/api/health",
       "roles": [
-        "public_or_cookie_session"
+        "public_or_handler_checked"
       ],
       "workload_tier": "normal",
-      "owner_policy": "public_or_session_specific_contract",
-      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "owner_policy": "public_liveness_only",
+      "idempotency_mode": "read",
       "body_limit_bytes": 0,
-      "status": "LEGACY_CONTRACT_GAPS",
+      "status": "IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS",
       "gaps": [
-        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+        "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
       ],
       "current_response_models": [
         "200"
       ],
-      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+      "note": "Copied from mounted route contracts. Auth roles derive from actual dependencies; ownership and transaction correctness require independent tests."
     },
     {
       "operation_id": "register_api_auth_register_post",
       "method": "POST",
       "path": "/api/auth/register",
       "roles": [
-        "public_or_cookie_session"
+        "public_or_handler_checked"
       ],
-      "workload_tier": "control",
-      "owner_policy": "public_or_session_specific_contract",
-      "idempotency_mode": "legacy_operation_specific_incomplete",
-      "body_limit_bytes": 1048576,
-      "status": "LEGACY_CONTRACT_GAPS",
+      "workload_tier": "normal",
+      "owner_policy": "removed_endpoint",
+      "idempotency_mode": "gone",
+      "body_limit_bytes": 4096,
+      "status": "IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS",
       "gaps": [
-        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+        "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
       ],
       "current_response_models": [
         "200"
       ],
-      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+      "note": "Copied from mounted route contracts. Auth roles derive from actual dependencies; ownership and transaction correctness require independent tests."
     },
     {
       "operation_id": "login_api_auth_login_post",
       "method": "POST",
       "path": "/api/auth/login",
       "roles": [
-        "public_or_cookie_session"
+        "public_or_handler_checked"
       ],
-      "workload_tier": "control",
-      "owner_policy": "public_or_session_specific_contract",
-      "idempotency_mode": "legacy_operation_specific_incomplete",
-      "body_limit_bytes": 1048576,
-      "status": "LEGACY_CONTRACT_GAPS",
+      "workload_tier": "normal",
+      "owner_policy": "staff_password_session",
+      "idempotency_mode": "new_session",
+      "body_limit_bytes": 4096,
+      "status": "IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS",
       "gaps": [
-        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+        "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
       ],
       "current_response_models": [
         "200",
         "422"
       ],
-      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+      "note": "Copied from mounted route contracts. Auth roles derive from actual dependencies; ownership and transaction correctness require independent tests."
     },
     {
       "operation_id": "session_api_auth_session_get",
       "method": "GET",
       "path": "/api/auth/session",
       "roles": [
-        "public_or_cookie_session"
+        "public_or_handler_checked"
       ],
-      "workload_tier": "control",
-      "owner_policy": "public_or_session_specific_contract",
-      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "workload_tier": "normal",
+      "owner_policy": "cookie_identity",
+      "idempotency_mode": "read_refresh_side_effect",
       "body_limit_bytes": 0,
-      "status": "LEGACY_CONTRACT_GAPS",
+      "status": "IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS",
       "gaps": [
-        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+        "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
       ],
       "current_response_models": [
         "200"
       ],
-      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+      "note": "Copied from mounted route contracts. Auth roles derive from actual dependencies; ownership and transaction correctness require independent tests."
     },
     {
       "operation_id": "me_api_auth_me_get",
       "method": "GET",
       "path": "/api/auth/me",
       "roles": [
-        "authenticated_owner_of_resource"
+        "authenticated_profile"
       ],
-      "workload_tier": "control",
-      "owner_policy": "server_resource_ownership_and_release_checks_required",
-      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "workload_tier": "normal",
+      "owner_policy": "current_identity",
+      "idempotency_mode": "read",
       "body_limit_bytes": 0,
-      "status": "LEGACY_CONTRACT_GAPS",
+      "status": "IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS",
       "gaps": [
-        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+        "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
       ],
       "current_response_models": [
         "200"
       ],
-      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+      "note": "Copied from mounted route contracts. Auth roles derive from actual dependencies; ownership and transaction correctness require independent tests."
     },
     {
       "operation_id": "refresh_api_auth_refresh_post",
       "method": "POST",
       "path": "/api/auth/refresh",
       "roles": [
-        "public_or_cookie_session"
+        "public_or_handler_checked"
       ],
-      "workload_tier": "control",
-      "owner_policy": "public_or_session_specific_contract",
-      "idempotency_mode": "legacy_operation_specific_incomplete",
-      "body_limit_bytes": 1048576,
-      "status": "LEGACY_CONTRACT_GAPS",
+      "workload_tier": "normal",
+      "owner_policy": "current_refresh_session",
+      "idempotency_mode": "session_refresh",
+      "body_limit_bytes": 4096,
+      "status": "IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS",
       "gaps": [
-        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+        "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
       ],
       "current_response_models": [
         "200"
       ],
-      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+      "note": "Copied from mounted route contracts. Auth roles derive from actual dependencies; ownership and transaction correctness require independent tests."
     },
     {
       "operation_id": "logout_api_auth_logout_post",
       "method": "POST",
       "path": "/api/auth/logout",
       "roles": [
-        "public_or_cookie_session"
+        "public_or_handler_checked"
       ],
-      "workload_tier": "control",
-      "owner_policy": "public_or_session_specific_contract",
-      "idempotency_mode": "legacy_operation_specific_incomplete",
-      "body_limit_bytes": 1048576,
-      "status": "LEGACY_CONTRACT_GAPS",
+      "workload_tier": "normal",
+      "owner_policy": "current_cookie_sessions_only",
+      "idempotency_mode": "repeatable_delete",
+      "body_limit_bytes": 4096,
+      "status": "IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS",
       "gaps": [
-        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+        "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
       ],
       "current_response_models": [
         "200"
       ],
-      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+      "note": "Copied from mounted route contracts. Auth roles derive from actual dependencies; ownership and transaction correctness require independent tests."
     },
     {
       "operation_id": "preferences_api_auth_preferences_patch",
       "method": "PATCH",
       "path": "/api/auth/preferences",
       "roles": [
-        "authenticated_owner_of_resource"
+        "authenticated_profile"
       ],
-      "workload_tier": "control",
-      "owner_policy": "server_resource_ownership_and_release_checks_required",
-      "idempotency_mode": "legacy_operation_specific_incomplete",
-      "body_limit_bytes": 1048576,
-      "status": "LEGACY_CONTRACT_GAPS",
+      "workload_tier": "normal",
+      "owner_policy": "current_profile_only",
+      "idempotency_mode": "replace_field",
+      "body_limit_bytes": 4096,
+      "status": "IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS",
       "gaps": [
-        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+        "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
       ],
       "current_response_models": [
         "200",
         "422"
       ],
-      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+      "note": "Copied from mounted route contracts. Auth roles derive from actual dependencies; ownership and transaction correctness require independent tests."
     },
     {
       "operation_id": "access_api_auth_phone_post",
       "method": "POST",
       "path": "/api/auth/phone",
       "roles": [
-        "public_or_cookie_session"
+        "public_or_handler_checked"
       ],
-      "workload_tier": "control",
-      "owner_policy": "public_or_session_specific_contract",
-      "idempotency_mode": "legacy_operation_specific_incomplete",
-      "body_limit_bytes": 1048576,
-      "status": "LEGACY_CONTRACT_GAPS",
+      "workload_tier": "normal",
+      "owner_policy": "unverified_phone_profile_only",
+      "idempotency_mode": "profile_upsert_new_session",
+      "body_limit_bytes": 4096,
+      "status": "IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS",
       "gaps": [
-        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+        "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
       ],
       "current_response_models": [
         "200",
         "422"
       ],
-      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+      "note": "Copied from mounted route contracts. Auth roles derive from actual dependencies; ownership and transaction correctness require independent tests."
     },
     {
       "operation_id": "catalogue_api_sets_get",
       "method": "GET",
       "path": "/api/sets",
       "roles": [
-        "public_or_cookie_session"
+        "public_or_handler_checked"
       ],
       "workload_tier": "normal",
-      "owner_policy": "public_or_session_specific_contract",
-      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "owner_policy": "public_published_audience",
+      "idempotency_mode": "read",
       "body_limit_bytes": 0,
-      "status": "LEGACY_CONTRACT_GAPS",
+      "status": "IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS",
       "gaps": [
-        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+        "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
       ],
       "current_response_models": [
         "200",
         "422"
       ],
-      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+      "note": "Copied from mounted route contracts. Auth roles derive from actual dependencies; ownership and transaction correctness require independent tests."
     },
     {
       "operation_id": "set_detail_api_sets__id__get",
       "method": "GET",
       "path": "/api/sets/{id}",
       "roles": [
-        "public_or_cookie_session"
+        "public_or_handler_checked"
       ],
       "workload_tier": "normal",
-      "owner_policy": "public_or_session_specific_contract",
-      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "owner_policy": "public_published_audience",
+      "idempotency_mode": "read",
       "body_limit_bytes": 0,
-      "status": "LEGACY_CONTRACT_GAPS",
+      "status": "IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS",
       "gaps": [
-        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+        "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
       ],
       "current_response_models": [
         "200",
         "422"
       ],
-      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+      "note": "Copied from mounted route contracts. Auth roles derive from actual dependencies; ownership and transaction correctness require independent tests."
     },
     {
       "operation_id": "studio_sets_api_studio_sets_get",
@@ -235,17 +235,17 @@
         "reviewer"
       ],
       "workload_tier": "control",
-      "owner_policy": "server_resource_ownership_and_release_checks_required",
-      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "owner_policy": "authorized_editorial_workspace",
+      "idempotency_mode": "read",
       "body_limit_bytes": 0,
-      "status": "LEGACY_CONTRACT_GAPS",
+      "status": "IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS",
       "gaps": [
-        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+        "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
       ],
       "current_response_models": [
         "200"
       ],
-      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+      "note": "Copied from mounted route contracts. Auth roles derive from actual dependencies; ownership and transaction correctness require independent tests."
     },
     {
       "operation_id": "create_set_api_studio_sets_post",
@@ -256,18 +256,18 @@
         "reviewer"
       ],
       "workload_tier": "control",
-      "owner_policy": "server_resource_ownership_and_release_checks_required",
-      "idempotency_mode": "legacy_operation_specific_incomplete",
-      "body_limit_bytes": 1048576,
-      "status": "LEGACY_CONTRACT_GAPS",
+      "owner_policy": "authorized_editorial_workspace",
+      "idempotency_mode": "not_idempotent",
+      "body_limit_bytes": 65536,
+      "status": "IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS",
       "gaps": [
-        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+        "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
       ],
       "current_response_models": [
         "200",
         "422"
       ],
-      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+      "note": "Copied from mounted route contracts. Auth roles derive from actual dependencies; ownership and transaction correctness require independent tests."
     },
     {
       "operation_id": "studio_set_api_studio_sets__id__get",
@@ -278,18 +278,18 @@
         "reviewer"
       ],
       "workload_tier": "control",
-      "owner_policy": "server_resource_ownership_and_release_checks_required",
-      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "owner_policy": "authorized_editorial_workspace",
+      "idempotency_mode": "read",
       "body_limit_bytes": 0,
-      "status": "LEGACY_CONTRACT_GAPS",
+      "status": "IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS",
       "gaps": [
-        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+        "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
       ],
       "current_response_models": [
         "200",
         "422"
       ],
-      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+      "note": "Copied from mounted route contracts. Auth roles derive from actual dependencies; ownership and transaction correctness require independent tests."
     },
     {
       "operation_id": "update_set_api_studio_sets__id__put",
@@ -300,18 +300,18 @@
         "reviewer"
       ],
       "workload_tier": "control",
-      "owner_policy": "server_resource_ownership_and_release_checks_required",
-      "idempotency_mode": "legacy_operation_specific_incomplete",
-      "body_limit_bytes": 1048576,
-      "status": "LEGACY_CONTRACT_GAPS",
+      "owner_policy": "authorized_editorial_workspace",
+      "idempotency_mode": "legacy_unfenced_edit",
+      "body_limit_bytes": 65536,
+      "status": "IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS",
       "gaps": [
-        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+        "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
       ],
       "current_response_models": [
         "200",
         "422"
       ],
-      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+      "note": "Copied from mounted route contracts. Auth roles derive from actual dependencies; ownership and transaction correctness require independent tests."
     },
     {
       "operation_id": "upload_api_studio_sets__id__files_post",
@@ -321,19 +321,19 @@
         "owner",
         "reviewer"
       ],
-      "workload_tier": "control",
-      "owner_policy": "server_resource_ownership_and_release_checks_required",
-      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "workload_tier": "batch",
+      "owner_policy": "authorized_private_source",
+      "idempotency_mode": "HELD",
       "body_limit_bytes": 0,
-      "status": "LEGACY_CONTRACT_GAPS",
+      "status": "IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS",
       "gaps": [
-        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+        "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
       ],
       "current_response_models": [
         "200",
         "422"
       ],
-      "note": "Upload route is held before parsing. Proposed 52MiB total is NOT an enforced upload path."
+      "note": "Copied from mounted route contracts. Auth roles derive from actual dependencies; ownership and transaction correctness require independent tests."
     },
     {
       "operation_id": "source_page_api_studio_files__id__page__page__get",
@@ -343,19 +343,19 @@
         "owner",
         "reviewer"
       ],
-      "workload_tier": "control",
-      "owner_policy": "server_resource_ownership_and_release_checks_required",
-      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "workload_tier": "batch",
+      "owner_policy": "authorized_private_source",
+      "idempotency_mode": "HELD",
       "body_limit_bytes": 0,
-      "status": "LEGACY_CONTRACT_GAPS",
+      "status": "IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS",
       "gaps": [
-        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+        "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
       ],
       "current_response_models": [
         "200",
         "422"
       ],
-      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+      "note": "Copied from mounted route contracts. Auth roles derive from actual dependencies; ownership and transaction correctness require independent tests."
     },
     {
       "operation_id": "source_text_api_studio_files__id__text__page__get",
@@ -365,19 +365,19 @@
         "owner",
         "reviewer"
       ],
-      "workload_tier": "control",
-      "owner_policy": "server_resource_ownership_and_release_checks_required",
-      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "workload_tier": "batch",
+      "owner_policy": "authorized_private_source",
+      "idempotency_mode": "HELD",
       "body_limit_bytes": 0,
-      "status": "LEGACY_CONTRACT_GAPS",
+      "status": "IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS",
       "gaps": [
-        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+        "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
       ],
       "current_response_models": [
         "200",
         "422"
       ],
-      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+      "note": "Copied from mounted route contracts. Auth roles derive from actual dependencies; ownership and transaction correctness require independent tests."
     },
     {
       "operation_id": "source_download_api_studio_files__id__download_get",
@@ -387,19 +387,19 @@
         "owner",
         "reviewer"
       ],
-      "workload_tier": "control",
-      "owner_policy": "server_resource_ownership_and_release_checks_required",
-      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "workload_tier": "normal",
+      "owner_policy": "authorized_private_source",
+      "idempotency_mode": "read",
       "body_limit_bytes": 0,
-      "status": "LEGACY_CONTRACT_GAPS",
+      "status": "IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS",
       "gaps": [
-        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+        "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
       ],
       "current_response_models": [
         "200",
         "422"
       ],
-      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+      "note": "Copied from mounted route contracts. Auth roles derive from actual dependencies; ownership and transaction correctness require independent tests."
     },
     {
       "operation_id": "extract_api_studio_sets__id__extract_post",
@@ -410,18 +410,18 @@
         "reviewer"
       ],
       "workload_tier": "batch",
-      "owner_policy": "server_resource_ownership_and_release_checks_required",
-      "idempotency_mode": "legacy_operation_specific_incomplete",
-      "body_limit_bytes": 1048576,
-      "status": "LEGACY_CONTRACT_GAPS",
+      "owner_policy": "authorized_editorial_workspace",
+      "idempotency_mode": "HELD",
+      "body_limit_bytes": 4096,
+      "status": "IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS",
       "gaps": [
-        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+        "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
       ],
       "current_response_models": [
         "200",
         "422"
       ],
-      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+      "note": "Copied from mounted route contracts. Auth roles derive from actual dependencies; ownership and transaction correctness require independent tests."
     },
     {
       "operation_id": "add_question_api_studio_sets__id__questions_post",
@@ -432,18 +432,18 @@
         "reviewer"
       ],
       "workload_tier": "control",
-      "owner_policy": "server_resource_ownership_and_release_checks_required",
-      "idempotency_mode": "legacy_operation_specific_incomplete",
-      "body_limit_bytes": 1048576,
-      "status": "LEGACY_CONTRACT_GAPS",
+      "owner_policy": "authorized_editorial_workspace",
+      "idempotency_mode": "not_idempotent",
+      "body_limit_bytes": 4096,
+      "status": "IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS",
       "gaps": [
-        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+        "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
       ],
       "current_response_models": [
         "200",
         "422"
       ],
-      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+      "note": "Copied from mounted route contracts. Auth roles derive from actual dependencies; ownership and transaction correctness require independent tests."
     },
     {
       "operation_id": "edit_question_api_studio_sets__id__questions__qid__put",
@@ -454,18 +454,18 @@
         "reviewer"
       ],
       "workload_tier": "control",
-      "owner_policy": "server_resource_ownership_and_release_checks_required",
-      "idempotency_mode": "legacy_operation_specific_incomplete",
-      "body_limit_bytes": 1048576,
-      "status": "LEGACY_CONTRACT_GAPS",
+      "owner_policy": "authorized_editorial_workspace",
+      "idempotency_mode": "legacy_unfenced_edit",
+      "body_limit_bytes": 262144,
+      "status": "IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS",
       "gaps": [
-        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+        "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
       ],
       "current_response_models": [
         "200",
         "422"
       ],
-      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+      "note": "Copied from mounted route contracts. Auth roles derive from actual dependencies; ownership and transaction correctness require independent tests."
     },
     {
       "operation_id": "approve_question_api_studio_sets__id__questions__qid__approve_post",
@@ -476,18 +476,18 @@
         "reviewer"
       ],
       "workload_tier": "control",
-      "owner_policy": "server_resource_ownership_and_release_checks_required",
-      "idempotency_mode": "legacy_operation_specific_incomplete",
-      "body_limit_bytes": 1048576,
-      "status": "LEGACY_CONTRACT_GAPS",
+      "owner_policy": "authorized_editorial_workspace",
+      "idempotency_mode": "revision_CAS",
+      "body_limit_bytes": 4096,
+      "status": "IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS",
       "gaps": [
-        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+        "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
       ],
       "current_response_models": [
         "200",
         "422"
       ],
-      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+      "note": "Copied from mounted route contracts. Auth roles derive from actual dependencies; ownership and transaction correctness require independent tests."
     },
     {
       "operation_id": "publish_api_studio_sets__id__publish_post",
@@ -497,18 +497,18 @@
         "owner"
       ],
       "workload_tier": "control",
-      "owner_policy": "server_resource_ownership_and_release_checks_required",
-      "idempotency_mode": "legacy_operation_specific_incomplete",
-      "body_limit_bytes": 1048576,
-      "status": "LEGACY_CONTRACT_GAPS",
+      "owner_policy": "owner_publication_rights",
+      "idempotency_mode": "HELD",
+      "body_limit_bytes": 4096,
+      "status": "IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS",
       "gaps": [
-        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+        "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
       ],
       "current_response_models": [
         "200",
         "422"
       ],
-      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+      "note": "Copied from mounted route contracts. Auth roles derive from actual dependencies; ownership and transaction correctness require independent tests."
     },
     {
       "operation_id": "withdraw_api_studio_sets__id__withdraw_post",
@@ -518,18 +518,18 @@
         "owner"
       ],
       "workload_tier": "control",
-      "owner_policy": "server_resource_ownership_and_release_checks_required",
-      "idempotency_mode": "legacy_operation_specific_incomplete",
-      "body_limit_bytes": 1048576,
-      "status": "LEGACY_CONTRACT_GAPS",
+      "owner_policy": "owner_publication_rights",
+      "idempotency_mode": "repeatable_state_change_audit_each_call",
+      "body_limit_bytes": 4096,
+      "status": "IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS",
       "gaps": [
-        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+        "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
       ],
       "current_response_models": [
         "200",
         "422"
       ],
-      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+      "note": "Copied from mounted route contracts. Auth roles derive from actual dependencies; ownership and transaction correctness require independent tests."
     },
     {
       "operation_id": "subset_api_studio_sets__id__subset_post",
@@ -540,18 +540,18 @@
         "reviewer"
       ],
       "workload_tier": "control",
-      "owner_policy": "server_resource_ownership_and_release_checks_required",
-      "idempotency_mode": "legacy_operation_specific_incomplete",
-      "body_limit_bytes": 1048576,
-      "status": "LEGACY_CONTRACT_GAPS",
+      "owner_policy": "authorized_editorial_workspace",
+      "idempotency_mode": "not_idempotent",
+      "body_limit_bytes": 65536,
+      "status": "IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS",
       "gaps": [
-        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+        "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
       ],
       "current_response_models": [
         "200",
         "422"
       ],
-      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+      "note": "Copied from mounted route contracts. Auth roles derive from actual dependencies; ownership and transaction correctness require independent tests."
     },
     {
       "operation_id": "preview_asset_api_studio_sets__id__questions__qid__asset__kind___index__get",
@@ -561,375 +561,375 @@
         "owner",
         "reviewer"
       ],
-      "workload_tier": "control",
-      "owner_policy": "server_resource_ownership_and_release_checks_required",
-      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "workload_tier": "batch",
+      "owner_policy": "authorized_private_source",
+      "idempotency_mode": "HELD",
       "body_limit_bytes": 0,
-      "status": "LEGACY_CONTRACT_GAPS",
+      "status": "IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS",
       "gaps": [
-        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+        "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
       ],
       "current_response_models": [
         "200",
         "422"
       ],
-      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+      "note": "Copied from mounted route contracts. Auth roles derive from actual dependencies; ownership and transaction correctness require independent tests."
     },
     {
       "operation_id": "save_answer_api_attempts__id__answers__qid__put",
       "method": "PUT",
       "path": "/api/attempts/{id}/answers/{qid}",
       "roles": [
-        "authenticated_owner_of_resource"
+        "authenticated_profile"
       ],
       "workload_tier": "live",
-      "owner_policy": "server_resource_ownership_and_release_checks_required",
-      "idempotency_mode": "legacy_operation_specific_incomplete",
-      "body_limit_bytes": 1048576,
-      "status": "LEGACY_CONTRACT_GAPS",
+      "owner_policy": "attempt_owner_active_deadline",
+      "idempotency_mode": "stored_request_receipt_CAS",
+      "body_limit_bytes": 4096,
+      "status": "IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS",
       "gaps": [
-        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+        "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
       ],
       "current_response_models": [
         "200",
         "422"
       ],
-      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+      "note": "Copied from mounted route contracts. Auth roles derive from actual dependencies; ownership and transaction correctness require independent tests."
     },
     {
       "operation_id": "my_sets_api_my_sets_get",
       "method": "GET",
       "path": "/api/my/sets",
       "roles": [
-        "authenticated_owner_of_resource"
+        "authenticated_profile"
       ],
       "workload_tier": "normal",
-      "owner_policy": "server_resource_ownership_and_release_checks_required",
-      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "owner_policy": "current_profile_audience",
+      "idempotency_mode": "read",
       "body_limit_bytes": 0,
-      "status": "LEGACY_CONTRACT_GAPS",
+      "status": "IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS",
       "gaps": [
-        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+        "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
       ],
       "current_response_models": [
         "200",
         "422"
       ],
-      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+      "note": "Copied from mounted route contracts. Auth roles derive from actual dependencies; ownership and transaction correctness require independent tests."
     },
     {
       "operation_id": "my_set_api_my_sets__id__get",
       "method": "GET",
       "path": "/api/my/sets/{id}",
       "roles": [
-        "authenticated_owner_of_resource"
+        "authenticated_profile"
       ],
       "workload_tier": "normal",
-      "owner_policy": "server_resource_ownership_and_release_checks_required",
-      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "owner_policy": "current_profile_audience",
+      "idempotency_mode": "read",
       "body_limit_bytes": 0,
-      "status": "LEGACY_CONTRACT_GAPS",
+      "status": "IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS",
       "gaps": [
-        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+        "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
       ],
       "current_response_models": [
         "200",
         "422"
       ],
-      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+      "note": "Copied from mounted route contracts. Auth roles derive from actual dependencies; ownership and transaction correctness require independent tests."
     },
     {
       "operation_id": "preflight_api_sets__id__preflight_post",
       "method": "POST",
       "path": "/api/sets/{id}/preflight",
       "roles": [
-        "authenticated_owner_of_resource"
+        "authenticated_profile"
       ],
-      "workload_tier": "live",
-      "owner_policy": "server_resource_ownership_and_release_checks_required",
-      "idempotency_mode": "legacy_operation_specific_incomplete",
-      "body_limit_bytes": 1048576,
-      "status": "LEGACY_CONTRACT_GAPS",
+      "workload_tier": "normal",
+      "owner_policy": "current_profile_audience_or_staff_preview",
+      "idempotency_mode": "upsert_preflight",
+      "body_limit_bytes": 4096,
+      "status": "IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS",
       "gaps": [
-        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+        "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
       ],
       "current_response_models": [
         "200",
         "422"
       ],
-      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+      "note": "Copied from mounted route contracts. Auth roles derive from actual dependencies; ownership and transaction correctness require independent tests."
     },
     {
       "operation_id": "start_api_sets__id__start_post",
       "method": "POST",
       "path": "/api/sets/{id}/start",
       "roles": [
-        "authenticated_owner_of_resource"
+        "authenticated_profile"
       ],
       "workload_tier": "live",
-      "owner_policy": "server_resource_ownership_and_release_checks_required",
-      "idempotency_mode": "legacy_operation_specific_incomplete",
-      "body_limit_bytes": 1048576,
-      "status": "LEGACY_CONTRACT_GAPS",
+      "owner_policy": "current_profile_audience_or_staff_preview",
+      "idempotency_mode": "start_key_receipt_legacy",
+      "body_limit_bytes": 4096,
+      "status": "IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS",
       "gaps": [
-        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+        "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
       ],
       "current_response_models": [
         "200",
         "422"
       ],
-      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+      "note": "Copied from mounted route contracts. Auth roles derive from actual dependencies; ownership and transaction correctness require independent tests."
     },
     {
       "operation_id": "history_api_attempts_get",
       "method": "GET",
       "path": "/api/attempts",
       "roles": [
-        "authenticated_owner_of_resource"
+        "authenticated_profile"
       ],
       "workload_tier": "normal",
-      "owner_policy": "server_resource_ownership_and_release_checks_required",
-      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "owner_policy": "attempt_owner",
+      "idempotency_mode": "read_with_expiry_side_effect",
       "body_limit_bytes": 0,
-      "status": "LEGACY_CONTRACT_GAPS",
+      "status": "IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS",
       "gaps": [
-        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+        "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
       ],
       "current_response_models": [
         "200",
         "422"
       ],
-      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+      "note": "Copied from mounted route contracts. Auth roles derive from actual dependencies; ownership and transaction correctness require independent tests."
     },
     {
       "operation_id": "read_attempt_api_attempts__id__get",
       "method": "GET",
       "path": "/api/attempts/{id}",
       "roles": [
-        "authenticated_owner_of_resource"
+        "authenticated_profile"
       ],
       "workload_tier": "live",
-      "owner_policy": "server_resource_ownership_and_release_checks_required",
-      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "owner_policy": "attempt_owner",
+      "idempotency_mode": "read_with_expiry_side_effect",
       "body_limit_bytes": 0,
-      "status": "LEGACY_CONTRACT_GAPS",
+      "status": "IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS",
       "gaps": [
-        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+        "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
       ],
       "current_response_models": [
         "200",
         "422"
       ],
-      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+      "note": "Copied from mounted route contracts. Auth roles derive from actual dependencies; ownership and transaction correctness require independent tests."
     },
     {
       "operation_id": "visit_question_api_attempts__id__visit_post",
       "method": "POST",
       "path": "/api/attempts/{id}/visit",
       "roles": [
-        "authenticated_owner_of_resource"
+        "authenticated_profile"
       ],
       "workload_tier": "live",
-      "owner_policy": "server_resource_ownership_and_release_checks_required",
-      "idempotency_mode": "legacy_operation_specific_incomplete",
-      "body_limit_bytes": 1048576,
-      "status": "LEGACY_CONTRACT_GAPS",
+      "owner_policy": "attempt_owner_active_deadline",
+      "idempotency_mode": "set_membership",
+      "body_limit_bytes": 4096,
+      "status": "IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS",
       "gaps": [
-        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+        "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
       ],
       "current_response_models": [
         "200",
         "422"
       ],
-      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+      "note": "Copied from mounted route contracts. Auth roles derive from actual dependencies; ownership and transaction correctness require independent tests."
     },
     {
       "operation_id": "submit_api_attempts__id__submit_post",
       "method": "POST",
       "path": "/api/attempts/{id}/submit",
       "roles": [
-        "authenticated_owner_of_resource"
+        "authenticated_profile"
       ],
       "workload_tier": "live",
-      "owner_policy": "server_resource_ownership_and_release_checks_required",
-      "idempotency_mode": "legacy_operation_specific_incomplete",
-      "body_limit_bytes": 1048576,
-      "status": "LEGACY_CONTRACT_GAPS",
+      "owner_policy": "attempt_owner",
+      "idempotency_mode": "atomic_seal_receipt",
+      "body_limit_bytes": 4096,
+      "status": "IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS",
       "gaps": [
-        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+        "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
       ],
       "current_response_models": [
         "200",
         "422"
       ],
-      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+      "note": "Copied from mounted route contracts. Auth roles derive from actual dependencies; ownership and transaction correctness require independent tests."
     },
     {
       "operation_id": "results_api_attempts__id__results_get",
       "method": "GET",
       "path": "/api/attempts/{id}/results",
       "roles": [
-        "authenticated_owner_of_resource"
+        "authenticated_profile"
       ],
-      "workload_tier": "live",
-      "owner_policy": "server_resource_ownership_and_release_checks_required",
-      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "workload_tier": "normal",
+      "owner_policy": "attempt_owner_and_solution_release",
+      "idempotency_mode": "read_grade_enqueue_side_effect",
       "body_limit_bytes": 0,
-      "status": "LEGACY_CONTRACT_GAPS",
+      "status": "IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS",
       "gaps": [
-        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+        "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
       ],
       "current_response_models": [
         "200",
         "422"
       ],
-      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+      "note": "Copied from mounted route contracts. Auth roles derive from actual dependencies; ownership and transaction correctness require independent tests."
     },
     {
       "operation_id": "asset_api_attempts__id__questions__qid__asset__kind___index__get",
       "method": "GET",
       "path": "/api/attempts/{id}/questions/{qid}/asset/{kind}/{index}",
       "roles": [
-        "authenticated_owner_of_resource"
+        "authenticated_profile"
       ],
-      "workload_tier": "live",
-      "owner_policy": "server_resource_ownership_and_release_checks_required",
-      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "workload_tier": "normal",
+      "owner_policy": "attempt_owner_and_solution_release",
+      "idempotency_mode": "read_with_expiry_side_effect",
       "body_limit_bytes": 0,
-      "status": "LEGACY_CONTRACT_GAPS",
+      "status": "IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS",
       "gaps": [
-        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+        "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
       ],
       "current_response_models": [
         "200",
         "422"
       ],
-      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+      "note": "Copied from mounted route contracts. Auth roles derive from actual dependencies; ownership and transaction correctness require independent tests."
     },
     {
       "operation_id": "retry_api_attempts__id__retry_post",
       "method": "POST",
       "path": "/api/attempts/{id}/retry",
       "roles": [
-        "authenticated_owner_of_resource"
+        "authenticated_profile"
       ],
-      "workload_tier": "live",
-      "owner_policy": "server_resource_ownership_and_release_checks_required",
-      "idempotency_mode": "legacy_operation_specific_incomplete",
-      "body_limit_bytes": 1048576,
-      "status": "LEGACY_CONTRACT_GAPS",
+      "workload_tier": "normal",
+      "owner_policy": "attempt_owner_frozen_grade",
+      "idempotency_mode": "KNOWN_A01_alias_gap",
+      "body_limit_bytes": 4096,
+      "status": "IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS",
       "gaps": [
-        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+        "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
       ],
       "current_response_models": [
         "200",
         "422"
       ],
-      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+      "note": "Copied from mounted route contracts. Auth roles derive from actual dependencies; ownership and transaction correctness require independent tests."
     },
     {
       "operation_id": "report_api_attempts__id__report_post",
       "method": "POST",
       "path": "/api/attempts/{id}/report",
       "roles": [
-        "authenticated_owner_of_resource"
+        "authenticated_profile"
       ],
       "workload_tier": "batch",
-      "owner_policy": "server_resource_ownership_and_release_checks_required",
-      "idempotency_mode": "legacy_operation_specific_incomplete",
-      "body_limit_bytes": 1048576,
-      "status": "LEGACY_CONTRACT_GAPS",
+      "owner_policy": "attempt_owner_and_report_rights",
+      "idempotency_mode": "versioned_report_job",
+      "body_limit_bytes": 4096,
+      "status": "IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS",
       "gaps": [
-        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+        "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
       ],
       "current_response_models": [
         "200",
         "422"
       ],
-      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+      "note": "Copied from mounted route contracts. Auth roles derive from actual dependencies; ownership and transaction correctness require independent tests."
     },
     {
       "operation_id": "status_api_jobs__id__get",
       "method": "GET",
       "path": "/api/jobs/{id}",
       "roles": [
-        "authenticated_owner_of_resource"
+        "authenticated_profile"
       ],
-      "workload_tier": "batch",
-      "owner_policy": "server_resource_ownership_and_release_checks_required",
-      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "workload_tier": "normal",
+      "owner_policy": "job_owner_or_staff_set_scope",
+      "idempotency_mode": "read_dispatch_side_effect",
       "body_limit_bytes": 0,
-      "status": "LEGACY_CONTRACT_GAPS",
+      "status": "IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS",
       "gaps": [
-        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+        "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
       ],
       "current_response_models": [
         "200",
         "422"
       ],
-      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+      "note": "Copied from mounted route contracts. Auth roles derive from actual dependencies; ownership and transaction correctness require independent tests."
     },
     {
       "operation_id": "retry_job_api_jobs__id__retry_post",
       "method": "POST",
       "path": "/api/jobs/{id}/retry",
       "roles": [
-        "authenticated_owner_of_resource"
+        "authenticated_profile"
       ],
       "workload_tier": "batch",
-      "owner_policy": "server_resource_ownership_and_release_checks_required",
-      "idempotency_mode": "legacy_operation_specific_incomplete",
-      "body_limit_bytes": 1048576,
-      "status": "LEGACY_CONTRACT_GAPS",
+      "owner_policy": "job_owner_or_staff_set_scope",
+      "idempotency_mode": "job_state_retry",
+      "body_limit_bytes": 4096,
+      "status": "IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS",
       "gaps": [
-        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+        "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
       ],
       "current_response_models": [
         "200",
         "422"
       ],
-      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+      "note": "Copied from mounted route contracts. Auth roles derive from actual dependencies; ownership and transaction correctness require independent tests."
     },
     {
       "operation_id": "download_api_jobs__id__download_get",
       "method": "GET",
       "path": "/api/jobs/{id}/download",
       "roles": [
-        "authenticated_owner_of_resource"
+        "authenticated_profile"
       ],
-      "workload_tier": "batch",
-      "owner_policy": "server_resource_ownership_and_release_checks_required",
-      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "workload_tier": "normal",
+      "owner_policy": "job_owner_and_report_rights",
+      "idempotency_mode": "read",
       "body_limit_bytes": 0,
-      "status": "LEGACY_CONTRACT_GAPS",
+      "status": "IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS",
       "gaps": [
-        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+        "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
       ],
       "current_response_models": [
         "200",
         "422"
       ],
-      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+      "note": "Copied from mounted route contracts. Auth roles derive from actual dependencies; ownership and transaction correctness require independent tests."
     },
     {
       "operation_id": "cron_api_cron_maintenance_post",
       "method": "POST",
       "path": "/api/cron/maintenance",
       "roles": [
-        "cron_service"
+        "public_or_handler_checked"
       ],
-      "workload_tier": "maintenance",
-      "owner_policy": "server_resource_ownership_and_release_checks_required",
-      "idempotency_mode": "legacy_operation_specific_incomplete",
-      "body_limit_bytes": 1048576,
-      "status": "LEGACY_CONTRACT_GAPS",
+      "workload_tier": "batch",
+      "owner_policy": "cron_secret_dependency",
+      "idempotency_mode": "maintenance_replay",
+      "body_limit_bytes": 4096,
+      "status": "IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS",
       "gaps": [
-        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+        "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
       ],
       "current_response_models": [
         "200"
       ],
-      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+      "note": "Copied from mounted route contracts. Auth roles derive from actual dependencies; ownership and transaction correctness require independent tests."
     },
     {
       "operation_id": "update_access_api_studio_reviewers_post",
@@ -939,18 +939,18 @@
         "owner"
       ],
       "workload_tier": "control",
-      "owner_policy": "server_resource_ownership_and_release_checks_required",
-      "idempotency_mode": "legacy_operation_specific_incomplete",
-      "body_limit_bytes": 1048576,
-      "status": "LEGACY_CONTRACT_GAPS",
+      "owner_policy": "owner_reviewer_administration",
+      "idempotency_mode": "role_replace",
+      "body_limit_bytes": 4096,
+      "status": "IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS",
       "gaps": [
-        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+        "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
       ],
       "current_response_models": [
         "200",
         "422"
       ],
-      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+      "note": "Copied from mounted route contracts. Auth roles derive from actual dependencies; ownership and transaction correctness require independent tests."
     },
     {
       "operation_id": "profiles_api_studio_profiles_get",
@@ -961,17 +961,17 @@
         "reviewer"
       ],
       "workload_tier": "control",
-      "owner_policy": "server_resource_ownership_and_release_checks_required",
-      "idempotency_mode": "legacy_operation_specific_incomplete",
+      "owner_policy": "authorized_editorial_workspace",
+      "idempotency_mode": "read",
       "body_limit_bytes": 0,
-      "status": "LEGACY_CONTRACT_GAPS",
+      "status": "IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS",
       "gaps": [
-        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+        "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
       ],
       "current_response_models": [
         "200"
       ],
-      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+      "note": "Copied from mounted route contracts. Auth roles derive from actual dependencies; ownership and transaction correctness require independent tests."
     },
     {
       "operation_id": "regrade_api_studio_sets__id__regrade_post",
@@ -981,18 +981,18 @@
         "owner"
       ],
       "workload_tier": "batch",
-      "owner_policy": "server_resource_ownership_and_release_checks_required",
-      "idempotency_mode": "legacy_operation_specific_incomplete",
-      "body_limit_bytes": 1048576,
-      "status": "LEGACY_CONTRACT_GAPS",
+      "owner_policy": "owner_scoring_successor",
+      "idempotency_mode": "HELD",
+      "body_limit_bytes": 4096,
+      "status": "IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS",
       "gaps": [
-        "Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete"
+        "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
       ],
       "current_response_models": [
         "200",
         "422"
       ],
-      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+      "note": "Copied from mounted route contracts. Auth roles derive from actual dependencies; ownership and transaction correctness require independent tests."
     },
     {
       "operation_id": "internal_capacity_profile_v1",
@@ -1002,16 +1002,18 @@
         "owner",
         "reviewer"
       ],
-      "workload_tier": "control",
-      "owner_policy": "server_resource_ownership_and_release_checks_required",
-      "idempotency_mode": "read_only",
+      "workload_tier": "normal",
+      "owner_policy": "staff_engineering_only",
+      "idempotency_mode": "read",
       "body_limit_bytes": 0,
-      "status": "IMPLEMENTED_TYPED_REFERENCE_READ",
-      "gaps": [],
+      "status": "IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS",
+      "gaps": [
+        "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+      ],
       "current_response_models": [
         "200"
       ],
-      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+      "note": "Copied from mounted route contracts. Auth roles derive from actual dependencies; ownership and transaction correctness require independent tests."
     },
     {
       "operation_id": "internal_safety_status_v1",
@@ -1021,16 +1023,18 @@
         "owner",
         "reviewer"
       ],
-      "workload_tier": "control",
-      "owner_policy": "server_resource_ownership_and_release_checks_required",
-      "idempotency_mode": "read_only",
+      "workload_tier": "normal",
+      "owner_policy": "staff_engineering_only",
+      "idempotency_mode": "read",
       "body_limit_bytes": 0,
-      "status": "IMPLEMENTED_TYPED_REFERENCE_READ",
-      "gaps": [],
+      "status": "IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS",
+      "gaps": [
+        "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+      ],
       "current_response_models": [
         "200"
       ],
-      "note": "Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review."
+      "note": "Copied from mounted route contracts. Auth roles derive from actual dependencies; ownership and transaction correctness require independent tests."
     }
   ],
   "complete_target_contract": false

@@ -31,7 +31,7 @@ class SetInput(BaseModel):
     allowed_emails: list[str] = []
     allowed_phones: list[str] = []
     profile_mode: str = "practice"
-    expires: str = ""
+    expires: str | None = ""
     rights_upload: bool = False
     rights_publish: bool = False
     rights_report: bool = False

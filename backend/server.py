@@ -42,7 +42,7 @@ app = FastAPI(
 )
 from tejas.http_limits import JsonBodyLimits
 from tejas.safety import ContentSafetyHold
-app.add_middleware(JsonBodyLimits)
+app.add_middleware(JsonBodyLimits, contracts_owner=app)
 app.add_middleware(ContentSafetyHold)
 origins = [os.environ["FRONTEND_URL"].rstrip("/")]
 app.add_middleware(
@@ -137,3 +137,6 @@ for module in [
     engineering,
 ]:
     app.include_router(module.router)
+
+from tejas.route_contracts import install_contracts
+install_contracts(app)

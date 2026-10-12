@@ -20,14 +20,17 @@
             }
           }
         },
-        "x-owner-policy": "public_or_session_specific_contract",
+        "x-owner-policy": "public_liveness_only",
         "x-role-scope": [
-          "public_or_cookie_session"
+          "public_or_handler_checked"
         ],
         "x-workload-tier": "normal",
-        "x-idempotency-mode": "legacy_operation_specific_incomplete",
+        "x-idempotency-mode": "read",
         "x-body-limit-bytes": 0,
-        "x-contract-status": "LEGACY_CONTRACT_GAPS"
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
       }
     },
     "/api/auth/register": {
@@ -47,14 +50,27 @@
             }
           }
         },
-        "x-owner-policy": "public_or_session_specific_contract",
+        "x-owner-policy": "removed_endpoint",
         "x-role-scope": [
-          "public_or_cookie_session"
+          "public_or_handler_checked"
         ],
-        "x-workload-tier": "control",
-        "x-idempotency-mode": "legacy_operation_specific_incomplete",
-        "x-body-limit-bytes": 1048576,
-        "x-contract-status": "LEGACY_CONTRACT_GAPS"
+        "x-workload-tier": "normal",
+        "x-idempotency-mode": "gone",
+        "x-body-limit-bytes": 4096,
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmptyPayload"
+              }
+            }
+          }
+        },
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
       }
     },
     "/api/auth/login": {
@@ -65,14 +81,14 @@
         "summary": "Login",
         "operationId": "login_api_auth_login_post",
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Credentials"
+                "$ref": "#/components/schemas/LoginPayload"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -94,14 +110,17 @@
             }
           }
         },
-        "x-owner-policy": "public_or_session_specific_contract",
+        "x-owner-policy": "staff_password_session",
         "x-role-scope": [
-          "public_or_cookie_session"
+          "public_or_handler_checked"
         ],
-        "x-workload-tier": "control",
-        "x-idempotency-mode": "legacy_operation_specific_incomplete",
-        "x-body-limit-bytes": 1048576,
-        "x-contract-status": "LEGACY_CONTRACT_GAPS"
+        "x-workload-tier": "normal",
+        "x-idempotency-mode": "new_session",
+        "x-body-limit-bytes": 4096,
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
       }
     },
     "/api/auth/session": {
@@ -121,14 +140,17 @@
             }
           }
         },
-        "x-owner-policy": "public_or_session_specific_contract",
+        "x-owner-policy": "cookie_identity",
         "x-role-scope": [
-          "public_or_cookie_session"
+          "public_or_handler_checked"
         ],
-        "x-workload-tier": "control",
-        "x-idempotency-mode": "legacy_operation_specific_incomplete",
+        "x-workload-tier": "normal",
+        "x-idempotency-mode": "read_refresh_side_effect",
         "x-body-limit-bytes": 0,
-        "x-contract-status": "LEGACY_CONTRACT_GAPS"
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
       }
     },
     "/api/auth/me": {
@@ -148,14 +170,17 @@
             }
           }
         },
-        "x-owner-policy": "server_resource_ownership_and_release_checks_required",
+        "x-owner-policy": "current_identity",
         "x-role-scope": [
-          "authenticated_owner_of_resource"
+          "authenticated_profile"
         ],
-        "x-workload-tier": "control",
-        "x-idempotency-mode": "legacy_operation_specific_incomplete",
+        "x-workload-tier": "normal",
+        "x-idempotency-mode": "read",
         "x-body-limit-bytes": 0,
-        "x-contract-status": "LEGACY_CONTRACT_GAPS"
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
       }
     },
     "/api/auth/refresh": {
@@ -175,14 +200,27 @@
             }
           }
         },
-        "x-owner-policy": "public_or_session_specific_contract",
+        "x-owner-policy": "current_refresh_session",
         "x-role-scope": [
-          "public_or_cookie_session"
+          "public_or_handler_checked"
         ],
-        "x-workload-tier": "control",
-        "x-idempotency-mode": "legacy_operation_specific_incomplete",
-        "x-body-limit-bytes": 1048576,
-        "x-contract-status": "LEGACY_CONTRACT_GAPS"
+        "x-workload-tier": "normal",
+        "x-idempotency-mode": "session_refresh",
+        "x-body-limit-bytes": 4096,
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmptyPayload"
+              }
+            }
+          }
+        },
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
       }
     },
     "/api/auth/logout": {
@@ -202,14 +240,27 @@
             }
           }
         },
-        "x-owner-policy": "public_or_session_specific_contract",
+        "x-owner-policy": "current_cookie_sessions_only",
         "x-role-scope": [
-          "public_or_cookie_session"
+          "public_or_handler_checked"
         ],
-        "x-workload-tier": "control",
-        "x-idempotency-mode": "legacy_operation_specific_incomplete",
-        "x-body-limit-bytes": 1048576,
-        "x-contract-status": "LEGACY_CONTRACT_GAPS"
+        "x-workload-tier": "normal",
+        "x-idempotency-mode": "repeatable_delete",
+        "x-body-limit-bytes": 4096,
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmptyPayload"
+              }
+            }
+          }
+        },
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
       }
     },
     "/api/auth/preferences": {
@@ -220,16 +271,14 @@
         "summary": "Preferences",
         "operationId": "preferences_api_auth_preferences_patch",
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "additionalProperties": true,
-                "type": "object",
-                "title": "Data"
+                "$ref": "#/components/schemas/PreferencePayload"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -251,14 +300,17 @@
             }
           }
         },
-        "x-owner-policy": "server_resource_ownership_and_release_checks_required",
+        "x-owner-policy": "current_profile_only",
         "x-role-scope": [
-          "authenticated_owner_of_resource"
+          "authenticated_profile"
         ],
-        "x-workload-tier": "control",
-        "x-idempotency-mode": "legacy_operation_specific_incomplete",
-        "x-body-limit-bytes": 1048576,
-        "x-contract-status": "LEGACY_CONTRACT_GAPS"
+        "x-workload-tier": "normal",
+        "x-idempotency-mode": "replace_field",
+        "x-body-limit-bytes": 4096,
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
       }
     },
     "/api/auth/phone": {
@@ -269,14 +321,14 @@
         "summary": "Access",
         "operationId": "access_api_auth_phone_post",
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/PhoneInput"
+                "$ref": "#/components/schemas/PhonePayload"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -298,14 +350,17 @@
             }
           }
         },
-        "x-owner-policy": "public_or_session_specific_contract",
+        "x-owner-policy": "unverified_phone_profile_only",
         "x-role-scope": [
-          "public_or_cookie_session"
+          "public_or_handler_checked"
         ],
-        "x-workload-tier": "control",
-        "x-idempotency-mode": "legacy_operation_specific_incomplete",
-        "x-body-limit-bytes": 1048576,
-        "x-contract-status": "LEGACY_CONTRACT_GAPS"
+        "x-workload-tier": "normal",
+        "x-idempotency-mode": "profile_upsert_new_session",
+        "x-body-limit-bytes": 4096,
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
       }
     },
     "/api/sets": {
@@ -367,14 +422,17 @@
             }
           }
         },
-        "x-owner-policy": "public_or_session_specific_contract",
+        "x-owner-policy": "public_published_audience",
         "x-role-scope": [
-          "public_or_cookie_session"
+          "public_or_handler_checked"
         ],
         "x-workload-tier": "normal",
-        "x-idempotency-mode": "legacy_operation_specific_incomplete",
+        "x-idempotency-mode": "read",
         "x-body-limit-bytes": 0,
-        "x-contract-status": "LEGACY_CONTRACT_GAPS"
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
       }
     },
     "/api/sets/{id}": {
@@ -415,14 +473,17 @@
             }
           }
         },
-        "x-owner-policy": "public_or_session_specific_contract",
+        "x-owner-policy": "public_published_audience",
         "x-role-scope": [
-          "public_or_cookie_session"
+          "public_or_handler_checked"
         ],
         "x-workload-tier": "normal",
-        "x-idempotency-mode": "legacy_operation_specific_incomplete",
+        "x-idempotency-mode": "read",
         "x-body-limit-bytes": 0,
-        "x-contract-status": "LEGACY_CONTRACT_GAPS"
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
       }
     },
     "/api/studio/sets": {
@@ -442,15 +503,18 @@
             }
           }
         },
-        "x-owner-policy": "server_resource_ownership_and_release_checks_required",
+        "x-owner-policy": "authorized_editorial_workspace",
         "x-role-scope": [
           "owner",
           "reviewer"
         ],
         "x-workload-tier": "control",
-        "x-idempotency-mode": "legacy_operation_specific_incomplete",
+        "x-idempotency-mode": "read",
         "x-body-limit-bytes": 0,
-        "x-contract-status": "LEGACY_CONTRACT_GAPS"
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
       },
       "post": {
         "tags": [
@@ -459,14 +523,14 @@
         "summary": "Create Set",
         "operationId": "create_set_api_studio_sets_post",
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/SetInput"
+                "$ref": "#/components/schemas/SetPayload"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -488,15 +552,18 @@
             }
           }
         },
-        "x-owner-policy": "server_resource_ownership_and_release_checks_required",
+        "x-owner-policy": "authorized_editorial_workspace",
         "x-role-scope": [
           "owner",
           "reviewer"
         ],
         "x-workload-tier": "control",
-        "x-idempotency-mode": "legacy_operation_specific_incomplete",
-        "x-body-limit-bytes": 1048576,
-        "x-contract-status": "LEGACY_CONTRACT_GAPS"
+        "x-idempotency-mode": "not_idempotent",
+        "x-body-limit-bytes": 65536,
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
       }
     },
     "/api/studio/sets/{id}": {
@@ -537,15 +604,18 @@
             }
           }
         },
-        "x-owner-policy": "server_resource_ownership_and_release_checks_required",
+        "x-owner-policy": "authorized_editorial_workspace",
         "x-role-scope": [
           "owner",
           "reviewer"
         ],
         "x-workload-tier": "control",
-        "x-idempotency-mode": "legacy_operation_specific_incomplete",
+        "x-idempotency-mode": "read",
         "x-body-limit-bytes": 0,
-        "x-contract-status": "LEGACY_CONTRACT_GAPS"
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
       },
       "put": {
         "tags": [
@@ -569,7 +639,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/SetInput"
+                "$ref": "#/components/schemas/SetPayload"
               }
             }
           }
@@ -594,15 +664,18 @@
             }
           }
         },
-        "x-owner-policy": "server_resource_ownership_and_release_checks_required",
+        "x-owner-policy": "authorized_editorial_workspace",
         "x-role-scope": [
           "owner",
           "reviewer"
         ],
         "x-workload-tier": "control",
-        "x-idempotency-mode": "legacy_operation_specific_incomplete",
-        "x-body-limit-bytes": 1048576,
-        "x-contract-status": "LEGACY_CONTRACT_GAPS"
+        "x-idempotency-mode": "legacy_unfenced_edit",
+        "x-body-limit-bytes": 65536,
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
       }
     },
     "/api/studio/sets/{id}/files": {
@@ -653,15 +726,18 @@
             }
           }
         },
-        "x-owner-policy": "server_resource_ownership_and_release_checks_required",
+        "x-owner-policy": "authorized_private_source",
         "x-role-scope": [
           "owner",
           "reviewer"
         ],
-        "x-workload-tier": "control",
-        "x-idempotency-mode": "legacy_operation_specific_incomplete",
+        "x-workload-tier": "batch",
+        "x-idempotency-mode": "HELD",
         "x-body-limit-bytes": 0,
-        "x-contract-status": "LEGACY_CONTRACT_GAPS"
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
       }
     },
     "/api/studio/files/{id}/page/{page}": {
@@ -711,15 +787,18 @@
             }
           }
         },
-        "x-owner-policy": "server_resource_ownership_and_release_checks_required",
+        "x-owner-policy": "authorized_private_source",
         "x-role-scope": [
           "owner",
           "reviewer"
         ],
-        "x-workload-tier": "control",
-        "x-idempotency-mode": "legacy_operation_specific_incomplete",
+        "x-workload-tier": "batch",
+        "x-idempotency-mode": "HELD",
         "x-body-limit-bytes": 0,
-        "x-contract-status": "LEGACY_CONTRACT_GAPS"
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
       }
     },
     "/api/studio/files/{id}/text/{page}": {
@@ -769,15 +848,18 @@
             }
           }
         },
-        "x-owner-policy": "server_resource_ownership_and_release_checks_required",
+        "x-owner-policy": "authorized_private_source",
         "x-role-scope": [
           "owner",
           "reviewer"
         ],
-        "x-workload-tier": "control",
-        "x-idempotency-mode": "legacy_operation_specific_incomplete",
+        "x-workload-tier": "batch",
+        "x-idempotency-mode": "HELD",
         "x-body-limit-bytes": 0,
-        "x-contract-status": "LEGACY_CONTRACT_GAPS"
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
       }
     },
     "/api/studio/files/{id}/download": {
@@ -818,15 +900,18 @@
             }
           }
         },
-        "x-owner-policy": "server_resource_ownership_and_release_checks_required",
+        "x-owner-policy": "authorized_private_source",
         "x-role-scope": [
           "owner",
           "reviewer"
         ],
-        "x-workload-tier": "control",
-        "x-idempotency-mode": "legacy_operation_specific_incomplete",
+        "x-workload-tier": "normal",
+        "x-idempotency-mode": "read",
         "x-body-limit-bytes": 0,
-        "x-contract-status": "LEGACY_CONTRACT_GAPS"
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
       }
     },
     "/api/studio/sets/{id}/extract": {
@@ -852,9 +937,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "additionalProperties": true,
-                "title": "Data"
+                "$ref": "#/components/schemas/ExtractPayload"
               }
             }
           }
@@ -879,15 +962,18 @@
             }
           }
         },
-        "x-owner-policy": "server_resource_ownership_and_release_checks_required",
+        "x-owner-policy": "authorized_editorial_workspace",
         "x-role-scope": [
           "owner",
           "reviewer"
         ],
         "x-workload-tier": "batch",
-        "x-idempotency-mode": "legacy_operation_specific_incomplete",
-        "x-body-limit-bytes": 1048576,
-        "x-contract-status": "LEGACY_CONTRACT_GAPS"
+        "x-idempotency-mode": "HELD",
+        "x-body-limit-bytes": 4096,
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
       }
     },
     "/api/studio/sets/{id}/questions": {
@@ -928,15 +1014,28 @@
             }
           }
         },
-        "x-owner-policy": "server_resource_ownership_and_release_checks_required",
+        "x-owner-policy": "authorized_editorial_workspace",
         "x-role-scope": [
           "owner",
           "reviewer"
         ],
         "x-workload-tier": "control",
-        "x-idempotency-mode": "legacy_operation_specific_incomplete",
-        "x-body-limit-bytes": 1048576,
-        "x-contract-status": "LEGACY_CONTRACT_GAPS"
+        "x-idempotency-mode": "not_idempotent",
+        "x-body-limit-bytes": 4096,
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmptyPayload"
+              }
+            }
+          }
+        },
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
       }
     },
     "/api/studio/sets/{id}/questions/{qid}": {
@@ -971,9 +1070,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "additionalProperties": true,
-                "title": "Data"
+                "$ref": "#/components/schemas/QuestionPayload"
               }
             }
           }
@@ -998,15 +1095,18 @@
             }
           }
         },
-        "x-owner-policy": "server_resource_ownership_and_release_checks_required",
+        "x-owner-policy": "authorized_editorial_workspace",
         "x-role-scope": [
           "owner",
           "reviewer"
         ],
         "x-workload-tier": "control",
-        "x-idempotency-mode": "legacy_operation_specific_incomplete",
-        "x-body-limit-bytes": 1048576,
-        "x-contract-status": "LEGACY_CONTRACT_GAPS"
+        "x-idempotency-mode": "legacy_unfenced_edit",
+        "x-body-limit-bytes": 262144,
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
       }
     },
     "/api/studio/sets/{id}/questions/{qid}/approve": {
@@ -1056,15 +1156,28 @@
             }
           }
         },
-        "x-owner-policy": "server_resource_ownership_and_release_checks_required",
+        "x-owner-policy": "authorized_editorial_workspace",
         "x-role-scope": [
           "owner",
           "reviewer"
         ],
         "x-workload-tier": "control",
-        "x-idempotency-mode": "legacy_operation_specific_incomplete",
-        "x-body-limit-bytes": 1048576,
-        "x-contract-status": "LEGACY_CONTRACT_GAPS"
+        "x-idempotency-mode": "revision_CAS",
+        "x-body-limit-bytes": 4096,
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmptyPayload"
+              }
+            }
+          }
+        },
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
       }
     },
     "/api/studio/sets/{id}/publish": {
@@ -1090,9 +1203,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "additionalProperties": true,
-                "title": "Data"
+                "$ref": "#/components/schemas/PublishPayload"
               }
             }
           }
@@ -1117,14 +1228,17 @@
             }
           }
         },
-        "x-owner-policy": "server_resource_ownership_and_release_checks_required",
+        "x-owner-policy": "owner_publication_rights",
         "x-role-scope": [
           "owner"
         ],
         "x-workload-tier": "control",
-        "x-idempotency-mode": "legacy_operation_specific_incomplete",
-        "x-body-limit-bytes": 1048576,
-        "x-contract-status": "LEGACY_CONTRACT_GAPS"
+        "x-idempotency-mode": "HELD",
+        "x-body-limit-bytes": 4096,
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
       }
     },
     "/api/studio/sets/{id}/withdraw": {
@@ -1150,9 +1264,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "additionalProperties": true,
-                "title": "Data"
+                "$ref": "#/components/schemas/WithdrawalPayload"
               }
             }
           }
@@ -1177,14 +1289,17 @@
             }
           }
         },
-        "x-owner-policy": "server_resource_ownership_and_release_checks_required",
+        "x-owner-policy": "owner_publication_rights",
         "x-role-scope": [
           "owner"
         ],
         "x-workload-tier": "control",
-        "x-idempotency-mode": "legacy_operation_specific_incomplete",
-        "x-body-limit-bytes": 1048576,
-        "x-contract-status": "LEGACY_CONTRACT_GAPS"
+        "x-idempotency-mode": "repeatable_state_change_audit_each_call",
+        "x-body-limit-bytes": 4096,
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
       }
     },
     "/api/studio/sets/{id}/subset": {
@@ -1210,9 +1325,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "additionalProperties": true,
-                "title": "Data"
+                "$ref": "#/components/schemas/SubsetPayload"
               }
             }
           }
@@ -1237,15 +1350,18 @@
             }
           }
         },
-        "x-owner-policy": "server_resource_ownership_and_release_checks_required",
+        "x-owner-policy": "authorized_editorial_workspace",
         "x-role-scope": [
           "owner",
           "reviewer"
         ],
         "x-workload-tier": "control",
-        "x-idempotency-mode": "legacy_operation_specific_incomplete",
-        "x-body-limit-bytes": 1048576,
-        "x-contract-status": "LEGACY_CONTRACT_GAPS"
+        "x-idempotency-mode": "not_idempotent",
+        "x-body-limit-bytes": 65536,
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
       }
     },
     "/api/studio/sets/{id}/questions/{qid}/asset/{kind}/{index}": {
@@ -1313,15 +1429,18 @@
             }
           }
         },
-        "x-owner-policy": "server_resource_ownership_and_release_checks_required",
+        "x-owner-policy": "authorized_private_source",
         "x-role-scope": [
           "owner",
           "reviewer"
         ],
-        "x-workload-tier": "control",
-        "x-idempotency-mode": "legacy_operation_specific_incomplete",
+        "x-workload-tier": "batch",
+        "x-idempotency-mode": "HELD",
         "x-body-limit-bytes": 0,
-        "x-contract-status": "LEGACY_CONTRACT_GAPS"
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
       }
     },
     "/api/attempts/{id}/answers/{qid}": {
@@ -1356,7 +1475,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/AnswerWrite"
+                "$ref": "#/components/schemas/AnswerPayload"
               }
             }
           }
@@ -1383,14 +1502,17 @@
             }
           }
         },
-        "x-owner-policy": "server_resource_ownership_and_release_checks_required",
+        "x-owner-policy": "attempt_owner_active_deadline",
         "x-role-scope": [
-          "authenticated_owner_of_resource"
+          "authenticated_profile"
         ],
         "x-workload-tier": "live",
-        "x-idempotency-mode": "legacy_operation_specific_incomplete",
-        "x-body-limit-bytes": 1048576,
-        "x-contract-status": "LEGACY_CONTRACT_GAPS"
+        "x-idempotency-mode": "stored_request_receipt_CAS",
+        "x-body-limit-bytes": 4096,
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
       }
     },
     "/api/my/sets": {
@@ -1452,14 +1574,17 @@
             }
           }
         },
-        "x-owner-policy": "server_resource_ownership_and_release_checks_required",
+        "x-owner-policy": "current_profile_audience",
         "x-role-scope": [
-          "authenticated_owner_of_resource"
+          "authenticated_profile"
         ],
         "x-workload-tier": "normal",
-        "x-idempotency-mode": "legacy_operation_specific_incomplete",
+        "x-idempotency-mode": "read",
         "x-body-limit-bytes": 0,
-        "x-contract-status": "LEGACY_CONTRACT_GAPS"
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
       }
     },
     "/api/my/sets/{id}": {
@@ -1500,14 +1625,17 @@
             }
           }
         },
-        "x-owner-policy": "server_resource_ownership_and_release_checks_required",
+        "x-owner-policy": "current_profile_audience",
         "x-role-scope": [
-          "authenticated_owner_of_resource"
+          "authenticated_profile"
         ],
         "x-workload-tier": "normal",
-        "x-idempotency-mode": "legacy_operation_specific_incomplete",
+        "x-idempotency-mode": "read",
         "x-body-limit-bytes": 0,
-        "x-contract-status": "LEGACY_CONTRACT_GAPS"
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
       }
     },
     "/api/sets/{id}/preflight": {
@@ -1533,9 +1661,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "additionalProperties": true,
-                "title": "Data"
+                "$ref": "#/components/schemas/PreflightPayload"
               }
             }
           }
@@ -1560,14 +1686,17 @@
             }
           }
         },
-        "x-owner-policy": "server_resource_ownership_and_release_checks_required",
+        "x-owner-policy": "current_profile_audience_or_staff_preview",
         "x-role-scope": [
-          "authenticated_owner_of_resource"
+          "authenticated_profile"
         ],
-        "x-workload-tier": "live",
-        "x-idempotency-mode": "legacy_operation_specific_incomplete",
-        "x-body-limit-bytes": 1048576,
-        "x-contract-status": "LEGACY_CONTRACT_GAPS"
+        "x-workload-tier": "normal",
+        "x-idempotency-mode": "upsert_preflight",
+        "x-body-limit-bytes": 4096,
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
       }
     },
     "/api/sets/{id}/start": {
@@ -1593,7 +1722,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Start"
+                "$ref": "#/components/schemas/StartPayload"
               }
             }
           }
@@ -1618,14 +1747,17 @@
             }
           }
         },
-        "x-owner-policy": "server_resource_ownership_and_release_checks_required",
+        "x-owner-policy": "current_profile_audience_or_staff_preview",
         "x-role-scope": [
-          "authenticated_owner_of_resource"
+          "authenticated_profile"
         ],
         "x-workload-tier": "live",
-        "x-idempotency-mode": "legacy_operation_specific_incomplete",
-        "x-body-limit-bytes": 1048576,
-        "x-contract-status": "LEGACY_CONTRACT_GAPS"
+        "x-idempotency-mode": "start_key_receipt_legacy",
+        "x-body-limit-bytes": 4096,
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
       }
     },
     "/api/attempts": {
@@ -1667,14 +1799,17 @@
             }
           }
         },
-        "x-owner-policy": "server_resource_ownership_and_release_checks_required",
+        "x-owner-policy": "attempt_owner",
         "x-role-scope": [
-          "authenticated_owner_of_resource"
+          "authenticated_profile"
         ],
         "x-workload-tier": "normal",
-        "x-idempotency-mode": "legacy_operation_specific_incomplete",
+        "x-idempotency-mode": "read_with_expiry_side_effect",
         "x-body-limit-bytes": 0,
-        "x-contract-status": "LEGACY_CONTRACT_GAPS"
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
       }
     },
     "/api/attempts/{id}": {
@@ -1715,14 +1850,17 @@
             }
           }
         },
-        "x-owner-policy": "server_resource_ownership_and_release_checks_required",
+        "x-owner-policy": "attempt_owner",
         "x-role-scope": [
-          "authenticated_owner_of_resource"
+          "authenticated_profile"
         ],
         "x-workload-tier": "live",
-        "x-idempotency-mode": "legacy_operation_specific_incomplete",
+        "x-idempotency-mode": "read_with_expiry_side_effect",
         "x-body-limit-bytes": 0,
-        "x-contract-status": "LEGACY_CONTRACT_GAPS"
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
       }
     },
     "/api/attempts/{id}/visit": {
@@ -1748,7 +1886,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Visit"
+                "$ref": "#/components/schemas/VisitPayload"
               }
             }
           }
@@ -1773,14 +1911,17 @@
             }
           }
         },
-        "x-owner-policy": "server_resource_ownership_and_release_checks_required",
+        "x-owner-policy": "attempt_owner_active_deadline",
         "x-role-scope": [
-          "authenticated_owner_of_resource"
+          "authenticated_profile"
         ],
         "x-workload-tier": "live",
-        "x-idempotency-mode": "legacy_operation_specific_incomplete",
-        "x-body-limit-bytes": 1048576,
-        "x-contract-status": "LEGACY_CONTRACT_GAPS"
+        "x-idempotency-mode": "set_membership",
+        "x-body-limit-bytes": 4096,
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
       }
     },
     "/api/attempts/{id}/submit": {
@@ -1823,14 +1964,27 @@
             }
           }
         },
-        "x-owner-policy": "server_resource_ownership_and_release_checks_required",
+        "x-owner-policy": "attempt_owner",
         "x-role-scope": [
-          "authenticated_owner_of_resource"
+          "authenticated_profile"
         ],
         "x-workload-tier": "live",
-        "x-idempotency-mode": "legacy_operation_specific_incomplete",
-        "x-body-limit-bytes": 1048576,
-        "x-contract-status": "LEGACY_CONTRACT_GAPS"
+        "x-idempotency-mode": "atomic_seal_receipt",
+        "x-body-limit-bytes": 4096,
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmptyPayload"
+              }
+            }
+          }
+        },
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
       }
     },
     "/api/attempts/{id}/results": {
@@ -1881,14 +2035,17 @@
             }
           }
         },
-        "x-owner-policy": "server_resource_ownership_and_release_checks_required",
+        "x-owner-policy": "attempt_owner_and_solution_release",
         "x-role-scope": [
-          "authenticated_owner_of_resource"
+          "authenticated_profile"
         ],
-        "x-workload-tier": "live",
-        "x-idempotency-mode": "legacy_operation_specific_incomplete",
+        "x-workload-tier": "normal",
+        "x-idempotency-mode": "read_grade_enqueue_side_effect",
         "x-body-limit-bytes": 0,
-        "x-contract-status": "LEGACY_CONTRACT_GAPS"
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
       }
     },
     "/api/attempts/{id}/questions/{qid}/asset/{kind}/{index}": {
@@ -1966,14 +2123,17 @@
             }
           }
         },
-        "x-owner-policy": "server_resource_ownership_and_release_checks_required",
+        "x-owner-policy": "attempt_owner_and_solution_release",
         "x-role-scope": [
-          "authenticated_owner_of_resource"
+          "authenticated_profile"
         ],
-        "x-workload-tier": "live",
-        "x-idempotency-mode": "legacy_operation_specific_incomplete",
+        "x-workload-tier": "normal",
+        "x-idempotency-mode": "read_with_expiry_side_effect",
         "x-body-limit-bytes": 0,
-        "x-contract-status": "LEGACY_CONTRACT_GAPS"
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
       }
     },
     "/api/attempts/{id}/retry": {
@@ -1999,9 +2159,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "additionalProperties": true,
-                "title": "Data"
+                "$ref": "#/components/schemas/RetryPayload"
               }
             }
           }
@@ -2026,14 +2184,17 @@
             }
           }
         },
-        "x-owner-policy": "server_resource_ownership_and_release_checks_required",
+        "x-owner-policy": "attempt_owner_frozen_grade",
         "x-role-scope": [
-          "authenticated_owner_of_resource"
+          "authenticated_profile"
         ],
-        "x-workload-tier": "live",
-        "x-idempotency-mode": "legacy_operation_specific_incomplete",
-        "x-body-limit-bytes": 1048576,
-        "x-contract-status": "LEGACY_CONTRACT_GAPS"
+        "x-workload-tier": "normal",
+        "x-idempotency-mode": "KNOWN_A01_alias_gap",
+        "x-body-limit-bytes": 4096,
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
       }
     },
     "/api/attempts/{id}/report": {
@@ -2059,9 +2220,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "additionalProperties": true,
-                "title": "Data"
+                "$ref": "#/components/schemas/ReportPayload"
               }
             }
           }
@@ -2086,14 +2245,17 @@
             }
           }
         },
-        "x-owner-policy": "server_resource_ownership_and_release_checks_required",
+        "x-owner-policy": "attempt_owner_and_report_rights",
         "x-role-scope": [
-          "authenticated_owner_of_resource"
+          "authenticated_profile"
         ],
         "x-workload-tier": "batch",
-        "x-idempotency-mode": "legacy_operation_specific_incomplete",
-        "x-body-limit-bytes": 1048576,
-        "x-contract-status": "LEGACY_CONTRACT_GAPS"
+        "x-idempotency-mode": "versioned_report_job",
+        "x-body-limit-bytes": 4096,
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
       }
     },
     "/api/jobs/{id}": {
@@ -2134,14 +2296,17 @@
             }
           }
         },
-        "x-owner-policy": "server_resource_ownership_and_release_checks_required",
+        "x-owner-policy": "job_owner_or_staff_set_scope",
         "x-role-scope": [
-          "authenticated_owner_of_resource"
+          "authenticated_profile"
         ],
-        "x-workload-tier": "batch",
-        "x-idempotency-mode": "legacy_operation_specific_incomplete",
+        "x-workload-tier": "normal",
+        "x-idempotency-mode": "read_dispatch_side_effect",
         "x-body-limit-bytes": 0,
-        "x-contract-status": "LEGACY_CONTRACT_GAPS"
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
       }
     },
     "/api/jobs/{id}/retry": {
@@ -2182,14 +2347,27 @@
             }
           }
         },
-        "x-owner-policy": "server_resource_ownership_and_release_checks_required",
+        "x-owner-policy": "job_owner_or_staff_set_scope",
         "x-role-scope": [
-          "authenticated_owner_of_resource"
+          "authenticated_profile"
         ],
         "x-workload-tier": "batch",
-        "x-idempotency-mode": "legacy_operation_specific_incomplete",
-        "x-body-limit-bytes": 1048576,
-        "x-contract-status": "LEGACY_CONTRACT_GAPS"
+        "x-idempotency-mode": "job_state_retry",
+        "x-body-limit-bytes": 4096,
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmptyPayload"
+              }
+            }
+          }
+        },
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
       }
     },
     "/api/jobs/{id}/download": {
@@ -2230,14 +2408,17 @@
             }
           }
         },
-        "x-owner-policy": "server_resource_ownership_and_release_checks_required",
+        "x-owner-policy": "job_owner_and_report_rights",
         "x-role-scope": [
-          "authenticated_owner_of_resource"
+          "authenticated_profile"
         ],
-        "x-workload-tier": "batch",
-        "x-idempotency-mode": "legacy_operation_specific_incomplete",
+        "x-workload-tier": "normal",
+        "x-idempotency-mode": "read",
         "x-body-limit-bytes": 0,
-        "x-contract-status": "LEGACY_CONTRACT_GAPS"
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
       }
     },
     "/api/cron/maintenance": {
@@ -2257,14 +2438,27 @@
             }
           }
         },
-        "x-owner-policy": "server_resource_ownership_and_release_checks_required",
+        "x-owner-policy": "cron_secret_dependency",
         "x-role-scope": [
-          "cron_service"
+          "public_or_handler_checked"
         ],
-        "x-workload-tier": "maintenance",
-        "x-idempotency-mode": "legacy_operation_specific_incomplete",
-        "x-body-limit-bytes": 1048576,
-        "x-contract-status": "LEGACY_CONTRACT_GAPS"
+        "x-workload-tier": "batch",
+        "x-idempotency-mode": "maintenance_replay",
+        "x-body-limit-bytes": 4096,
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmptyPayload"
+              }
+            }
+          }
+        },
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
       }
     },
     "/api/studio/reviewers": {
@@ -2275,14 +2469,14 @@
         "summary": "Update Access",
         "operationId": "update_access_api_studio_reviewers_post",
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Access"
+                "$ref": "#/components/schemas/ReviewerPayload"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -2304,14 +2498,17 @@
             }
           }
         },
-        "x-owner-policy": "server_resource_ownership_and_release_checks_required",
+        "x-owner-policy": "owner_reviewer_administration",
         "x-role-scope": [
           "owner"
         ],
         "x-workload-tier": "control",
-        "x-idempotency-mode": "legacy_operation_specific_incomplete",
-        "x-body-limit-bytes": 1048576,
-        "x-contract-status": "LEGACY_CONTRACT_GAPS"
+        "x-idempotency-mode": "role_replace",
+        "x-body-limit-bytes": 4096,
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
       }
     },
     "/api/studio/profiles": {
@@ -2331,15 +2528,18 @@
             }
           }
         },
-        "x-owner-policy": "server_resource_ownership_and_release_checks_required",
+        "x-owner-policy": "authorized_editorial_workspace",
         "x-role-scope": [
           "owner",
           "reviewer"
         ],
         "x-workload-tier": "control",
-        "x-idempotency-mode": "legacy_operation_specific_incomplete",
+        "x-idempotency-mode": "read",
         "x-body-limit-bytes": 0,
-        "x-contract-status": "LEGACY_CONTRACT_GAPS"
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
       }
     },
     "/api/studio/sets/{id}/regrade": {
@@ -2365,9 +2565,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "additionalProperties": true,
-                "title": "Data"
+                "$ref": "#/components/schemas/RegradePayload"
               }
             }
           }
@@ -2392,14 +2590,17 @@
             }
           }
         },
-        "x-owner-policy": "server_resource_ownership_and_release_checks_required",
+        "x-owner-policy": "owner_scoring_successor",
         "x-role-scope": [
           "owner"
         ],
         "x-workload-tier": "batch",
-        "x-idempotency-mode": "legacy_operation_specific_incomplete",
-        "x-body-limit-bytes": 1048576,
-        "x-contract-status": "LEGACY_CONTRACT_GAPS"
+        "x-idempotency-mode": "HELD",
+        "x-body-limit-bytes": 4096,
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
       }
     },
     "/api/internal/capacity/profile": {
@@ -2421,15 +2622,18 @@
             }
           }
         },
-        "x-owner-policy": "server_resource_ownership_and_release_checks_required",
+        "x-owner-policy": "staff_engineering_only",
         "x-role-scope": [
           "owner",
           "reviewer"
         ],
-        "x-workload-tier": "control",
-        "x-idempotency-mode": "read_only",
+        "x-workload-tier": "normal",
+        "x-idempotency-mode": "read",
         "x-body-limit-bytes": 0,
-        "x-contract-status": "IMPLEMENTED_TYPED_REFERENCE_READ"
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
       }
     },
     "/api/internal/safety/status": {
@@ -2451,15 +2655,18 @@
             }
           }
         },
-        "x-owner-policy": "server_resource_ownership_and_release_checks_required",
+        "x-owner-policy": "staff_engineering_only",
         "x-role-scope": [
           "owner",
           "reviewer"
         ],
-        "x-workload-tier": "control",
-        "x-idempotency-mode": "read_only",
+        "x-workload-tier": "normal",
+        "x-idempotency-mode": "read",
         "x-body-limit-bytes": 0,
-        "x-contract-status": "IMPLEMENTED_TYPED_REFERENCE_READ"
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
       }
     }
   },
@@ -2925,7 +3132,14 @@
             "default": "practice"
           },
           "expires": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Expires",
             "default": ""
           },
@@ -3234,6 +3448,705 @@
         "additionalProperties": false,
         "type": "object",
         "title": "Workload"
+      },
+      "EmptyPayload": {
+        "additionalProperties": false,
+        "properties": {},
+        "title": "EmptyPayload",
+        "type": "object"
+      },
+      "LoginPayload": {
+        "additionalProperties": false,
+        "properties": {
+          "email": {
+            "format": "email",
+            "title": "Email",
+            "type": "string"
+          },
+          "password": {
+            "maxLength": 64,
+            "minLength": 10,
+            "title": "Password",
+            "type": "string"
+          },
+          "name": {
+            "default": "Reviewer",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "exam": {
+            "default": "JEE Main",
+            "enum": [
+              "JEE Main",
+              "BITSAT"
+            ],
+            "title": "Exam",
+            "type": "string"
+          },
+          "consent": {
+            "default": false,
+            "title": "Consent",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "LoginPayload",
+        "type": "object"
+      },
+      "PreferencePayload": {
+        "additionalProperties": false,
+        "properties": {
+          "exam": {
+            "enum": [
+              "JEE Main",
+              "BITSAT"
+            ],
+            "title": "Exam",
+            "type": "string"
+          }
+        },
+        "required": [
+          "exam"
+        ],
+        "title": "PreferencePayload",
+        "type": "object"
+      },
+      "PhonePayload": {
+        "additionalProperties": false,
+        "properties": {
+          "phone": {
+            "maxLength": 32,
+            "minLength": 5,
+            "title": "Phone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "phone"
+        ],
+        "title": "PhonePayload",
+        "type": "object"
+      },
+      "RulesPayload": {
+        "additionalProperties": false,
+        "properties": {
+          "minutes": {
+            "default": 0,
+            "maximum": 1440,
+            "minimum": 0,
+            "title": "Minutes",
+            "type": "number"
+          },
+          "correct": {
+            "default": 4,
+            "exclusiveMinimum": 0,
+            "maximum": 100,
+            "title": "Correct",
+            "type": "number"
+          },
+          "wrong": {
+            "default": -1,
+            "maximum": 0,
+            "minimum": -100,
+            "title": "Wrong",
+            "type": "number"
+          },
+          "skipped": {
+            "const": 0,
+            "default": 0,
+            "title": "Skipped",
+            "type": "integer"
+          },
+          "numeric_rule": {
+            "default": "",
+            "maxLength": 500,
+            "title": "Numeric Rule",
+            "type": "string"
+          },
+          "navigation": {
+            "const": "free",
+            "default": "free",
+            "title": "Navigation",
+            "type": "string"
+          },
+          "numeric_policy": {
+            "const": "integer_exact",
+            "default": "integer_exact",
+            "title": "Numeric Policy",
+            "type": "string"
+          },
+          "solution_release": {
+            "const": "after_submit",
+            "default": "after_submit",
+            "title": "Solution Release",
+            "type": "string"
+          }
+        },
+        "title": "RulesPayload",
+        "type": "object"
+      },
+      "SetPayload": {
+        "additionalProperties": false,
+        "properties": {
+          "title": {
+            "maxLength": 160,
+            "minLength": 3,
+            "title": "Title",
+            "type": "string"
+          },
+          "exam": {
+            "default": "JEE Main",
+            "enum": [
+              "JEE Main",
+              "BITSAT"
+            ],
+            "title": "Exam",
+            "type": "string"
+          },
+          "year": {
+            "default": "",
+            "maxLength": 10,
+            "title": "Year",
+            "type": "string"
+          },
+          "source": {
+            "default": "",
+            "maxLength": 500,
+            "title": "Source",
+            "type": "string"
+          },
+          "attribution": {
+            "default": "",
+            "maxLength": 300,
+            "title": "Attribution",
+            "type": "string"
+          },
+          "audience": {
+            "default": "all",
+            "enum": [
+              "all",
+              "restricted"
+            ],
+            "title": "Audience",
+            "type": "string"
+          },
+          "allowed_emails": {
+            "items": {
+              "maxLength": 254,
+              "type": "string"
+            },
+            "maxItems": 1000,
+            "title": "Allowed Emails",
+            "type": "array"
+          },
+          "allowed_phones": {
+            "items": {
+              "maxLength": 32,
+              "type": "string"
+            },
+            "maxItems": 1000,
+            "title": "Allowed Phones",
+            "type": "array"
+          },
+          "profile_mode": {
+            "const": "practice",
+            "default": "practice",
+            "title": "Profile Mode",
+            "type": "string"
+          },
+          "expires": {
+            "anyOf": [
+              {
+                "maxLength": 10,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": "",
+            "title": "Expires"
+          },
+          "rights_upload": {
+            "default": false,
+            "title": "Rights Upload",
+            "type": "boolean"
+          },
+          "rights_publish": {
+            "default": false,
+            "title": "Rights Publish",
+            "type": "boolean"
+          },
+          "rights_report": {
+            "default": false,
+            "title": "Rights Report",
+            "type": "boolean"
+          },
+          "rules": {
+            "$ref": "#/components/schemas/RulesPayload"
+          },
+          "change_reason": {
+            "default": "",
+            "maxLength": 1000,
+            "title": "Change Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title"
+        ],
+        "title": "SetPayload",
+        "type": "object"
+      },
+      "ExtractPayload": {
+        "additionalProperties": false,
+        "properties": {
+          "replace_drafts": {
+            "default": false,
+            "title": "Replace Drafts",
+            "type": "boolean"
+          }
+        },
+        "title": "ExtractPayload",
+        "type": "object"
+      },
+      "RegionPayload": {
+        "additionalProperties": false,
+        "properties": {
+          "file_id": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "File Id",
+            "type": "string"
+          },
+          "page": {
+            "maximum": 10000,
+            "minimum": 1,
+            "title": "Page",
+            "type": "integer"
+          },
+          "rect": {
+            "items": {
+              "type": "number"
+            },
+            "maxItems": 4,
+            "minItems": 4,
+            "title": "Rect",
+            "type": "array"
+          }
+        },
+        "required": [
+          "file_id",
+          "page",
+          "rect"
+        ],
+        "title": "RegionPayload",
+        "type": "object"
+      },
+      "QuestionPayload": {
+        "additionalProperties": false,
+        "properties": {
+          "number": {
+            "default": 1,
+            "maximum": 10000,
+            "minimum": 1,
+            "title": "Number",
+            "type": "integer"
+          },
+          "solution_number": {
+            "anyOf": [
+              {
+                "maximum": 10000,
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Solution Number"
+          },
+          "subject": {
+            "default": "",
+            "maxLength": 300,
+            "title": "Subject",
+            "type": "string"
+          },
+          "section": {
+            "default": "",
+            "maxLength": 300,
+            "title": "Section",
+            "type": "string"
+          },
+          "type": {
+            "default": "mcq",
+            "enum": [
+              "mcq",
+              "integer"
+            ],
+            "title": "Type",
+            "type": "string"
+          },
+          "text": {
+            "default": "",
+            "maxLength": 30000,
+            "title": "Text",
+            "type": "string"
+          },
+          "options": {
+            "additionalProperties": {
+              "maxLength": 8192,
+              "type": "string"
+            },
+            "maxProperties": 8,
+            "propertyNames": {
+              "maxLength": 16,
+              "minLength": 1
+            },
+            "title": "Options",
+            "type": "object"
+          },
+          "answer": {
+            "default": "",
+            "maxLength": 128,
+            "title": "Answer",
+            "type": "string"
+          },
+          "solution": {
+            "default": "",
+            "maxLength": 30000,
+            "title": "Solution",
+            "type": "string"
+          },
+          "topic": {
+            "default": "",
+            "maxLength": 300,
+            "title": "Topic",
+            "type": "string"
+          },
+          "difficulty": {
+            "default": "",
+            "maxLength": 300,
+            "title": "Difficulty",
+            "type": "string"
+          },
+          "render_mode": {
+            "default": "typed",
+            "enum": [
+              "source",
+              "typed"
+            ],
+            "title": "Render Mode",
+            "type": "string"
+          },
+          "q_refs": {
+            "items": {
+              "$ref": "#/components/schemas/RegionPayload"
+            },
+            "maxItems": 40,
+            "title": "Q Refs",
+            "type": "array"
+          },
+          "s_refs": {
+            "items": {
+              "$ref": "#/components/schemas/RegionPayload"
+            },
+            "maxItems": 40,
+            "title": "S Refs",
+            "type": "array"
+          },
+          "accessible_text": {
+            "default": "",
+            "maxLength": 30000,
+            "title": "Accessible Text",
+            "type": "string"
+          },
+          "solution_accessible_text": {
+            "default": "",
+            "maxLength": 30000,
+            "title": "Solution Accessible Text",
+            "type": "string"
+          },
+          "review_note": {
+            "default": "",
+            "maxLength": 2000,
+            "title": "Review Note",
+            "type": "string"
+          },
+          "disposition": {
+            "default": "standard",
+            "enum": [
+              "standard",
+              "dropped",
+              "bonus_all",
+              "multiple_accepted",
+              "under_review"
+            ],
+            "title": "Disposition",
+            "type": "string"
+          },
+          "accepted_answers": {
+            "items": {
+              "maxLength": 128,
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Accepted Answers",
+            "type": "array"
+          }
+        },
+        "title": "QuestionPayload",
+        "type": "object"
+      },
+      "PublishPayload": {
+        "additionalProperties": false,
+        "properties": {
+          "confirm": {
+            "title": "Confirm",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "confirm"
+        ],
+        "title": "PublishPayload",
+        "type": "object"
+      },
+      "WithdrawalPayload": {
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason"
+        ],
+        "title": "WithdrawalPayload",
+        "type": "object"
+      },
+      "SubsetPayload": {
+        "additionalProperties": false,
+        "properties": {
+          "title": {
+            "default": "Revision set",
+            "maxLength": 160,
+            "minLength": 3,
+            "title": "Title",
+            "type": "string"
+          },
+          "question_ids": {
+            "items": {
+              "maxLength": 100,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 1000,
+            "minItems": 1,
+            "title": "Question Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "question_ids"
+        ],
+        "title": "SubsetPayload",
+        "type": "object"
+      },
+      "AnswerPayload": {
+        "additionalProperties": false,
+        "properties": {
+          "value": {
+            "maxLength": 128,
+            "title": "Value",
+            "type": "string"
+          },
+          "marked": {
+            "default": false,
+            "title": "Marked",
+            "type": "boolean"
+          },
+          "revision": {
+            "maximum": 100000,
+            "minimum": 1,
+            "title": "Revision",
+            "type": "integer"
+          },
+          "request_id": {
+            "maxLength": 100,
+            "minLength": 8,
+            "title": "Request Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "value",
+          "revision",
+          "request_id"
+        ],
+        "title": "AnswerPayload",
+        "type": "object"
+      },
+      "PreflightPayload": {
+        "additionalProperties": false,
+        "properties": {
+          "preview": {
+            "default": false,
+            "title": "Preview",
+            "type": "boolean"
+          },
+          "test_response": {
+            "default": "",
+            "maxLength": 30,
+            "title": "Test Response",
+            "type": "string"
+          }
+        },
+        "title": "PreflightPayload",
+        "type": "object"
+      },
+      "StartPayload": {
+        "additionalProperties": false,
+        "properties": {
+          "start_key": {
+            "maxLength": 100,
+            "minLength": 8,
+            "title": "Start Key",
+            "type": "string"
+          },
+          "device_checked": {
+            "default": false,
+            "title": "Device Checked",
+            "type": "boolean"
+          },
+          "preview": {
+            "default": false,
+            "title": "Preview",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "start_key"
+        ],
+        "title": "StartPayload",
+        "type": "object"
+      },
+      "VisitPayload": {
+        "additionalProperties": false,
+        "properties": {
+          "question_id": {
+            "maxLength": 36,
+            "minLength": 36,
+            "title": "Question Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "question_id"
+        ],
+        "title": "VisitPayload",
+        "type": "object"
+      },
+      "RetryPayload": {
+        "additionalProperties": false,
+        "properties": {
+          "start_key": {
+            "maxLength": 100,
+            "minLength": 8,
+            "title": "Start Key",
+            "type": "string"
+          },
+          "score_version": {
+            "anyOf": [
+              {
+                "maxLength": 100,
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9_-]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Score Version"
+          }
+        },
+        "required": [
+          "start_key"
+        ],
+        "title": "RetryPayload",
+        "type": "object"
+      },
+      "ReportPayload": {
+        "additionalProperties": false,
+        "properties": {
+          "score_version": {
+            "default": "original",
+            "maxLength": 100,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "title": "Score Version",
+            "type": "string"
+          }
+        },
+        "title": "ReportPayload",
+        "type": "object"
+      },
+      "ReviewerPayload": {
+        "additionalProperties": false,
+        "properties": {
+          "email": {
+            "format": "email",
+            "title": "Email",
+            "type": "string"
+          },
+          "role": {
+            "enum": [
+              "student",
+              "reviewer"
+            ],
+            "title": "Role",
+            "type": "string"
+          },
+          "initial_password": {
+            "default": "",
+            "maxLength": 64,
+            "title": "Initial Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "role"
+        ],
+        "title": "ReviewerPayload",
+        "type": "object"
+      },
+      "RegradePayload": {
+        "additionalProperties": false,
+        "properties": {
+          "note": {
+            "maxLength": 2000,
+            "minLength": 8,
+            "title": "Note",
+            "type": "string"
+          }
+        },
+        "required": [
+          "note"
+        ],
+        "title": "RegradePayload",
+        "type": "object"
       }
     }
   }

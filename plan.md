@@ -16,19 +16,23 @@ Deliver a premium landing page + working practice MVP for **JEE Main** and **BIT
 
 - **Auth requirements (non-negotiable)**:
   - **Students**: phone-number only (no OTP, no password). This is a **convenience profile**, not verified phone ownership.
-  - **Staff/Owner**: secured separately. A staff credential was leaked in an earlier test artifact; **rotation + session revocation is required** (operator action).
-    - **User directive update:** do not repeatedly ask for confirmation during routine work.
-    - **Exception (critical/irreversible):** before invalidating staff access (credential rotation/session revocation), ask once with a clear execution window.
+  - **Staff/Owner**: secured separately.
+    - A staff credential was leaked in an earlier test artifact; **rotation + session revocation is required** (operator action).
+    - **User directive update (latest):** “Mujhse kuch mat pucho… final product bna kr do… khud bdhte rho.”
+      - We proceed autonomously for routine engineering decisions.
+      - We will not repeatedly ask for confirmations.
+      - **Exception (critical/irreversible):** before invalidating staff access (credential rotation/session revocation), we will still do **one** explicit execution window confirmation, because it is an irreversible access-impacting security operation.
 
 - **Theme requirement (updated)**:
   - **Matte maroon** theme stays as-is (`#5C0025`), with light/dark tokens.
 
 ### Current top priority
 
-**Execute Packet 1 (IN PROGRESS)** of the approved 10-packet strategy **now that the portable strategy PDF has been delivered**.
+Proceed **sequentially through all 10 packets** to reach a world-class product and a proven 5-lakh active-attempt target.
 
-- User directive: “Ab kaam start… best do… baar baar mat pucho.”
-- Operating mode: proceed autonomously for normal implementation decisions; only interrupt for truly critical/irreversible actions.
+- **Packet 1 is IN PROGRESS** (foundation expanded significantly; exit blocked).
+- We will **not stop** for routine confirmations.
+- We will **not claim** “final product” or “5 lakh concurrent supported” until the qualification gates (Packet 10 / OPS-R) are met with real evidence.
 
 ### Capacity/claims stance (binding)
 
@@ -133,7 +137,7 @@ H. **Portable “10 packets” Strategy PDF export** — ✅ **COMPLETED**
   - Verified public HTTP 200 `application/pdf` and matching hash by testing-agent iterations 32/33.
   - These tests are **document checks only**. Do **not** treat as application correctness/capacity evidence or Packet 1 exit evidence.
 
-I. **Packet 1 execution** — 🔧 **IN PROGRESS (FOUNDATION DELIVERED; EXIT STILL BLOCKED)**
+I. **Packet 1 execution** — 🔧 **IN PROGRESS (FOUNDATION EXPANDED; EXIT STILL BLOCKED)**
 
 Packet 1’s intent remains unchanged: **freeze correctness definitions + build enforceable safety rails + establish isolated evidence discipline**, without claiming scale readiness.
 
@@ -171,51 +175,127 @@ Packet 1’s intent remains unchanged: **freeze correctness definitions + build 
   - Source index for **177 pages / 3299 blocks**
   - Requirements subset: **45 reviewed-subset obligations** + **60 analysis feature obligations** (A01–A60)
   - Gate inventory: **13 WP + 12 OPS-R = 25 gates**
-  - Runtime OpenAPI + route catalogue with explicit LEGACY gaps
+  - Runtime OpenAPI + route catalogue with explicit contract metadata
   - Dependency baseline inventory
 - Implemented in:
   - `/app/docs/packet1/build_baseline.py`
-  - `/app/docs/packet1/*` outputs:
-    - `coverage_manifest.json` (explicit `zero_orphan_proven=false`)
-    - `COVERAGE_MATRIX.md`
-    - `requirements.v1.json`
-    - `release_gates.v1.json`
-    - `source_block_inventory.v1.json`
-    - `operation_catalogue.v1.json`
-    - `openapi.current.v1.json`
-    - `dependency_baseline.json`
+  - `/app/docs/packet1/*` outputs
 
 5) **Rulebook correction applied**
 - Rulebook guidance updated to reflect the errata: **all 60 analyses are mandatory** (no “40 minimum”).
 
-6) **Isolated regression/evidence discipline (now verified)**
-- Packet 1 test harness is now stable and truthful:
-  - exact UUID DB namespace guard (including Motor Database constructor)
-  - single session loop (Motor event-loop binding stabilized)
-  - real cookie sessions via auth codepaths (no “pretend staff”) and outbound HTTP blocked
-  - cleanup never swallowed; drop only own DB once
-  - indexing once per run; `delete_many` only within own namespace
-- Independent final verification:
-  - `/app/test_reports/iteration_37.json`:
-    - **77 tests**, run **3 fresh processes**, each: **71 passed, 6 strict xfailed, 0 fail, 0 error**
-    - xfails are **OPEN invariants** (A01–A06) and remain release blockers
-  - Hashed (unsigned) evidence bundle:
-    - `/app/docs/packet1/evidence/artifact_manifest.json`
-    - + preserved `/tmp/packet1_run*.log` copied into evidence folder
+6) **Isolated regression/evidence discipline (now verified, corrected, and made safe-by-default)**
+- Packet 1 test harness is stable and truthful.
+- **Safe pytest default** added to prevent accidentally running historical audit scripts:
+  - `/app/pytest.ini` (defaults to `tests/packet1`)
+- Latest accepted suite checkpoint (three fresh-process runs + safe-default run):
+  - **149 total cases = 143 passed + 6 strict xfailed**; 0 unexpected failures; 0 errors
+  - Logs under: `/app/docs/packet1/evidence/packet1-final-run*.log`
+  - Accepted verification report:
+    - `/app/test_reports/iteration_43_verified.json`
+  - Unsigned hashed artifact manifest:
+    - `/app/docs/packet1/evidence/continuation-artifact-manifest.json`
+- Strict rule preserved: **no extra xfails** beyond A01–A06.
+
+7) **Executable route contract registry + ingress hardening (expanded and verified)**
+- All **49 mounted `/api` operations** now:
+  - require explicit catalogue entry (fail-start if unlisted)
+  - expose runtime-derived `x-owner-policy`, `x-role-scope`, `x-workload-tier`, `x-idempotency-mode`, `x-body-limit-bytes`
+  - enforce strict request DTOs and per-operation budgets
+  - fail-closed ingress checks:
+    - missing media type still uses the same schema/body budget; incorrect media type → 415
+    - duplicate keys/non-finite numbers/invalid unicode/too-deep JSON → 400
+    - header ambiguity/length mismatch → 400
+    - stream timeout → 408
+    - query budget → 414
+- ContentSafetyHold remains outside body parsing and continues to deny protected content operations.
+- Implemented in:
+  - `/app/backend/tejas/request_contracts.py`
+  - `/app/backend/tejas/route_contracts.py`
+  - `/app/backend/tejas/http_limits.py` (upgraded)
+  - wired in `/app/backend/server.py`
+- Baseline generator now **copies authoritative runtime metadata** instead of guessing.
+
+8) **Frontend Studio write allowlists (verified by real JS + ASGI, plus mocked UI-only browser proof)**
+- StudioEditor sends only allowlisted editable fields for:
+  - questions
+  - set settings
+- Implemented in:
+  - `/app/frontend/src/lib/studioContracts.js`
+  - wired in `/app/frontend/src/features/StudioEditor.js`
+- Verified:
+  - Node executes real JS allowlist functions
+  - ASGI Studio create/read/save/settings roundtrip passes
+  - Browser-only verification uses API interception (MOCKED UI only; no real auth/write)
+
+9) **Source review mechanical ledger + validator (now live with partial exact-span review)**
+- Validator enforces:
+  - exact codepoint-partition span coverage (gap-free, overlap-free)
+  - source hash binding
+  - evidence path + hash validation
+  - parent-symlink traversal denial + secret/config denial
+  - explicit separation: mechanical coverage ≠ semantic approval
+- Implemented in:
+  - `/app/docs/packet1/source_review.py`
+  - `/app/docs/packet1/review_ledger.v1.json`
+  - `/app/docs/packet1/SOURCE_REVIEW_CONTRACT.md`
+- **Current truth (updated):**
+  - Exact-span agent review completed for **PDF-05 pages 3 and 55** only:
+    - **2 pages / 38 blocks / 65 bound obligations**
+  - Remaining: **3261 blocks**
+  - `semantic_completeness_proven=false` and `operator_approval_present=false`
+
+10) **Staff credential generation fencing + operator-only rotation primitive (strengthened; still not executed live)**
+- Generation-based staff session fencing:
+  - sessions store `credential_generation`
+  - auth validates session generation vs user generation for staff `current()` + `refresh()`
+  - `new_session()` rechecks latest user generation before finalizing issuance
+- Operator-only rotation primitive:
+  - CAS update by expected generation
+  - majority+journal acknowledgement, **server UTC** timestamp
+  - deletes stale staff sessions (cleanup)
+  - delayed old-session insert cannot regain access (generation fencing is authoritative)
+- Implemented in:
+  - `/app/backend/tejas/staff_credentials.py`
+  - `/app/backend/tools/rotate_staff_credential.py`
+  - runbook: `/app/docs/packet1/STAFF_ROTATION_RUNBOOK.md`
+- CLI safety strengthened:
+  - dry-run default
+  - requires `--apply --confirm-revoke --confirm-fenced-deployment` plus protected TTY
+  - does not accept secrets in argv
+- **LIVE rotation is NOT executed** and the incident is NOT closed.
+
+11) **Dependency scans + triage recorded (OPEN; not remediated yet)**
+- Python scan (pip-audit):
+  - scanned 143 dependency rows; 23 affected packages; 191 advisory records
+  - 2 skipped packages: `emergentintegrations`, `litellm`
+- Frontend scan (yarn audit):
+  - 26 unique advisories: 10 high, 14 moderate, 2 low
+- Stored evidence and triage:
+  - `/app/docs/packet1/dependency_triage.v1.json`
+  - scan artifacts under `/app/docs/packet1/evidence/`
+- **Status:** OPEN; no auto-upgrades and no reachability/compatibility claims.
+
+12) **Mobile toast overflow + resize clipping fixed (UI-safe)**
+- Sonner/toast container was overflowing/clipping on mobile resize.
+- Fixed by geometry constraints and disabling transitions for toaster container.
+- No color/token/theme changes.
 
 ✅ **Deliberately BLOCKED (by design) in Packet 1**
 
 - `coverage_manifest.json` still declares: **zero_orphan_proven=false** (indexing != atomic clause coverage)
 - Packet 1 exit remains **BLOCKED** pending:
-  - full atomic clause registry across all 5 PDFs (0 pages certified fully atomized)
+  - full atomic clause registry across all 5 PDFs
   - owner-approved contracts & failure scope
-  - credential incident closure with actual authorized rotation/revocation evidence; recording BLOCKED is not an alternative passing exit condition
+  - credential incident closure with actual authorized rotation/revocation evidence
+  - remaining audit reproductions (S01/A04b/A05b/A07/A08 + frontend defects plan)
+  - dependency advisory remediation/attestation readiness
 
 ✅ **Operational/current behavior changes (student-safe, but visible)**
 
 - User-facing limitation: **source upload / staff source preview / publication / extraction / regrade** are held with **503** (pre-body-parse), including direct calls and dispatch. Normal student pilot attempt flow, grading and report lanes are not held.
 
-### Open defects (no fixes yet; remain release blockers for affected capabilities)
+### Open defects (no permanent fixes yet; remain release blockers for affected capabilities)
 
 - Backend (P1 audit findings; still OPEN):
   - **A01** retry-resume idempotency gap (owned by Packet 06)
@@ -233,7 +313,7 @@ Packet 1’s intent remains unchanged: **freeze correctness definitions + build 
 - Security incident (P0): leaked staff credential in a historical test report artifact
   - **Rotation + session revocation is required by an authorized operator**
   - **NOT executed** yet
-  - Still requires **one-time explicit user confirmation before invalidating staff access**
+  - Still requires **one-time explicit execution window confirmation before invalidating staff access**
 
 Services status (informational only; not a capacity claim): frontend/backend/mongodb are running in this environment.
 
@@ -276,13 +356,13 @@ User stories:
 
 ### Phase 3 — Comprehensive testing, hardening, and regression
 
-- Backend test suite is now stable for Packet 1 evidence discipline (`/app/tests/packet1`).
-- Frontend E2E exists; audit identifies remaining UX/correctness defects.
+- Backend Packet 1 suite is stable and now safe-by-default (`/app/pytest.ini` + `/app/tests/packet1`).
+- Frontend browser-only allowlist verification exists and is explicitly MOCKED (no real auth/write).
 - Security posture remains partial; production requirements (MFA, signing, cells) are not implemented.
 
 ### Phase 4 — Architecture Alignment to PDFs + 5-lakh scale hardening (bounded tranche)
 
-- Rulebook + capacity worksheet exist; Packet 1 now includes executable workload math and typed planning DTOs.
+- Rulebook + capacity worksheet exist; Packet 1 includes executable workload math and typed planning DTOs.
 - This does **not** provision live cells or validate throughput.
 
 ---
@@ -312,28 +392,35 @@ Each packet will contain:
 - Acceptance tests + exit gates (latency/error/backlog/durability metrics)
 - Ownership split: **application code vs operator-provisioned infrastructure**
 
-#### Packet 1 — Rules, Safety & Regression Baseline (P01) — **IN PROGRESS (foundation done; exit blocked)**
+#### Packet 1 — Rules, Safety & Regression Baseline (P01) — **IN PROGRESS (foundation expanded; exit blocked)**
 
 **Purpose:** Freeze what “correct” means before major refactors; create enforceable safety rails and red regressions for later packets.
 
 **Must deliver (Packet 1 scope only):**
 
 - **Atomic requirement registry**: expand beyond the current 62-row audit matrix into atomic MUST/acceptance clauses from all five PDFs.
+  - The current exact-span review is **partial**: only PDF-05 pp3 & 55 are partitioned/bound.
 - **Contract-first API & permission catalogue**:
   - strict input/output DTOs, field allowlists, canonical body hashing, typed errors, idempotency scope,
   - ETags/If-Match semantics, status/Location/Retry-After, payload budgets, UTC/monotonic units.
+  - **Now includes**: executable ingress contracts for all 49 mounted operations.
 - **Data ownership map**:
   - vaulting/sourcing boundaries, content truth vs analytics projections, job/outbox boundaries.
 - **Regression baseline & evidence discipline**:
-  - real-function regressions for A01–A06 are now implemented and correctly RED (strict xfail) until repaired by their owning packets.
+  - real-function regressions for A01–A06 are implemented and correctly RED (strict xfail) until repaired by their owning packets.
   - isolated test data access; tests fail closed if pointed at production namespaces.
   - secret-safe outputs (no credentials in reports), dependency inventory baseline.
+  - safe-by-default pytest scope.
 - **Containment (not permanent fixes):**
   - fail-closed containment around unsafe upload/publication/job paths until owning packets repair them.
-- **Credential incident handling (planning + safe execution path):**
-  - investigate where the leaked staff credential lives and how to rotate it safely.
-  - produce an operator-run rotation + session revocation runbook.
-  - **Do not execute rotation/revocation without one-time explicit user confirmation**, because it invalidates access.
+- **Credential incident handling (planning + safe execution path; not executed yet):**
+  - persistently rotate hash in `tejas_users` + revoke entries in `tejas_sessions`
+  - race-safe session issuance boundaries
+  - operator-only tool and runbook
+  - **Do not execute rotation/revocation without one-time explicit execution window confirmation**, because it invalidates access.
+- **Dependency/advisory triage evidence**:
+  - record vulnerabilities/skips honestly
+  - do not claim clean scans
 
 **What Packet 1 MUST NOT do:**
 
@@ -347,7 +434,7 @@ Each packet will contain:
 - Zero orphan mandatory clauses in the detailed registry
 - All current findings have a red regression or explicitly unverified reproduction task
 - Safe test isolation and credential containment evidence
-- With explicit operator authorization and user confirmation: actual persisted credential rotation + session revocation evidence. Packet 1 remains BLOCKED until this evidence exists; a runbook or blocked label does not pass the gate.
+- With explicit operator authorization and user confirmation: **actual persisted credential rotation + session revocation evidence**. Packet 1 remains BLOCKED until this evidence exists; a runbook or blocked label does not pass the gate.
 
 **Fix ownership mapping (from audit):**
 
@@ -412,42 +499,54 @@ Each packet will contain:
 
 Immediate work order (autonomous; no repeated confirmation requests):
 
-1. **Lock in Packet 1 evidence checkpoint** — ✅ DONE
-   - Verified stable suite: `/app/test_reports/iteration_37.json` (3 fresh-process runs)
-   - Preserved hashed (unsigned) evidence: `/app/docs/packet1/evidence/artifact_manifest.json`
-   - Note: per-run DB UUID names are intentionally not exported; harness enforces them internally.
+1. **Lock in Packet 1 evidence checkpoint** — ✅ DONE (updated)
+   - Safe default: `/app/pytest.ini`
+   - Stable suite: `/app/tests/packet1`
+   - Accepted verification:
+     - `/app/test_reports/iteration_43_verified.json`
+     - `143 passed, 6 strict xfailed` repeated 3× plus safe-default run
 
-2. **Expand atomic clause coverage workflow (still Packet 1, still BLOCKED)**
-   - Promote `source_block_inventory.v1.json` into a reviewed atomic registry queue.
-   - Track review status per PDF page/block → per atomic MUST clause.
-   - No claims until `zero_orphan_proven=true` is justified and approved.
+2. **Per-operation contract catalogue (ingress discipline)** — ✅ DONE (expanded)
+   - Executable route registry for all 49 operations (fail-start if unlisted)
+   - Strict request DTOs + per-operation budgets
+   - Baseline generator copies authoritative runtime metadata
 
-3. **Finish the per-operation contract catalogue (still Packet 1)**
-   - For every `/api` operation: ownership, roles, lane, idempotency, body budgets, typed errors.
-   - Identify which legacy routes need replacement vs compatibility shims.
-   - Decide retention/deletion policies and add decision register entries (remain BLOCKED until approved).
+3. **Atomic clause coverage workflow (still Packet 1, still BLOCKED)** — 🔧 IN PROGRESS
+   - Exact-span ledger + validator in place:
+     - `/app/docs/packet1/review_ledger.v1.json`
+     - `/app/docs/packet1/source_review.py`
+   - Partial exact-span review completed for PDF-05 pp3 and p55.
+   - Next: expand exact-span binding beyond these two pages; keep semantic approval false until independent approvals exist.
 
-4. **Port remaining audit reproductions (still Packet 1; do NOT fix them here)**
-   - Add red reproductions (or explicit “unverified” tasks) for:
-     - S01 multipart/form parsing budgets
+4. **Port remaining audit reproductions (still Packet 1; do NOT fix them here)** — ⏭️ NEXT
+   - Add strict red reproductions (or explicit “unverified” tasks) for:
+     - S01 multipart/form parsing budgets (original failure reproduction remains pending; upload hold is not proof)
      - A04b / A05b / A07 / A08
-     - Frontend defects F01/F02/F03: at least reproducible evidence plan, owned by Packet 7
+     - Frontend defects F01/F02/F03: reproducible evidence plan, owned by Packet 7
+   - Maintain registry:
+     - `/app/docs/packet1/REGRESSION_STATUS.json`
 
-5. **Credential incident runbook (planning only; execution remains gated)**
-   - Document exact persisted rotation steps:
-     - rotate hash in `tejas_users` + revoke entries in `tejas_sessions`
-     - ensure race-safe session issuance boundaries
-   - Prepare one-time confirmation prompt and execution window plan.
+5. **Credential incident closure tooling (Packet 1: tool + fencing; execution remains gated)** — ✅ Tooling delivered; ⏭️ closure pending
+   - Tooling & fencing delivered:
+     - `/app/backend/tejas/staff_credentials.py`
+     - `/app/backend/tools/rotate_staff_credential.py`
+     - `/app/docs/packet1/STAFF_ROTATION_RUNBOOK.md`
+   - Next (gated): authorized operator executes rotation + session revocation; record evidence.
 
-6. **Dependency/advisory triage (Packet 1 baseline, not full release SBOM)**
-   - Current environment includes test-support deps (pytest/pytest-asyncio/Markdown from earlier doc-check tooling).
-   - Create an explicit separation plan:
-     - keep test-only deps out of production images
-     - add signed SBOM + advisory status in Packet 10
+6. **Dependency/advisory triage (Packet 1 baseline; not remediation yet)** — ✅ Baseline evidence recorded; ⏭️ remediation strategy pending
+   - Evidence:
+     - `/app/docs/packet1/dependency_triage.v1.json`
+   - No auto-upgrades; no reachability/compatibility claims.
 
-### C) Packets 2–10
+7. **Frontend Studio allowlist visual smoke** — ✅ DONE (with explicit scope)
+   - Node + ASGI roundtrip tests prove allowlists.
+   - Browser-only proof is explicitly MOCKED UI (API intercepted; no real auth/write) and preserved as evidence.
 
-Proceed sequentially only after Packet 1 exit gate evidence is complete.
+### C) Continue sequentially through Packets 2–10
+
+- Proceed **sequentially** once Packet 1 exit gate evidence is complete.
+- Do not “skip ahead” to later packets without meeting dependencies.
+- Do not claim production readiness until OPS-R gates and load/fault/restore evidence exist.
 
 ---
 
@@ -468,16 +567,19 @@ Proceed sequentially only after Packet 1 exit gate evidence is complete.
   - contract-first API/permission catalogue,
   - data ownership map,
   - red regressions + isolated evidence discipline,
-  - safe containment (where allowed).
+  - safe containment (where allowed),
+  - ingress contract enforcement and per-operation budgets.
 - Student login remains phone-only; UI remains matte maroon.
 - Credential incident handling:
-  - rotation plan + runbook prepared;
+  - rotation tool + runbook prepared;
   - execution only with one-time explicit user confirmation and operator authorization;
   - no credentials leak in artifacts.
+- Dependency advisories recorded honestly; no clean scan claim.
 - **Evidence is honest**:
   - green tests are truly green,
   - known audit defects remain red (strict expected failures) until repaired by their owning packets,
-  - no “100%/critical_bugs=[]” report language is treated as closure.
+  - no “critical_bugs=[]” report language is treated as closure,
+  - scope violations in earlier testing-agent work are recorded and superseded rather than hidden.
 
 ### Product success (post-strategy; future)
 
@@ -498,3 +600,4 @@ Proceed sequentially only after Packet 1 exit gate evidence is complete.
 - Full load + chaos + restore qualification campaign
 - Any OPEN audit P1 correctness defect (A01–A06, S01, F03)
 - Any unperformed mandatory WP/OPS-R gate (PDF-05 p65–68)
+- Any unresolved dependency advisory or skipped package without explicit tested disposition

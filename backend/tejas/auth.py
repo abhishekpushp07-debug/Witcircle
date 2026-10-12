@@ -70,15 +70,31 @@ def cookies(response, u, sid):
 
 
 async def new_session(u, response):
+    from .staff_credentials import generation, check_session_generation
     sid = uid()
-    await sessions.insert_one(
-        {
-            "id": sid,
-            "user_id": u["id"],
-            "access_type": u.get("access_type", "staff_password"),
-            "expires_at": datetime.now(timezone.utc) + timedelta(days=7),
-        }
-    )
+    record = {
+        'id': sid, 'user_id': u['id'],
+        'access_type': u.get('access_type', 'staff_password'),
+        'expires_at': datetime.now(timezone.utc) + timedelta(days=7),
+    }
+    if record['access_type'] != 'unverified_phone':
+        try:
+            record['credential_generation'] = generation(u)
+            if u.get('staff_auth_held') is True:
+                raise ValueError()
+        except ValueError:
+            raise HTTPException(401, 'Staff sign-in is unavailable. Use the protected operator recovery channel.')
+    await sessions.insert_one(record)
+    if record['access_type'] != 'unverified_phone':
+        latest = await users.find_one({'id': u['id']}, {'_id': 0, 'password_hash': 0})
+        try:
+            if not latest or latest.get('role') not in ('owner', 'reviewer'):
+                raise ValueError()
+            check_session_generation(record, latest)
+        except ValueError:
+            await sessions.delete_one({'id': sid})
+            raise HTTPException(401, 'Staff credentials changed during sign-in. Enter the current credentials again.')
+        u = latest
     cookies(response, u, sid)
     return view(u)
 
@@ -105,15 +121,19 @@ async def current(request: Request):
         )
         if p["type"] != "access":
             raise ValueError()
-        if not await sessions.find_one(
+        record = await sessions.find_one(
             {
                 "id": p["sid"],
                 "user_id": p["sub"],
                 "expires_at": {"$gt": datetime.now(timezone.utc)},
             }
-        ):
+        )
+        if not record:
             raise ValueError()
-        return await identity(p)
+        u = await identity(p)
+        from .staff_credentials import check_session_generation
+        check_session_generation(record, u, p.get('access_type'))
+        return u
     except (jwt.PyJWTError, ValueError, KeyError, TypeError):
         raise HTTPException(
             401, "Enter your number again to continue. Saved work is retained."
@@ -204,15 +224,18 @@ async def refresh(request: Request, response: Response):
         )
         if p["type"] != "refresh":
             raise ValueError()
-        if not await sessions.find_one(
+        record = await sessions.find_one(
             {
                 "id": p["sid"],
                 "user_id": p["sub"],
                 "expires_at": {"$gt": datetime.now(timezone.utc)},
             }
-        ):
+        )
+        if not record:
             raise ValueError()
         u = await identity(p)
+        from .staff_credentials import check_session_generation
+        check_session_generation(record, u, p.get('access_type'))
         cookies(response, u, p["sid"])
         return view(u)
     except (jwt.PyJWTError, ValueError, KeyError, TypeError):

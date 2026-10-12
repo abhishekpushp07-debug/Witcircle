@@ -19,6 +19,7 @@ import {
   LockKeyhole,
 } from "lucide-react";
 import { api, post, put, API, downloadFile } from "../lib/api";
+import { questionPayload, settingsPayload } from "../lib/studioContracts";
 import { useAuth } from "../lib/auth";
 import {
   PageTitle,
@@ -131,7 +132,7 @@ export default function StudioEditor() {
   }
   async function saveQuestion() {
     return perform(async () => {
-      const saved = await put(`/studio/sets/${id}/questions/${q.id}`, q);
+      const saved = await put(`/studio/sets/${id}/questions/${q.id}`, questionPayload(q));
       setQ(saved);
       setDirty(false);
       const d = await api("/studio/sets/" + id);
@@ -141,7 +142,7 @@ export default function StudioEditor() {
   }
   async function saveSettings() {
     return perform(async () => {
-      await put("/studio/sets/" + id, settings);
+      await put("/studio/sets/" + id, settingsPayload(settings));
       await load();
     }, "Rules and rights saved. Publication is a separate action.");
   }

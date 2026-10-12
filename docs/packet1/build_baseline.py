@@ -149,42 +149,24 @@ def openapi_inventory():
         ['curl', '--silent', '--show-error', '--fail', '--max-time', '30', base + '/api/openapi.json'],
         timeout=35,
     ))
-    route_functions = {}
-    for path in (ROOT / 'backend/tejas').glob('*.py'):
-        tree = ast.parse(path.read_text())
-        for node in tree.body:
-            if isinstance(node, (ast.AsyncFunctionDef, ast.FunctionDef)):
-                route_functions[node.name] = (path, node)
     rows = []
     for path, methods in spec['paths'].items():
         for method, operation in methods.items():
             if method not in ('get', 'post', 'put', 'patch', 'delete', 'options', 'head'):
                 continue
-            internal = path.startswith('/api/internal/')
-            staff_path = path.startswith('/api/studio/')
-            public = path in ('/api/health', '/api/sets', '/api/auth/phone', '/api/auth/login', '/api/auth/register', '/api/auth/session', '/api/auth/refresh', '/api/auth/logout') or path == '/api/sets/{id}'
-            cron = path == '/api/cron/maintenance'
-            owner_path = path.endswith(('/publish', '/withdraw', '/regrade')) or path == '/api/studio/reviewers'
-            roles = ['cron_service'] if cron else ['owner'] if owner_path else ['owner', 'reviewer'] if staff_path or internal else ['public_or_cookie_session'] if public else ['authenticated_owner_of_resource']
-            lane = 'control' if staff_path or internal or path.startswith('/api/auth/') else 'maintenance' if cron else 'live' if '/attempts/' in path or path.endswith(('/start', '/preflight')) else 'normal'
-            if path.endswith(('/report', '/regrade', '/extract')) or path.startswith('/api/jobs'):
-                lane = 'batch'
-            legacy = not internal
-            row = {'operation_id': operation.get('operationId'), 'method': method.upper(), 'path': path,
-                'roles': roles, 'workload_tier': lane, 'owner_policy': 'server_resource_ownership_and_release_checks_required' if not public else 'public_or_session_specific_contract',
-                'idempotency_mode': 'read_only' if internal else 'legacy_operation_specific_incomplete',
-                'body_limit_bytes': 0 if method == 'get' else 1048576,
-                'status': 'LEGACY_CONTRACT_GAPS' if legacy else 'IMPLEMENTED_TYPED_REFERENCE_READ',
-                'gaps': ['Full strict DTOs, per-operation errors, permission audit, preconditions and idempotency evidence not yet complete'] if legacy else [],
+            required = ('x-owner-policy', 'x-role-scope', 'x-workload-tier', 'x-idempotency-mode', 'x-body-limit-bytes')
+            if any(key not in operation for key in required):
+                raise ValueError('Runtime route is missing executable contract metadata')
+            rows.append({
+                'operation_id': operation.get('operationId'), 'method': method.upper(), 'path': path,
+                'roles': operation['x-role-scope'], 'workload_tier': operation['x-workload-tier'],
+                'owner_policy': operation['x-owner-policy'], 'idempotency_mode': operation['x-idempotency-mode'],
+                'body_limit_bytes': operation['x-body-limit-bytes'],
+                'status': 'IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS',
+                'gaps': operation.get('x-known-gaps', []),
                 'current_response_models': list(operation.get('responses', {}).keys()),
-                'note': 'Inventory metadata, NOT proof of runtime enforcement. Health/body/legacy read side-effects require per-route review.'}
-            if path.endswith('/files'):
-                row['body_limit_bytes'] = 0
-                row['note'] = 'Upload route is held before parsing. Proposed 52MiB total is NOT an enforced upload path.'
-            operation.update({'x-owner-policy': row['owner_policy'], 'x-role-scope': roles,
-                'x-workload-tier': lane, 'x-idempotency-mode': row['idempotency_mode'],
-                'x-body-limit-bytes': row['body_limit_bytes'], 'x-contract-status': row['status']})
-            rows.append(row)
+                'note': 'Copied from mounted route contracts. Auth roles derive from actual dependencies; ownership and transaction correctness require independent tests.',
+            })
     spec['info']['description'] = 'Pinned current API inventory; legacy gaps remain. Target /api/v1 aliases are not implemented. Not a full production contract freeze.'
     write('openapi.current.v1.json', spec)
     write('operation_catalogue.v1.json', {'version': 1, 'routes': rows, 'complete_target_contract': False})
@@ -207,6 +189,15 @@ def dependencies():
 def main():
     OUT.mkdir(exist_ok=True)
     sources, pages, blocks = source_inventory()
+    from source_review import ReviewLedger, trusted_source_blocks, validate_ledger
+    ledger = ReviewLedger.model_validate_json((OUT/'review_ledger.v1.json').read_bytes())
+    source_texts, source_pages = trusted_source_blocks()
+    reviewed = validate_ledger(ledger, source_texts, source_pages)
+    reviewed_ids = {block.block_id for block in ledger.blocks}
+    for block in blocks:
+        if block['id'] in reviewed_ids:
+            block['review_status'] = 'AGENT_PARTITIONED_NOT_INDEPENDENTLY_APPROVED'
+    write('evidence/source-review-current.json', reviewed)
     clauses, gates = requirements()
     write('requirements.v1.json', {'version': 1, 'complete': False, 'requirements': clauses})
     write('source_block_inventory.v1.json', {'sources': sources, 'pages': pages, 'blocks': blocks})
@@ -216,6 +207,10 @@ def main():
     coverage = {'version': 1, 'generated_at_utc': datetime.now(timezone.utc).isoformat(),
         'sources': sources, 'page_count': len(pages), 'block_count': len(blocks),
         'indexed_pages': len(pages), 'fully_atomized_reviewed_pages': 0,
+        'exact_span_partitioned_pages': reviewed['partitioned_pages'],
+        'exact_span_partitioned_blocks': reviewed['partitioned_blocks'],
+        'exact_span_bound_requirements': reviewed['bound_requirements'],
+        'exact_span_registry': 'docs/packet1/review_ledger.v1.json',
         'reviewed_subset_obligations': len(CLAUSES), 'analysis_feature_obligations': 60,
         'wp_gates': 13, 'ops_r_gates': 12, 'orphan_mandatory_clauses': None,
         'zero_orphan_proven': False, 'packet1_exit': 'BLOCKED',
@@ -227,6 +222,11 @@ def main():
         '| ID | Source/pages | Repair packet | Boundary | Acceptance target | Evidence |', '|---|---|---:|---|---|---|']
     for r in clauses:
         lines.append(f'| {r["id"]} | {r["source"]} pp{",".join(map(str, r["pages_1based"]))} | {r["repair_packet"]} | {r["contract_boundary"]} | {r["acceptance_target"]} | UNVERIFIED |')
+    lines.extend(['', '## Exact-span agent review (independent approval pending)', '',
+        f"{reviewed['partitioned_pages']} pages / {reviewed['partitioned_blocks']} blocks / {reviewed['bound_requirements']} bound requirements. This is not semantic-completeness or capacity proof. Exact quote hashes and offsets are in review_ledger.v1.json.", '',
+        '| ID | Obligation | Packet | Acceptance status |', '|---|---|---:|---|'])
+    for requirement in ledger.requirements:
+        lines.append(f'| {requirement.id} | {requirement.obligation} | {requirement.packet} | PLANNED / NOT QUALIFIED |')
     (OUT / 'COVERAGE_MATRIX.md').write_text('\n'.join(lines) + '\n')
     openapi_inventory()
     dependencies()
