@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api, post, put } from "../../lib/api";
+const postpone = (state, error) => {
+  state.current.failures = Math.min(6, state.current.failures + 1);
+  state.current.after = Date.now() + Math.max(error?.retryAfterMs || 0, Math.min(30000, 1000 * 2 ** state.current.failures) + Math.random() * 1500);
+};
 export function useAttempt(id, user) {
   const navigate = useNavigate();
   const [attempt, setAttempt] = useState(null);
@@ -14,6 +18,8 @@ export function useAttempt(id, user) {
     drafts = useRef({}),
     running = useRef(false),
     loading = useRef(false),
+    retryState = useRef({ failures: 0, after: 0 }),
+    deadlineRetry = useRef({ failures: 0, after: 0 }),
     anchor = useRef({ server: 0, mono: 0 }),
     timer = useRef(null),
     conflictRef = useRef(false);
@@ -42,7 +48,7 @@ export function useAttempt(id, user) {
     [id, navigate],
   );
   const load = useCallback(async () => {
-    if (loading.current) return;
+    if (loading.current || Date.now() < retryState.current.after) return;
     loading.current = true;
     try {
       const d = await api("/attempts/" + id);
@@ -59,8 +65,10 @@ export function useAttempt(id, user) {
       drafts.current = stored;
       persist();
       setError("");
+      retryState.current = { failures: 0, after: 0 };
       if (d.status === "completed") openResult();
     } catch (e) {
+      postpone(retryState, e);
       setError(e.message);
     } finally {
       loading.current = false;
@@ -72,6 +80,7 @@ export function useAttempt(id, user) {
   const flush = useCallback(async () => {
     if (
       running.current ||
+      Date.now() < retryState.current.after ||
       !navigator.onLine ||
       !data.current ||
       conflictRef.current
@@ -96,6 +105,13 @@ export function useAttempt(id, user) {
         }
         try {
           const res = await put(`/attempts/${id}/answers/${qid}`, draft);
+          retryState.current = { failures: 0, after: 0 };
+          if (res.current_revision > res.accepted.revision) {
+            conflictRef.current = true;
+            setConflict(true);
+            setError('This retry was already saved, but another device has a newer answer. Review the server version before continuing.');
+            break;
+          }
           data.current.answers[qid] = res.accepted;
           data.current.visited = [
             ...new Set([...(data.current.visited || []), qid]),
@@ -109,9 +125,11 @@ export function useAttempt(id, user) {
           persist();
           setError("");
         } catch (e) {
+          postpone(retryState, e);
           setError(e.message);
           if (e.status === 409) {
-            const latest = await api("/attempts/" + id);
+            const latest = await api("/attempts/" + id).catch(() => null);
+            if (!latest) break;
             if (latest.status === "completed") {
               openResult();
               return;
@@ -150,11 +168,20 @@ export function useAttempt(id, user) {
     const off = () => setOnline(false);
     window.addEventListener("online", on);
     window.addEventListener("offline", off);
-    const retry = setInterval(recover, 5000);
+    let stopped = false;
+    let retry;
+    const schedule = () => {
+      retry = setTimeout(async () => {
+        await recover();
+        if (!stopped) schedule();
+      }, 5000 + Math.random() * 2000);
+    };
+    schedule();
     return () => {
+      stopped = true;
       window.removeEventListener("online", on);
       window.removeEventListener("offline", off);
-      clearInterval(retry);
+      clearTimeout(retry);
       clearTimeout(timer.current);
     };
   }, [flush, load]);
@@ -162,13 +189,16 @@ export function useAttempt(id, user) {
     if (!attempt?.deadline) return;
     let checking = false;
     const confirmDeadline = async () => {
-      if (checking || !navigator.onLine) return;
+      if (checking || !navigator.onLine || Date.now() < deadlineRetry.current.after) return;
       checking = true;
+      deadlineRetry.current.after = Date.now() + 5000 + Math.random() * 1500;
       try {
         const latest = await api("/attempts/" + id);
+        deadlineRetry.current.failures = 0;
         syncClock(latest.server_now);
         if (latest.status === "completed") openResult();
       } catch (e) {
+        postpone(deadlineRetry, e);
         setError(e.message);
       } finally {
         checking = false;

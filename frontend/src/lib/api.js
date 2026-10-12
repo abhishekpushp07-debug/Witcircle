@@ -33,7 +33,7 @@ export async function api(path, options = {}, retry = true) {
     try {
       data = await res.json();
     } catch {}
-    if (res.status === 413)
+    if (res.status === 413 && options.body instanceof FormData)
       throw new Error(
         "The upload exceeds the allowed size. Keep PDFs under 50 MB; split larger files and retry.",
       );
@@ -46,6 +46,9 @@ export async function api(path, options = {}, retry = true) {
           : "This request could not finish. Please try again.",
     );
     err.status = res.status;
+    const hint = res.headers.get('Retry-After');
+    const seconds = Number(hint);
+    err.retryAfterMs = hint ? (Number.isFinite(seconds) ? seconds * 1000 : Math.max(0, Date.parse(hint) - Date.now())) : 0;
     throw err;
   }
   const body = await res.json();

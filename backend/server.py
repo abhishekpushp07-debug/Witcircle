@@ -39,6 +39,8 @@ app = FastAPI(
     docs_url="/api/docs",
     openapi_url="/api/openapi.json",
 )
+from tejas.http_limits import JsonBodyLimits
+app.add_middleware(JsonBodyLimits)
 origins = [os.environ["FRONTEND_URL"].rstrip("/")]
 app.add_middleware(
     CORSMiddleware,
@@ -81,7 +83,12 @@ async def protections(request: Request, call_next):
 
 @app.exception_handler(HTTPException)
 async def http_error(request, exc):
-    return error_response(exc.detail, exc.status_code, "http_" + str(exc.status_code))
+    response = error_response(exc.detail, exc.status_code, "http_" + str(exc.status_code))
+    if exc.headers:
+        response.headers.update(exc.headers)
+    if exc.status_code in (429, 503) and "Retry-After" not in response.headers:
+        response.headers["Retry-After"] = "3"
+    return response
 
 
 @app.exception_handler(RequestValidationError)
@@ -93,7 +100,20 @@ async def validation_error(request, exc):
 
 @app.exception_handler(StorageError)
 async def storage_error(request, exc):
-    return error_response(str(exc), 503, "vault_unavailable")
+    response = error_response("Private content is temporarily unavailable. Please retry shortly.", 503, "vault_unavailable")
+    response.headers["Retry-After"] = "3"
+    return response
+
+
+async def database_busy(request, exc):
+    response = error_response("The service is busy. Keep pending drafts and retry using the same request identifier.", 503, "database_busy")
+    response.headers["Retry-After"] = "3"
+    return response
+
+
+from pymongo.errors import ConnectionFailure, ExecutionTimeout, WTimeoutError
+for failure in (ConnectionFailure, ExecutionTimeout, WTimeoutError):
+    app.add_exception_handler(failure, database_busy)
 
 
 @app.get("/api/health")

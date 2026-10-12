@@ -13,10 +13,16 @@ from .content import summary, permitted, validate_refs
 from tejas_core import public_question, score_attempt, crop_png
 from tejas_storage import get_object
 
+from .idempotency import fingerprint, verify_start, bind_start_alias
+from .contracts import EnvelopeResponse
+from .derivatives import render_crop
+from pydantic import ConfigDict
+
 router = APIRouter(prefix="/api", tags=["Practice"])
 
 
 class Start(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     start_key: str = Field(min_length=8, max_length=100)
     device_checked: bool = False
     preview: bool = False
@@ -33,69 +39,53 @@ def delivered(q):
 
 
 async def owned(id, u):
-    a = await get(attempts, id)
-    if a["user_id"] != u["id"]:
+    a = await attempts.find_one({"id": id, "user_id": u["id"]}, {"_id": 0, "command_receipts": 0, "response_schema": 0})
+    if not a:
         raise HTTPException(404, "Attempt not found.")
-    return a
+    if a["status"] == "completed":
+        ledger = await db.tejas_ledgers.find_one({"id": id}, {"_id": 0})
+        if ledger:
+            a["ledger"] = ledger
+    return await hydrate(a)
+
+
+async def ensure_grade(a, bg=None):
+    """Embedded grading_status is the durable outbox if enqueue crashes."""
+    if a.get("status") != "completed" or a.get("ledger") or a.get("grading_status") == "ready":
+        return None
+    from .jobs import enqueue, run_job
+    j = await enqueue("grade", a["user_id"], a["set_id"], {"attempt_id": a["id"]})
+    if bg and j["status"] in ("queued", "running"):
+        bg.add_task(run_job, j["id"])
+    return j
 
 
 async def finalize(id, reason="submitted"):
+    """Atomic lightweight close + durable outbox. No pack read or grade computation."""
     t = {"$divide": [{"$toLong": "$$NOW"}, 1000]}
-    # Freeze accepted responses atomically; concurrent saves cannot race into completed ledger.
+    expired = {"$and": [{"$gt": ["$deadline", 0]}, {"$lte": ["$deadline", t]}]}
     a = await attempts.find_one_and_update(
         {"id": id, "status": "active"},
-        [
-            {
-                "$set": {
-                    "status": "completed",
-                    "submitted_at": {
-                        "$cond": [
-                            {
-                                "$and": [
-                                    {"$gt": ["$deadline", 0]},
-                                    {"$lte": ["$deadline", t]},
-                                ]
-                            },
-                            "$deadline",
-                            t,
-                        ]
-                    },
-                    "reason": {
-                        "$cond": [
-                            {
-                                "$and": [
-                                    {"$gt": ["$deadline", 0]},
-                                    {"$lte": ["$deadline", t]},
-                                ]
-                            },
-                            "time_limit",
-                            reason,
-                        ]
-                    },
-                    "receipt": id,
-                }
-            }
-        ],
+        [{"$set": {
+            "status": "completed", "submitted_at": {"$cond": [expired, "$deadline", t]},
+            "sealed_at": t, "sealed_seq": {"$ifNull": ["$server_seq", 0]},
+            "reason": {"$cond": [expired, "time_limit", reason]},
+            "receipt": id, "grading_status": "queued",
+        }}],
+        projection={"_id": 0, "command_receipts": 0, "response_schema": 0},
         return_document=ReturnDocument.AFTER,
     )
     if not a:
-        return await get(attempts, id)
-    a = await hydrate(a)
-    from .corrections import freeze_ledger
-
-    ledger = await freeze_ledger(a)
-    result = {"summary": ledger["summary"]}
-    await attempts.update_one({"id": id}, {"$set": {"summary": result["summary"]}})
-    await audit(a["user_id"], "Attempt completed", id, reason)
-    a["summary"] = result["summary"]
+        a = await attempts.find_one({"id": id}, {"_id": 0, "command_receipts": 0, "response_schema": 0})
+    if not a:
+        raise HTTPException(404, "Attempt not found.")
     return clean(a)
 
 
 async def expire(a):
-    a = await hydrate(a)
     if a["status"] == "active" and a["deadline"] and now() >= a["deadline"]:
-        return await finalize(a["id"], "time_limit")
-    return a
+        a = await finalize(a["id"], "time_limit")
+    return await hydrate(a)
 
 
 def attempt_view(a):
@@ -150,8 +140,9 @@ async def preflight(id: str, data: dict, u=Depends(current)):
         raise HTTPException(404, "This set is not available.")
     if not s["questions"]:
         raise HTTPException(400, "This set has no questions yet.")
+    source_map = {}
     for q in s["questions"]:
-        await validate_refs(s, q)
+        await validate_refs(s, q, source_map)
     await db.tejas_preflight.update_one(
         {"user_id": u["id"], "set_id": id},
         {
@@ -173,9 +164,10 @@ async def preflight(id: str, data: dict, u=Depends(current)):
 @router.post("/sets/{id}/start")
 async def start(id: str, data: Start, u=Depends(current)):
     existing = await attempts.find_one(
-        {"user_id": u["id"], "start_key": data.start_key}, {"_id": 0}
+        {"user_id": u["id"], "$or": [{"start_key": data.start_key}, {"start_request_keys": data.start_key}]}, {"_id": 0, "command_receipts": 0, "response_schema": 0}
     )
     if existing:
+        verify_start(existing, id, data)
         return attempt_view(await expire(existing))
     s = await get(sets, id)
     preview = data.preview and u["role"] in ["owner", "reviewer"]
@@ -186,6 +178,7 @@ async def start(id: str, data: Start, u=Depends(current)):
     if active:
         active = await expire(active)
         if active["status"] == "active":
+            await bind_start_alias(active, id, data)
             return attempt_view(active)
     if not preview and (s["status"] != "published" or not permitted(s, u)):
         raise HTTPException(404, "This set is not available to start.")
@@ -210,6 +203,11 @@ async def start(id: str, data: Start, u=Depends(current)):
         "user_id": u["id"],
         "set_id": id,
         "start_key": data.start_key,
+        "start_request_keys": [data.start_key],
+        "start_receipts": {fingerprint(data.start_key): fingerprint({"operation": "start", "set_id": id, **data.model_dump(exclude={"start_key"})})},
+        "start_fingerprint": fingerprint({"operation": "start", "set_id": id, **data.model_dump(exclude={"start_key"})}),
+        "server_seq": 0,
+        "command_count": 0,
         "title": s["title"],
         "exam": s["exam"],
         "version": s["version"],
@@ -236,29 +234,27 @@ async def start(id: str, data: Start, u=Depends(current)):
         )
         if not a:
             a = await attempts.find_one(
-                {"user_id": u["id"], "start_key": data.start_key}
+                {"user_id": u["id"], "start_key": data.start_key}, {"_id": 0, "command_receipts": 0, "response_schema": 0}
             )
+            if a:
+                verify_start(a, id, data)
+        if not a:
+            raise HTTPException(409, "Another start is being resolved. Retry with the same identifier.")
+        await bind_start_alias(a, id, data)
     await audit(u["id"], "Attempt started", a["id"], mode)
     return attempt_view(await hydrate(a))
 
 
 @router.get("/attempts")
 async def history(page: int = 1, u=Depends(current)):
-    data = (
-        await attempts.find({"user_id": u["id"]}, {"_id": 0})
-        .sort("started_at", -1)
-        .skip((max(1, page) - 1) * 20)
-        .limit(20)
-        .to_list(20)
-    )
-    result = []
+    fields = {k: 1 for k in ("id", "set_id", "title", "exam", "mode", "version", "rules", "started_at", "deadline", "status", "submitted_at", "receipt", "reason", "summary", "profile", "count", "grading_status")}
+    data = await attempts.find({"user_id": u["id"]}, {"_id": 0, **fields}).sort("started_at", -1).skip((max(1, page) - 1) * 20).limit(20).to_list(20)
     for a in data:
-        a = await expire(a)
-        v = attempt_view(a)
-        v.pop("questions")
-        v.pop("answers")
-        result.append(v)
-    return {"items": result, "page": page}
+        if a["status"] == "active" and a["deadline"] and now() >= a["deadline"]:
+            closed = await finalize(a["id"], "time_limit")
+            a.update({k: v for k, v in closed.items() if k in fields})
+        a["server_now"] = now()
+    return {"items": data, "page": page}
 
 
 @router.get("/attempts/{id}")
@@ -266,49 +262,72 @@ async def read_attempt(id: str, u=Depends(current)):
     return attempt_view(await expire(await owned(id, u)))
 
 
+class Visit(BaseModel):
+    question_id: str = Field(min_length=36, max_length=36)
+
+
 @router.post("/attempts/{id}/visit")
-async def visit_question(id: str, data: dict, u=Depends(current)):
-    a = await expire(await owned(id, u))
-    qid = data.get("question_id")
-    if a["status"] != "active":
-        raise HTTPException(409, "The attempt has ended.")
-    if qid not in [q["id"] for q in a["questions"]]:
+async def visit_question(id: str, data: Visit, u=Depends(current)):
+    from uuid import UUID
+    qid = data.question_id
+    try:
+        UUID(qid)
+    except ValueError:
         raise HTTPException(400, "Unknown question identity.")
-    await attempts.update_one(
-        {"id": id, "status": "active"}, {"$addToSet": {"visited": qid}}
-    )
-    return {"visited": list(dict.fromkeys(a.get("visited", []) + [qid]))}
+    a = await attempts.find_one({"id": id, "user_id": u["id"]}, {"_id": 0, "status": 1, "deadline": 1, "visited": 1, f"response_schema.{qid}": 1, "questions.id": 1})
+    if not a:
+        raise HTTPException(404, "Attempt not found.")
+    if a["status"] != "active" or (a["deadline"] and now() >= a["deadline"]):
+        if a["status"] == "active":
+            await finalize(id, "time_limit")
+        raise HTTPException(409, "The attempt has ended.")
+    if qid not in a.get("response_schema", {}) and not any(q["id"] == qid for q in a.get("questions", [])):
+        raise HTTPException(400, "Unknown question identity.")
+    t = {"$divide": [{"$toLong": "$$NOW"}, 1000]}
+    updated = await attempts.find_one_and_update({"id": id, "user_id": u["id"], "status": "active", "$expr": {"$or": [{"$eq": ["$deadline", 0]}, {"$gt": ["$deadline", t]}]}}, {"$addToSet": {"visited": qid}}, projection={"_id": 0, "visited": 1}, return_document=ReturnDocument.AFTER)
+    if not updated:
+        raise HTTPException(409, "The attempt has ended.")
+    return updated
 
 
-@router.post("/attempts/{id}/submit")
-async def submit(id: str, u=Depends(current)):
-    a = await owned(id, u)
-    if a["status"] == "active":
-        a = await finalize(
-            id,
-            "time_limit" if a["deadline"] and now() >= a["deadline"] else "submitted",
-        )
-    return {
-        "id": id,
-        "receipt": id,
-        "status": a["status"],
-        "submitted_at": a["submitted_at"],
-    }
+class SubmissionReceipt(BaseModel):
+    id: str
+    receipt: str
+    status: str
+    submitted_at: float
+    sealed_seq: int = 0
+    grading_status: str
+    command_state: str = "applied"
+
+
+@router.post("/attempts/{id}/submit", response_model=SubmissionReceipt)
+async def submit(id: str, bg: BackgroundTasks, response: Response, u=Depends(current)):
+    a = await attempts.find_one({"id": id, "user_id": u["id"]}, {"_id": 0, "id": 1})
+    if not a:
+        raise HTTPException(404, "Attempt not found.")
+    a = await finalize(id)
+    # Dispatch is best effort; the seal/outbox survives a failure here.
+    try:
+        await ensure_grade(a, bg)
+    except Exception:
+        import logging
+        logging.getLogger(__name__).error("Grade dispatch delayed; durable outbox retained")
+    grading = a.get("grading_status", "ready" if a.get("summary") else "queued")
+    response.status_code = 200 if grading == "ready" else 202
+    response.headers["Location"] = f"/api/attempts/{id}/results"
+    response.headers["Retry-After"] = "2"
+    return {"id": id, "receipt": a["receipt"], "status": a["status"], "submitted_at": a["submitted_at"], "sealed_seq": a.get("sealed_seq", 0), "grading_status": grading}
 
 
 @router.get("/attempts/{id}/results")
-async def results(id: str, score_version: str = "original", u=Depends(current)):
+async def results(id: str, bg: BackgroundTasks, score_version: str = "original", u=Depends(current)):
     from .corrections import with_grade
 
     a = await expire(await owned(id, u))
     if a["status"] == "completed":
         if not a.get("ledger"):
-            from .corrections import freeze_ledger
-
-            a["ledger"] = await freeze_ledger(a)
-            await attempts.update_one(
-                {"id": id}, {"$set": {"summary": a["ledger"]["summary"]}}
-            )
+            job = await ensure_grade(a, bg)
+            return EnvelopeResponse({"id": id, "receipt": a["receipt"], "status": "grading", "grading_status": (job or {}).get("status", "queued"), "job_id": (job or {}).get("id"), "retry_after_ms": 2000}, status_code=202, headers={"Retry-After": "2"})
         a = await with_grade(a, score_version)
     if a["status"] != "completed":
         raise HTTPException(403, "Solutions are released only after submission.")
@@ -359,9 +378,9 @@ async def asset(
     if not 0 <= index < len(refs):
         raise HTTPException(404, "Asset not found.")
     f = await get(files, refs[index]["file_id"])
-    raw = await run_in_threadpool(get_object, f["path"])
     return Response(
-        await run_in_threadpool(crop_png, raw, refs[index]), media_type="image/png"
+        await run_in_threadpool(render_crop, f, refs[index]), media_type="image/png",
+        headers={"Cache-Control": "private, no-store"},
     )
 
 
@@ -370,6 +389,8 @@ async def retry(id: str, data: dict, u=Depends(current)):
     from .corrections import with_grade
 
     a = await expire(await owned(id, u))
+    if a["status"] == "completed" and not a.get("ledger"):
+        raise HTTPException(409, "Your answers are sealed. Wait for grading before starting a retry.", headers={"Retry-After": "2"})
     if a["status"] == "completed":
         a = await with_grade(a, data.get("score_version"))
     if a["status"] != "completed":
@@ -384,15 +405,20 @@ async def retry(id: str, data: dict, u=Depends(current)):
             400, "There are no incorrect or skipped questions to retry."
         )
     start_key = str(data.get("start_key", ""))
-    if len(start_key) < 8:
-        raise HTTPException(400, "A retry request identifier is required.")
-    existing = await attempts.find_one({"user_id": u["id"], "start_key": start_key})
+    if not 8 <= len(start_key) <= 100:
+        raise HTTPException(400, "A retry request identifier of 8–100 characters is required.")
+    retry_hash = fingerprint({"operation": "retry", "parent_attempt": id, "score_version": data.get("score_version") or "original"})
+    existing = await attempts.find_one({"user_id": u["id"], "$or": [{"start_key": start_key}, {"start_request_keys": start_key}]}, {"id": 1, "parent_attempt": 1, "retry_fingerprint": 1})
     if existing:
+        if existing.get("parent_attempt") != id or (existing.get("retry_fingerprint") and existing["retry_fingerprint"] != retry_hash):
+            raise HTTPException(409, "This retry identifier belongs to a different request.")
         return {"id": existing["id"]}
     active = await attempts.find_one(
         {"user_id": u["id"], "set_id": a["set_id"], "mode": "retry", "status": "active"}
     )
     if active:
+        if active.get("parent_attempt") != id or (active.get("retry_fingerprint") and active["retry_fingerprint"] != retry_hash):
+            raise HTTPException(409, "Finish your existing revision attempt before starting a different one.")
         return {"id": active["id"]}
     a.update(
         {
@@ -400,6 +426,9 @@ async def retry(id: str, data: dict, u=Depends(current)):
             "title": a["title"] + " — Mistake retry",
             "parent_attempt": id,
             "start_key": start_key,
+            "retry_fingerprint": retry_hash,
+            "server_seq": 0,
+            "command_count": 0,
             "questions": qs,
             "rules": {**a["rules"], "minutes": 0},
             "mode": "retry",
@@ -419,6 +448,13 @@ async def retry(id: str, data: dict, u=Depends(current)):
         "score_version",
         "change_note",
         "visited",
+        "start_fingerprint",
+        "start_request_keys",
+        "start_receipts",
+        "grading_status",
+        "sealed_at",
+        "sealed_seq",
+        "command_receipts",
     ]:
         a.pop(k, None)
     a["visited"] = []
@@ -435,13 +471,14 @@ async def retry(id: str, data: dict, u=Depends(current)):
         await insert_attempt(a)
     except DuplicateKeyError:
         a = await attempts.find_one(
-            {
-                "user_id": u["id"],
-                "set_id": a["set_id"],
-                "mode": "retry",
-                "status": "active",
-            }
+            {"user_id": u["id"], "$or": [
+                {"start_key": start_key},
+                {"start_request_keys": start_key},
+                {"set_id": a["set_id"], "mode": "retry", "status": "active"},
+            ]}, {"_id": 0, "id": 1, "parent_attempt": 1, "retry_fingerprint": 1},
         )
+        if not a or a.get("parent_attempt") != id or a.get("retry_fingerprint") != retry_hash:
+            raise HTTPException(409, "A different start or revision request already used this identifier.")
     await audit(
         u["id"],
         "Mistake retry started",
@@ -457,6 +494,9 @@ async def report(id: str, bg: BackgroundTasks, data: dict, u=Depends(current)):
 
     a = await expire(await owned(id, u))
     version = str(data.get("score_version", "original"))
+    if a["status"] == "completed" and not a.get("ledger"):
+        await ensure_grade(a, bg)
+        raise HTTPException(409, "Your answers are sealed. The report becomes available after grading.", headers={"Retry-After": "2"})
     if a["status"] == "completed":
         a = await with_grade(a, version)
     if a["status"] != "completed":

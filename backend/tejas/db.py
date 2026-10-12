@@ -2,12 +2,18 @@ import os, time, uuid
 from datetime import datetime
 from motor.motor_asyncio import AsyncIOMotorClient
 from fastapi import HTTPException
-from bson import ObjectId
+from .runtime import DB_POOL, DB_WAIT_MS
+from pymongo.write_concern import WriteConcern
 
 client = AsyncIOMotorClient(
-    os.environ["MONGO_URL"], maxPoolSize=100, serverSelectionTimeoutMS=5000
+    os.environ["MONGO_URL"], maxPoolSize=DB_POOL, minPoolSize=0,
+    maxConnecting=2, waitQueueTimeoutMS=DB_WAIT_MS,
+    serverSelectionTimeoutMS=5000, connectTimeoutMS=5000, socketTimeoutMS=15000,
+    tz_aware=True,
 )
-db = client[os.environ["DB_NAME"]]
+# A requested acknowledgement policy, NOT proof of replicated/multi-AZ durability.
+# The preview is standalone; quorum/failover qualification remains a release gate.
+db = client.get_database(os.environ["DB_NAME"], write_concern=WriteConcern(w="majority", j=True, wtimeout=5000))
 users = db.tejas_users
 sessions = db.tejas_sessions
 sets = db.tejas_sets
@@ -32,13 +38,14 @@ def clean(v):
         return [clean(x) for x in v]
     if isinstance(v, datetime):
         return v.isoformat()
-    if isinstance(v, ObjectId):
-        return str(v)
     return v
 
 
 async def get(coll, id):
-    d = await coll.find_one({"id": id}, {"_id": 0})
+    projection = {"_id": 0}
+    if coll.name == "tejas_attempts":
+        projection.update({"command_receipts": 0, "response_schema": 0})
+    d = await coll.find_one({"id": id}, projection)
     if not d:
         raise HTTPException(404, "This item is unavailable or does not exist.")
     if coll.name == "tejas_attempts" and d.get("pack_id"):
@@ -86,6 +93,7 @@ async def indexes():
     await sets.create_index([("status", 1), ("exam", 1)])
     await attempts.create_index([("user_id", 1), ("started_at", -1)])
     await attempts.create_index([("user_id", 1), ("start_key", 1)], unique=True)
+    await attempts.create_index([("user_id", 1), ("start_request_keys", 1)], unique=True, partialFilterExpression={"start_request_keys": {"$exists": True}})
     await attempts.create_index(
         [("user_id", 1), ("set_id", 1), ("mode", 1)],
         unique=True,
@@ -106,3 +114,6 @@ async def indexes():
     await attempts.create_index([("set_id", 1), ("status", 1), ("version", 1)])
     await jobs.create_index([("set_id", 1), ("created_at", -1)])
     await files.create_index([("set_id", 1), ("created_at", -1)])
+
+    await attempts.create_index([("status", 1), ("grading_status", 1), ("submitted_at", 1)])
+    await jobs.create_index([("kind", 1), ("status", 1), ("next_run_at", 1), ("created_at", 1)])

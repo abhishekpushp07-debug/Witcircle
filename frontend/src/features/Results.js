@@ -28,6 +28,7 @@ import {
 } from "../components/Shared";
 import { QuestionContent, MathText } from "../components/QuestionContent";
 import { ReportButton } from "../components/ReportButton";
+import { Button } from '../components/ui/button';
 export default function Results() {
   const { id } = useParams();
   const { user } = useAuth();
@@ -41,20 +42,27 @@ export default function Results() {
   const [busy, setBusy] = useState(false);
   const [expanded, setExpanded] = useState({});
   const [page, setPage] = useState(1);
+  const [refresh, setRefresh] = useState(0);
+  const [pending, setPending] = useState(null);
   useEffect(() => {
     const controller = new AbortController();
-    setR(null);
-    setError("");
-    setExpanded({});
-    setPage(1);
-    api(
-      "/attempts/" + id + "/results?score_version=" + encodeURIComponent(scoreVersion),
-      { signal: controller.signal },
-    )
-      .then((result) => { if (!controller.signal.aborted) setR(result); })
-      .catch((e) => { if (!controller.signal.aborted) setError(e.message); });
-    return () => controller.abort();
-  }, [id, scoreVersion]);
+    let timer, polls = 0;
+    setR(null); setPending(null); setError(''); setExpanded({}); setPage(1);
+    const load = async () => {
+      try {
+        const result = await api('/attempts/' + id + '/results?score_version=' + encodeURIComponent(scoreVersion), { signal: controller.signal });
+        if (controller.signal.aborted) return;
+        if (result.status === 'grading') {
+          setPending(result);
+          if (result.grading_status !== 'failed' && ++polls < 45) {
+            timer = setTimeout(load, Math.min(10000, Math.max(2000, result.retry_after_ms || 2000) * (1 + polls / 5)) + Math.random() * 1000);
+          }
+        } else { setPending(null); setR(result); }
+      } catch (e) { if (!controller.signal.aborted) setError(e.message); }
+    };
+    load();
+    return () => { controller.abort(); clearTimeout(timer); };
+  }, [id, scoreVersion, refresh]);
   async function retry() {
     setBusy(true);
     try {
@@ -70,10 +78,26 @@ export default function Results() {
       setBusy(false);
     }
   }
+  if (pending) return <div className="container page" data-testid="results-grading-pending">
+    <PageTitle eyebrow="SUBMISSION RECEIVED" title="Your answers are safely submitted." description="Your sealed answers are being graded in the background. You can leave this page and return from My practice." />
+    <div className="card">
+      <p data-testid="grading-status" role="status">{pending.grading_status === 'failed' ? 'Grading needs another try. Your submitted answers have not changed.' : 'Preparing your results and matched solutions…'}</p>
+      <p data-testid="submission-receipt">Receipt: {pending.receipt}</p>
+      <ErrorBox error={error} />
+      <div className="form-actions">
+        <Button className="btn btn-primary" data-testid="grading-retry" disabled={busy} onClick={async () => {
+          setBusy(true);
+          try { if (pending.grading_status === 'failed') await post('/jobs/' + pending.job_id + '/retry', {}); setRefresh(v => v + 1); }
+          catch (e) { setError(e.message); } finally { setBusy(false); }
+        }}>{pending.grading_status === 'failed' ? 'Retry grading' : 'Check progress'}</Button>
+        <Button asChild variant="outline" className="btn btn-secondary"><Link data-testid="grading-back-home" to="/home">My practice</Link></Button>
+      </div>
+    </div>
+  </div>;
   if (!r)
     return (
       <div className="container page">
-        <ErrorBox error={error} />
+        <ErrorBox error={error} retry={() => setRefresh(v => v + 1)} />
         {!error && <Loading text="Opening your completed attempt…" />}
       </div>
     );

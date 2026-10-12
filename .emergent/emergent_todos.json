@@ -1,14 +1,1 @@
-[
-  {
-    "content": "Replace teal palette with matte-maroon tokens and readable light/dark typography",
-    "status": "completed"
-  },
-  {
-    "content": "Simplify navigation and polish Exam Details using existing Shadcn controls",
-    "status": "completed"
-  },
-  {
-    "content": "Build and verify desktop/mobile appearance plus recovery/version regression; inspect menu overflow",
-    "status": "in_progress"
-  }
-]
+[]

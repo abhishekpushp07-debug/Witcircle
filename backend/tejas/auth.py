@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from pydantic import BaseModel, Field, EmailStr, field_validator
 from starlette.concurrency import run_in_threadpool
 from pymongo.errors import DuplicateKeyError
+from pymongo import ReturnDocument
 from .db import db, users, sessions, uid, now
 
 router = APIRouter(prefix="/api/auth", tags=["Staff accounts and sessions"])
@@ -149,25 +150,18 @@ async def login(data: Credentials, response: Response):
     email = str(data.email).lower()
     window = int(now() // 900)
     key = hashlib.sha256(f"staff:{email}:{window}".encode()).hexdigest()
-    limit = await db.tejas_login_limits.find_one({"_id": key})
-    if limit and limit.get("count", 0) >= 5:
-        raise HTTPException(429, "Too many sign-in attempts. Please wait 15 minutes.")
+    limit = await db.tejas_login_limits.find_one_and_update(
+        {"_id": key}, {"$inc": {"count": 1}, "$setOnInsert": {"expires_at": datetime.now(timezone.utc) + timedelta(minutes=30)}},
+        upsert=True, return_document=ReturnDocument.AFTER,
+    )
+    if limit["count"] > 5:
+        raise HTTPException(429, "Too many sign-in attempts. Please wait before trying again.", headers={"Retry-After": str(max(1, int((window + 1) * 900 - now()) + 1))})
     u = await users.find_one({"email": email})
     if (
         not u
         or u.get("role") not in ["owner", "reviewer"]
         or not await run_in_threadpool(verify, data.password, u["password_hash"])
     ):
-        await db.tejas_login_limits.update_one(
-            {"_id": key},
-            {
-                "$inc": {"count": 1},
-                "$set": {
-                    "expires_at": datetime.now(timezone.utc) + timedelta(minutes=30)
-                },
-            },
-            upsert=True,
-        )
         raise HTTPException(
             401,
             "Staff email or password is incorrect. Students can enter with their mobile number.",

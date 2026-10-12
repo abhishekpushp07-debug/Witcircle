@@ -1,286 +1,211 @@
-"""Durable heavy-work jobs with atomic leases; no scheduler runs inside the application."""
-
+"""Durable bounded pilot jobs. No scheduler loop; existing platform cron repairs dispatch gaps.
+Separate lanes are NOT independent worker fleets or failure domains.
+"""
 import os, secrets, asyncio, logging
-from fastapi import (
-    APIRouter,
-    Depends,
-    HTTPException,
-    BackgroundTasks,
-    Request,
-    Response,
-)
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Request, Response
 from pymongo import ReturnDocument
 from pymongo.errors import DuplicateKeyError
 from starlette.concurrency import run_in_threadpool
 from .db import jobs, sets, files, attempts, db, uid, now, get, audit
 from .auth import current
+from .runtime import LANE_LIMITS, JOB_ATTEMPTS, JOB_LEASE_SECONDS, INLINE_JOBS
 from tejas_core import build_questions, generate_report
 from tejas_storage import get_object, put_object
 
-router = APIRouter(prefix="/api", tags=["Processing"])
-_capacity = asyncio.Semaphore(2)
+router = APIRouter(prefix='/api', tags=['Processing'])
+_active = {kind: set() for kind in LANE_LIMITS}
+
+
+def public_job(j):
+    return {k: v for k, v in j.items() if k not in ('_id', 'path', 'payload', 'lease')}
 
 
 async def enqueue(kind, user_id, set_id, payload):
-    key = (
-        payload["attempt_id"] + "-" + payload.get("score_version", "original")
-        if kind == "report"
-        else payload.get("key", set_id)
-    )
-    id = kind + "-" + key
-    j = {
-        "id": id,
-        "kind": kind,
-        "user_id": user_id,
-        "set_id": set_id,
-        "payload": payload,
-        "status": "queued",
-        "progress": 0,
-        "created_at": now(),
-        "lease_until": 0,
-        "error": "",
-    }
+    if kind == 'report':
+        key = payload['attempt_id'] + '-' + payload.get('score_version', 'original')
+    elif kind == 'grade':
+        key = payload['attempt_id']
+    elif kind == 'extract':
+        key = set_id + '-r' + str(payload.get('revision', 0))
+    else:
+        key = payload.get('key', set_id)
+    j = {'id': kind + '-' + key, 'kind': kind, 'user_id': user_id, 'set_id': set_id,
+         'payload': payload, 'status': 'queued', 'progress': 0, 'created_at': now(),
+         'lease_until': 0, 'error': '', 'attempts': 0, 'next_run_at': 0}
     try:
         await jobs.insert_one(j)
     except DuplicateKeyError:
-        existing = await get(jobs, id)
-        if existing["status"] == "failed" or (
-            kind == "extract" and existing["status"] == "done"
-        ):
-            await jobs.update_one(
-                {"id": id},
-                {"$set": {k: v for k, v in j.items() if k not in ["id", "_id"]}},
-            )
-        else:
-            return {
-                k: v for k, v in existing.items() if k not in ["_id", "path", "payload"]
-            }
-    return {k: v for k, v in j.items() if k not in ["_id", "path", "payload"]}
+        existing = await get(jobs, j['id'])
+        if existing['user_id'] != user_id and kind not in ('extract', 'regrade'):
+            raise HTTPException(404, 'Job not found.')
+        return public_job(existing)
+    return public_job(j)
+
+
+async def require_lease(j):
+    if not await jobs.find_one({'id': j['id'], 'lease': j['lease'], 'status': 'running', 'lease_until': {'$gt': now()}}, {'_id': 1}):
+        raise RuntimeError('Worker lease lost; output must not be published')
 
 
 async def run_job(id):
-    async with _capacity:
-        lease = uid()
-        j = await jobs.find_one_and_update(
-            {
-                "id": id,
-                "$or": [
-                    {"status": "queued"},
-                    {"status": "running", "lease_until": {"$lt": now()}},
-                ],
-            },
-            {
-                "$set": {
-                    "status": "running",
-                    "progress": 10,
-                    "lease": lease,
-                    "lease_until": now() + 900,
-                }
-            },
-            return_document=ReturnDocument.AFTER,
-        )
+    if not INLINE_JOBS:
+        return
+    header = await jobs.find_one({'id': id}, {'kind': 1})
+    if not header or header['kind'] not in _active:
+        return
+    kind = header['kind']
+    lane = _active[kind]
+    # No semaphore waiters or per-request thread accumulation. Overflow remains durable.
+    if id in lane or len(lane) >= LANE_LIMITS[kind]:
+        return
+    lane.add(id)
+    lease = uid()
+    try:
+        j = await jobs.find_one_and_update({
+            'id': id, '$and': [
+                {'$or': [{'status': 'queued'}, {'status': 'running', 'lease_until': {'$lt': now()}}]},
+                {'$or': [{'attempts': {'$lt': JOB_ATTEMPTS}}, {'attempts': {'$exists': False}}]},
+                {'$or': [{'next_run_at': {'$lte': now()}}, {'next_run_at': {'$exists': False}}]},
+            ]}, {'$set': {'status': 'running', 'progress': 10, 'lease': lease, 'lease_until': now() + JOB_LEASE_SECONDS}, '$inc': {'attempts': 1}}, return_document=ReturnDocument.AFTER)
         if not j:
             return
         try:
-            if j["kind"] == "extract":
-                qf = await get(files, j["payload"]["qfile"])
-                sf = await get(files, j["payload"]["sfile"])
-                qraw = await run_in_threadpool(get_object, qf["path"])
-                sraw = await run_in_threadpool(get_object, sf["path"])
-                qs = await run_in_threadpool(
-                    build_questions,
-                    qraw,
-                    sraw,
-                    qf["id"],
-                    sf["id"],
-                    j["payload"].get("known_tejas", False),
-                )
-                guard = {"id": j["set_id"]}
-                if "revision" in j["payload"]:
-                    guard["revision"] = j["payload"]["revision"]
-                updated = await sets.update_one(
-                    guard,
-                    {
-                        "$set": {"questions": qs, "status": "review"},
-                        "$inc": {"revision": 1},
-                    },
-                )
+            if kind == 'grade':
+                from .corrections import freeze_ledger
+                a = await get(attempts, j['payload']['attempt_id'])
+                if a['status'] != 'completed':
+                    raise ValueError('Only sealed attempts can be graded')
+                await require_lease(j)
+                ledger = a.get('ledger') or await freeze_ledger(a)
+                await require_lease(j)
+                await attempts.update_one({'id': a['id'], 'status': 'completed'}, {'$set': {'summary': ledger['summary'], 'grading_status': 'ready'}})
+                message = 'Your sealed answers have been graded.'
+            elif kind == 'extract':
+                qf = await get(files, j['payload']['qfile'])
+                sf = await get(files, j['payload']['sfile'])
+                qraw = await run_in_threadpool(get_object, qf['path'])
+                sraw = await run_in_threadpool(get_object, sf['path'])
+                qs = await run_in_threadpool(build_questions, qraw, sraw, qf['id'], sf['id'], j['payload'].get('known_tejas', False))
+                await require_lease(j)
+                guard = {'id': j['set_id'], 'revision': j['payload']['revision']}
+                updated = await sets.update_one(guard, {'$set': {'questions': qs, 'status': 'review'}, '$inc': {'revision': 1}})
                 if not updated.modified_count:
-                    raise ValueError(
-                        "Draft changed during extraction. Existing reviewer edits were preserved; rerun from the current revision."
-                    )
-                message = (
-                    f"{len(qs)} draft questions extracted. Human review is required."
-                    if qs
-                    else "No question boundaries detected. Add questions manually and select source regions."
-                )
-            elif j["kind"] == "regrade":
+                    raise ValueError('Draft changed during extraction; reviewer edits preserved')
+                message = f'{len(qs)} draft questions extracted. Human review is required.'
+            elif kind == 'regrade':
                 from .corrections import run_regrade
-
+                await require_lease(j)
                 message = await run_regrade(j)
-            elif j["kind"] == "report":
+            elif kind == 'report':
                 from .corrections import with_grade
-
-                a = await with_grade(
-                    await get(attempts, j["payload"]["attempt_id"]),
-                    j["payload"].get("score_version"),
-                )
-                ids = {
-                    r["file_id"]
-                    for q in a["questions"]
-                    for r in q.get("q_refs", []) + q.get("s_refs", [])
-                }
+                a = await with_grade(await get(attempts, j['payload']['attempt_id']), j['payload'].get('score_version'))
+                if not a.get('ledger'):
+                    raise ValueError('The frozen grade is not ready')
+                ids = {r['file_id'] for q in a['questions'] for r in q.get('q_refs', []) + q.get('s_refs', [])}
                 sources = {}
                 for fid in ids:
                     f = await get(files, fid)
-                    sources[fid] = await run_in_threadpool(get_object, f["path"])
-                await jobs.update_one(
-                    {"id": id, "lease": lease}, {"$set": {"progress": 35}}
-                )
-                pdf = await run_in_threadpool(
-                    generate_report, a, lambda fid: sources[fid]
-                )
-                await jobs.update_one(
-                    {"id": id, "lease": lease}, {"$set": {"progress": 80}}
-                )
-                path = await run_in_threadpool(
-                    put_object, f"tejas/reports/{a['user_id']}/{id}.pdf", pdf
-                )
-                await jobs.update_one(
-                    {"id": id, "lease": lease}, {"$set": {"path": path}}
-                )
-                message = "Your complete results and matched solutions are ready."
+                    sources[fid] = await run_in_threadpool(get_object, f['path'])
+                await jobs.update_one({'id': id, 'lease': lease}, {'$set': {'progress': 35}})
+                pdf = await run_in_threadpool(generate_report, a, lambda fid: sources[fid])
+                await require_lease(j)
+                # Never overwrite another lease's report bytes. Only the fenced DB pointer wins.
+                path = await run_in_threadpool(put_object, f"tejas/reports/{a['user_id']}/{id}/{lease}.pdf", pdf)
+                await require_lease(j)
+                await jobs.update_one({'id': id, 'lease': lease, 'status': 'running', 'lease_until': {'$gt': now()}}, {'$set': {'path': path, 'progress': 80}})
+                message = 'Your complete results and matched solutions are ready.'
             else:
-                raise ValueError("Unknown job type")
-            await jobs.update_one(
-                {"id": id, "lease": lease},
-                {
-                    "$set": {
-                        "status": "done",
-                        "progress": 100,
-                        "message": message,
-                        "finished_at": now(),
-                    }
-                },
-            )
-            await audit(
-                j["user_id"], j["kind"].title() + " completed", j["set_id"], message
-            )
+                raise ValueError('Unknown job type')
+            await require_lease(j)
+            completed = await jobs.update_one({'id': id, 'lease': lease, 'status': 'running', 'lease_until': {'$gt': now()}}, {'$set': {'status': 'done', 'progress': 100, 'message': message, 'finished_at': now(), 'error': ''}})
+            if completed.modified_count:
+                await audit(j['user_id'], kind.title() + ' completed', j['set_id'], message)
         except Exception:
-            logging.exception("Tejas job failed: %s", id)
-            await jobs.update_one(
-                {"id": id, "lease": lease},
-                {
-                    "$set": {
-                        "status": "failed",
-                        "error": "Processing could not finish. Your original files and saved attempt are safe. Retry this job.",
-                        "progress": 0,
-                    }
-                },
-            )
+            logging.getLogger(__name__).exception('Background job failed (kind=%s)', kind)
+            retryable = j.get('attempts', 1) < JOB_ATTEMPTS
+            await jobs.update_one({'id': id, 'lease': lease, 'status': 'running'}, {'$set': {
+                'status': 'queued' if retryable else 'failed', 'progress': 0,
+                'next_run_at': now() + min(60, 2 ** j.get('attempts', 1)),
+                'error': 'Processing could not finish. Your originals and saved answers are safe.' + (' Retrying shortly.' if retryable else ' Retry after the cause is resolved.'),
+            }})
+    finally:
+        lane.discard(id)
 
 
-@router.get("/jobs/{id}")
-async def status(id: str, u=Depends(current)):
+@router.get('/jobs/{id}')
+async def status(id: str, bg: BackgroundTasks, u=Depends(current)):
     j = await get(jobs, id)
-    if j["user_id"] != u["id"] and not (
-        j["kind"] == "extract" and u["role"] in ["owner", "reviewer"]
-    ):
-        raise HTTPException(404, "Job not found.")
-    return {k: v for k, v in j.items() if k not in ["path", "payload", "lease"]}
+    if j['user_id'] != u['id'] and not (j['kind'] == 'extract' and u['role'] in ['owner', 'reviewer']):
+        raise HTTPException(404, 'Job not found.')
+    if j['status'] in ('queued', 'running'):
+        bg.add_task(run_job, id)
+    return public_job(j)
 
 
-@router.post("/jobs/{id}/retry")
+@router.post('/jobs/{id}/retry')
 async def retry_job(id: str, bg: BackgroundTasks, u=Depends(current)):
-    j = await status(id, u)
-    if j["status"] == "running" and j["lease_until"] > now():
-        raise HTTPException(
-            409, "This job is still processing. Check its progress shortly."
-        )
-    await jobs.update_one({"id": id}, {"$set": {"status": "queued", "error": ""}})
+    j = await status(id, bg, u)
+    if j['status'] == 'done':
+        return j
+    if j['status'] != 'failed':
+        raise HTTPException(409, 'This job is already queued or processing.', headers={'Retry-After': '3'})
+    updated = await jobs.find_one_and_update({'id': id, 'status': 'failed'}, {'$set': {'status': 'queued', 'error': '', 'attempts': 0, 'next_run_at': 0}}, return_document=ReturnDocument.AFTER)
+    if not updated:
+        raise HTTPException(409, 'Another retry already queued this job.')
     bg.add_task(run_job, id)
-    return {"id": id, "status": "queued"}
+    return public_job(updated)
 
 
-@router.get("/jobs/{id}/download")
+@router.get('/jobs/{id}/download')
 async def download(id: str, u=Depends(current)):
     j = await get(jobs, id)
-    if j["kind"] != "report" or j["user_id"] != u["id"]:
-        raise HTTPException(404, "Report not found.")
-    if j["status"] != "done":
-        raise HTTPException(
-            409, "The report is not ready yet. Retry generation if needed."
-        )
-    return Response(
-        await run_in_threadpool(get_object, j["path"]),
-        media_type="application/pdf",
-        headers={
-            "Content-Disposition": 'attachment; filename="Tejas-results-and-solutions.pdf"'
-        },
-    )
+    if j['kind'] != 'report' or j['user_id'] != u['id']:
+        raise HTTPException(404, 'Report not found.')
+    if j['status'] != 'done':
+        raise HTTPException(409, 'The report is not ready yet.', headers={'Retry-After': '3'})
+    return Response(await run_in_threadpool(get_object, j['path']), media_type='application/pdf', headers={'Content-Disposition': 'attachment; filename="Tejas-results-and-solutions.pdf"', 'Cache-Control': 'private, no-store'})
 
 
 async def maintenance():
-    from .attempts import finalize
-
-    expired = (
-        await attempts.find(
-            {"status": "active", "deadline": {"$gt": 0, "$lte": now()}}, {"id": 1}
-        )
-        .limit(1000)
-        .to_list(1000)
-    )
+    from .attempts import finalize, ensure_grade
+    expired = await attempts.find({'status': 'active', 'deadline': {'$gt': 0, '$lte': now()}}, {'id': 1}).limit(1000).to_list(1000)
     for a in expired:
-        await finalize(a["id"], "time_limit")
-    pending = (
-        await jobs.find(
-            {
-                "$or": [
-                    {"status": "queued"},
-                    {"status": "running", "lease_until": {"$lt": now()}},
-                ]
-            },
-            {"id": 1},
-        )
-        .limit(10)
-        .to_list(10)
-    )
-    for j in pending:
-        await run_job(j["id"])
-    await db.tejas_operations.update_one(
-        {"id": "maintenance"},
-        {
-            "$set": {
-                "last_run": now(),
-                "expired": len(expired),
-                "recovered_jobs": len(pending),
-            }
-        },
-        upsert=True,
-    )
+        await finalize(a['id'], 'time_limit')
+    # Recover a crash after durable close but before enqueue, including pre-upgrade submissions.
+    outbox = await attempts.find({'status': 'completed', 'grading_status': {'$nin': ['ready']}}, {'id': 1, 'user_id': 1, 'set_id': 1, 'status': 1}).limit(1000).to_list(1000)
+    for a in outbox:
+        await ensure_grade(a)
+    # Exhausted crashed workers must become visibly failed, not running forever.
+    await jobs.update_many({'status': 'running', 'lease_until': {'$lt': now()}, 'attempts': {'$gte': JOB_ATTEMPTS}}, {'$set': {'status': 'failed', 'error': 'Worker recovery budget exhausted. Saved data is safe; retry after resolving the cause.'}})
+    selected = []
+    for kind, capacity in LANE_LIMITS.items():
+        rows = await jobs.find({'kind': kind, '$and': [
+            {'$or': [{'status': 'queued'}, {'status': 'running', 'lease_until': {'$lt': now()}}]},
+            {'$or': [{'next_run_at': {'$lte': now()}}, {'next_run_at': {'$exists': False}}]},
+        ]}, {'id': 1}).sort('created_at', 1).limit(capacity).to_list(capacity)
+        selected.extend(rows)
+    await asyncio.gather(*(run_job(j['id']) for j in selected))
+    await db.tejas_operations.update_one({'id': 'maintenance'}, {'$set': {'last_run': now(), 'expired': len(expired), 'outbox_checked': len(outbox), 'recovered_jobs': len(selected)}}, upsert=True)
 
 
-@router.post("/cron/maintenance")
+@router.post('/cron/maintenance')
 async def cron(request: Request, bg: BackgroundTasks):
     # Cron endpoints must ack 2xx immediately; enqueue/background the actual work.
-    expected = os.environ.get("WEBHOOK_CRON_SECRET", "")
-    provided = request.headers.get("authorization", "")
-    if not expected or not secrets.compare_digest(provided, "Bearer " + expected):
-        raise HTTPException(401, "Unauthorized")
+    expected = os.environ.get('WEBHOOK_CRON_SECRET', '')
+    if not expected or not secrets.compare_digest(request.headers.get('authorization', ''), 'Bearer ' + expected):
+        raise HTTPException(401, 'Unauthorized')
     try:
         body = await request.json()
-        rid = request.headers.get("x-webhook-id") or body.get("run_id")
-        if (
-            not isinstance(body, dict)
-            or body.get("event") != "schedule.triggered"
-            or not rid
-        ):
+        if not isinstance(body, dict):
+            raise ValueError()
+        rid = request.headers.get('x-webhook-id') or body.get('run_id')
+        if body.get('event') != 'schedule.triggered' or not isinstance(rid, str) or not 1 <= len(rid) <= 200:
             raise ValueError()
     except Exception:
-        raise HTTPException(400, "Invalid schedule envelope")
+        raise HTTPException(400, 'Invalid schedule envelope')
     try:
-        await db.tejas_cron_receipts.insert_one({"_id": rid, "at": now()})
+        await db.tejas_cron_receipts.insert_one({'_id': rid, 'at': now()})
     except DuplicateKeyError:
-        return {"accepted": True, "duplicate": True}
+        return {'accepted': True, 'duplicate': True}
     bg.add_task(maintenance)
-    return {"accepted": True}
+    return {'accepted': True}

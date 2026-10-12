@@ -11,7 +11,8 @@ router = APIRouter(prefix="/api", tags=["Score corrections"])
 
 
 async def freeze_ledger(a):
-    result = score_attempt(a)
+    from starlette.concurrency import run_in_threadpool
+    result = await run_in_threadpool(score_attempt, a)
     fields = [
         "id",
         "response",
@@ -40,7 +41,7 @@ async def freeze_ledger(a):
     await db.tejas_ledgers.update_one(
         {"id": a["id"]}, {"$setOnInsert": ledger}, upsert=True
     )
-    return ledger
+    return await db.tejas_ledgers.find_one({"id": a["id"]}, {"_id": 0})
 
 
 async def with_grade(a, version=None):
@@ -66,9 +67,13 @@ async def run_regrade(job):
     s = job["payload"]["set_snapshot"]
     latest = {q["id"]: q for q in s["questions"]}
     created = skipped = 0
+    from .jobs import require_lease
+    from starlette.concurrency import run_in_threadpool
     async for record in attempts.find(
-        {"set_id": s["id"], "status": "completed", "version": {"$lt": s["version"]}}
+        {"set_id": s["id"], "status": "completed", "version": {"$lt": s["version"]}},
+        {"_id": 0, "command_receipts": 0, "response_schema": 0, "start_receipts": 0},
     ).batch_size(50):
+        await require_lease(job)
         a = await hydrate(record)
         qs = []
         compatible = True
@@ -109,7 +114,7 @@ async def run_regrade(job):
         graded["questions"] = qs
         graded.pop("ledger", None)
         graded["key_version"] = s["version"]
-        result = score_attempt(graded)
+        result = await run_in_threadpool(score_attempt, graded)
         pack_id = await seal(qs)
         gid = f"{a['id']}-key-{s['version']}"
         fields = [
@@ -134,6 +139,7 @@ async def run_regrade(job):
             "rows": [{k: q.get(k) for k in fields} for q in result["questions"]],
             "engine_version": 1,
         }
+        await require_lease(job)
         await db.tejas_score_versions.update_one(
             {"id": gid},
             {

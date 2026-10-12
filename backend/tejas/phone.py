@@ -48,7 +48,8 @@ async def access(data: PhoneInput, response: Response):
     )
     if limit["count"] > 30:
         raise HTTPException(
-            429, "Too many requests for this number. Please try again in a few minutes."
+            429, "Too many requests for this number. Please try again in a few minutes.",
+            headers={"Retry-After": str(max(1, int((window + 1) * 600 - now()) + 1))},
         )
     profile = {
         "id": uid(),

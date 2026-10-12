@@ -412,15 +412,19 @@ def question_issues(q, exam):
     return issues
 
 
-async def validate_refs(s, q):
+async def validate_refs(s, q, source_map=None):
+    from .derivatives import render_crop
+    if source_map is None:
+        source_map = {}
     for key in ["q_refs", "s_refs"]:
         for r in q.get(key, []):
             if r.get("file_id") not in s.get("file_ids", []):
                 raise HTTPException(400, "Source region must belong to this set.")
-            f = await get(files, r["file_id"])
-            raw = await run_in_threadpool(get_object, f["path"])
+            if r["file_id"] not in source_map:
+                source_map[r["file_id"]] = await get(files, r["file_id"])
+            f = source_map[r["file_id"]]
             try:
-                await run_in_threadpool(crop_png, raw, r, 0.3)
+                await run_in_threadpool(render_crop, f, r, 0.3)
             except (ValueError, KeyError, TypeError):
                 raise HTTPException(
                     400, "Source region is invalid. Check page and coordinates."

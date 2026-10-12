@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -68,16 +68,18 @@ export default function StudioEditor() {
   const [subsetTitle, setSubsetTitle] = useState("");
   const [checks, setChecks] = useState({});
   const [crop, setCrop] = useState(false);
-  async function load(keep = true) {
+  const selection = useRef({ dirty, index: i });
+  selection.current = { dirty, index: i };
+  const load = useCallback(async (keep = true) => {
     const d = await api("/studio/sets/" + id);
     setS(d);
     setSettings(d);
-    if (!keep || !dirty)
+    if (!keep || !selection.current.dirty)
       setQ(
-        d.questions[Math.min(i, Math.max(d.questions.length - 1, 0))] || null,
+        d.questions[Math.min(selection.current.index, Math.max(d.questions.length - 1, 0))] || null,
       );
     return d;
-  }
+  }, [id]);
   useEffect(() => {
     if (tab === "Change history")
       api("/studio/profiles")
@@ -86,7 +88,7 @@ export default function StudioEditor() {
   }, [tab]);
   useEffect(() => {
     load(false).catch((e) => setError(e.message));
-  }, [id]);
+  }, [load]);
   useEffect(() => {
     if (!job || ["done", "failed"].includes(job.status)) return;
     const t = setInterval(
@@ -105,7 +107,7 @@ export default function StudioEditor() {
       1800,
     );
     return () => clearInterval(t);
-  }, [job]);
+  }, [job, load]);
   function change(k, v) {
     setQ({ ...q, [k]: v });
     setDirty(true);

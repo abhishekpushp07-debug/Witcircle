@@ -1,3 +1,19 @@
+# Current authoritative status — PDF v5 architecture alignment
+
+This section supersedes conflicting historical entries below. The active application is **Tejas**, React + FastAPI + MongoDB. Latest user choices: matte maroon (replaces teal/blue); phone-number-only student convenience login; separate staff access; update the rulebook from all five PDFs and harden code against the scale guidance.
+
+- Binding rules: `/app/docs/RULEBOOK_ARCHITECTURE_V5.md`; actual gaps: `/app/docs/GAP_MATRIX_PDF_TO_CODE.md`; reference capacity/infrastructure: `/app/docs/CAPACITY_AND_OPERATIONS.md`; precise evidence: `/app/docs/VERIFICATION_RECORD.md`
+- Completed application hardening: payload-bound durable save/start receipts; atomic submission seal + recoverable grading outbox; async grade/report work; per-process job lane/retry budgets and lease checks; immutable per-lease PDF output; compact history/visit reads; bounded Mongo pool waits; authorized crop caching; bounded JSON and atomic staff throttling; pending-grading UI and jittered client recovery/report retry
+- Frontend: matte maroon light/dark, Figtree/Roboto Mono, simplified Shadcn preflight, responsive navigation. Player, offline drafts/reconnect, submission, results and real PDF download tested. Phone entry does NOT verify number ownership
+- QA closure: 50 identified fixture sets withdrawn without deleting evidence. Original `tejas-paper-01` remains unchanged, 75 questions, status `review`; **no approved student paper is currently published**. Previous own attempts/reports remain available
+- Evidence: backend 27-check log, four scoped application fault tests, six JSON/throttle checks, browser iterations 21–22, post-withdrawal checks and clean frontend build. See the verification record for caveats; do not repeat overly broad conclusions from earlier subagent reports
+- **Not implemented/provisioned/qualified:** 20 isolated relational live cells, distributed admission/writer fencing and explicit-commit/drain protocol, multi-AZ write durability, separate worker fleet/parser sandbox, staff MFA/one-use grants, KMS-signed activation/Object Lock/CDN, regional restore qualification, 40–60 analytics, or a 500,000-concurrent-user load campaign
+- Current guarantee: a tested and hardened practice pilot, NOT full-PDF specification completion or production capacity certification. Infrastructure, DB-server administration, CI/CD and deployment were not modified. Environment connection values were preserved
+
+---
+## Historical notes (not current acceptance evidence)
+
+
 # PLAN IIT - JEE Advanced Paper Source Module
 
 ## STEP-1: Paper Source Module - FROZEN ✅
