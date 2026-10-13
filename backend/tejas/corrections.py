@@ -56,6 +56,8 @@ async def with_grade(a, version=None):
             404, "This score version is not available for this attempt."
         )
     out = copy.deepcopy(a)
+    out['original_summary'] = a['ledger']['summary']
+    out['original_ledger'] = copy.deepcopy(a['ledger'])
     out["questions"] = await unpack(grade["pack_id"])
     out["ledger"] = grade["ledger"]
     out["key_version"] = grade["key_version"]

@@ -30,13 +30,17 @@ export function useAttempt(id, user) {
   const persist = useCallback(() => {
     setPending({ ...drafts.current });
     try {
-      localStorage.setItem(storage, JSON.stringify(drafts.current));
+      const encoded = JSON.stringify(drafts.current);
+      if (localStorage.getItem(storage) !== encoded) {
+        localStorage.setItem(storage, encoded);
+        localStorage.setItem(storage.replace('tejas-draft-', 'tejas-draft-meta-'), JSON.stringify({title:data.current?.title,updated_at:Date.now(),attempt_id:id}));
+      }
     } catch {
       setError(
         "Browser storage is unavailable. Pending drafts cannot survive a refresh; stay connected.",
       );
     }
-  }, [storage]);
+  }, [storage, id]);
   const openResult = useCallback(
     () =>
       navigate(
@@ -58,7 +62,12 @@ export function useAttempt(id, user) {
       let stored = {};
       try {
         stored = JSON.parse(localStorage.getItem(storage) || "{}");
-      } catch {}
+        if (!stored || typeof stored !== 'object' || Array.isArray(stored) || Object.values(stored).some(v=>!v || typeof v.value !== 'string' || typeof v.request_id !== 'string' || !Number.isInteger(v.revision))) throw new Error('Invalid draft');
+      } catch {
+        conflictRef.current = true; setConflict(true);
+        setError('The local draft could not be read safely and has been preserved. Open My practice to inspect or explicitly discard it; it has not been scored.');
+        return;
+      }
       for (const [qid, v] of Object.entries(stored)) {
         if (d.answers[qid]?.request_id === v.request_id) delete stored[qid];
       }
@@ -285,6 +294,7 @@ export function useAttempt(id, user) {
       );
     const receipt = await post("/attempts/" + id + "/submit");
     localStorage.removeItem(storage);
+    localStorage.removeItem(storage.replace('tejas-draft-', 'tejas-draft-meta-'));
     navigate("/results/" + receipt.id);
   };
   return {

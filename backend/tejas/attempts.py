@@ -229,6 +229,10 @@ async def start(id: str, data: Start, u=Depends(current)):
         "mode": mode,
         "status": "active",
         "answers": {},
+        'first_answers': {},
+        'answer_history_version': 1,
+        'solution_events_version': 1,
+        'solution_opened': [],
         "started_at": now(),
         "deadline": 0,
         "parent_attempt": None,
@@ -355,9 +359,11 @@ async def results(id: str, bg: BackgroundTasks, score_version: str = "original",
         q["asset_count"] = len(q.get("q_refs", []))
         q["solution_asset_count"] = len(q.get("s_refs", []))
     from .insights import insights
+    from .analytics import build_analytics
     return {
         **attempt_view(a),
         **result,
+        'analytics': build_analytics(a, result),
         'insights': insights(result),
         "grade_versions": await db.tejas_score_versions.find(
             {"attempt_id": id, "user_id": u["id"]},
@@ -405,6 +411,24 @@ async def asset(
     )
 
 
+class SolutionConsulted(BaseModel):
+    question_id: str
+    recorded: bool
+
+
+@router.post('/attempts/{id}/questions/{qid}/solution-open', response_model=SolutionConsulted)
+async def solution_consulted(id: str, qid: str, u=Depends(current)):
+    a = await owned(id, u)
+    if a['status'] != 'completed' or a.get('competition_end', 0) > now():
+        raise HTTPException(403, 'Solutions are not released for this attempt yet.')
+    if not any(q['id'] == qid for q in a['questions']):
+        raise HTTPException(404, 'Question not found.')
+    if a.get('solution_events_version') != 1:
+        return SolutionConsulted(question_id=qid, recorded=False)
+    await attempts.update_one({'id':id,'user_id':u['id'],'status':'completed'}, {'$addToSet':{'solution_opened':qid}})
+    return SolutionConsulted(question_id=qid, recorded=True)
+
+
 @router.post("/attempts/{id}/retry")
 async def retry(id: str, data: dict, u=Depends(current)):
     from .corrections import with_grade
@@ -442,6 +466,8 @@ async def retry(id: str, data: dict, u=Depends(current)):
     if active:
         if active.get("parent_attempt") != id or (active.get("retry_fingerprint") and active["retry_fingerprint"] != retry_hash):
             raise HTTPException(409, "Finish your existing revision attempt before starting a different one.")
+        from .idempotency import bind_retry_alias
+        await bind_retry_alias(active, start_key, retry_hash)
         return {"id": active["id"]}
     a.update(
         {
@@ -457,6 +483,10 @@ async def retry(id: str, data: dict, u=Depends(current)):
             "mode": "retry",
             "status": "active",
             "answers": {},
+            'first_answers': {},
+            'answer_history_version': 1,
+            'solution_events_version': 1,
+            'solution_opened': [],
             "started_at": now(),
             "deadline": 0,
         }
@@ -478,8 +508,12 @@ async def retry(id: str, data: dict, u=Depends(current)):
         "sealed_at",
         "sealed_seq",
         "command_receipts",
+        'competition_end',
+        'competition_ranked',
     ]:
         a.pop(k, None)
+    a['start_request_keys'] = [start_key]
+    a['retry_receipts'] = {fingerprint(start_key): retry_hash}
     a["visited"] = []
     a["profile"] = await seal_profile(
         {
@@ -502,6 +536,8 @@ async def retry(id: str, data: dict, u=Depends(current)):
         )
         if not a or a.get("parent_attempt") != id or a.get("retry_fingerprint") != retry_hash:
             raise HTTPException(409, "A different start or revision request already used this identifier.")
+        from .idempotency import bind_retry_alias
+        await bind_retry_alias(a, start_key, retry_hash)
     await audit(
         u["id"],
         "Mistake retry started",

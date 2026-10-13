@@ -41,7 +41,7 @@ async def test_all_routes_contracts_and_schema_refs(http_client):
     operations = [(path, method, op) for path, methods in spec['paths'].items() for method, op in methods.items() if method in ('get','post','put','patch','delete')]
     actual = {(c.route.path, m.lower()) for c in app.state.route_contracts for m in c.route.methods}
     assert {(p,m) for p,m,_ in operations} == actual
-    assert len(operations) == 60
+    assert len(operations) == 61
     def check_refs(value):
         if isinstance(value, dict):
             if '$ref' in value:

@@ -44,6 +44,7 @@ class SetInput(BaseModel):
             "numeric_rule": "Exact integer value; signs and leading zeros accepted; up to 20 digits. No rounding.",
         }
     )
+    expected_revision: int | None = Field(default=None, ge=1)
     change_reason: str = Field(default="", max_length=1000)
 
 
@@ -98,7 +99,7 @@ def permitted(s, u=None):
                 or (u.get("phone") and u["phone"] in s.get("allowed_phones", []))
             )
         )
-    return True
+    return s.get('audience') == 'all'
 
 
 def summary(s):
@@ -160,6 +161,8 @@ async def studio_sets(u=Depends(staff)):
 
 @router.post("/studio/sets")
 async def create_set(data: SetInput, u=Depends(staff)):
+    if data.audience not in ('all', 'restricted'):
+        raise HTTPException(400, 'Select a supported audience.')
     if data.exam not in ["JEE Main", "BITSAT"]:
         raise HTTPException(400, "Choose JEE Main or BITSAT.")
     if data.profile_mode != "practice":
@@ -233,8 +236,12 @@ async def update_set(id: str, data: SetInput, u=Depends(staff)):
         from .phone import normalize_phone
 
         data.allowed_phones = [normalize_phone(p) for p in data.allowed_phones]
-    fields = {**data.model_dump(), "rules": valid_rules(data.rules), "status": "draft"}
-    await sets.update_one({"id": id}, {"$set": fields, "$inc": {"revision": 1}})
+    if data.expected_revision is not None and data.expected_revision != s['revision']:
+        raise HTTPException(409, 'Another editor changed this set. Reload before saving.')
+    fields = {**data.model_dump(exclude={'expected_revision'}), "rules": valid_rules(data.rules), "status": "draft"}
+    changed = await sets.update_one({"id": id, 'revision': s['revision']}, {"$set": fields, "$inc": {"revision": 1}})
+    if not changed.modified_count:
+        raise HTTPException(409, 'Another editor changed this set. Reload before saving.')
     await audit(
         u["id"],
         "Set rules / rights updated",
@@ -463,14 +470,16 @@ async def add_question(id: str, u=Depends(staff)):
         "solution_accessible_text": "",
         "review_note": "",
     }
-    await sets.update_one(
-        {"id": id},
+    changed = await sets.update_one(
+        {"id": id, 'revision': s['revision']},
         {
             "$push": {"questions": q},
             "$set": {"status": "draft"},
             "$inc": {"revision": 1},
         },
     )
+    if not changed.modified_count:
+        raise HTTPException(409, 'The draft changed. Reload before adding a question.')
     await audit(u["id"], "Question draft added", id)
     return q
 
@@ -518,10 +527,14 @@ async def edit_question(id: str, qid: str, data: dict, u=Depends(staff)):
     q["issues"] = question_issues(q, s["exam"])
     if s["status"] == "published" and not q["review_note"].strip():
         raise HTTPException(400, "A correction note is required for published content.")
-    await sets.update_one(
-        {"id": id, "questions.id": qid},
+    if data.get('expected_revision') is not None and data['expected_revision'] != s['revision']:
+        raise HTTPException(409, 'The draft changed. Your edits were not overwritten; reload before saving.')
+    changed = await sets.update_one(
+        {"id": id, "questions.id": qid, 'revision': s['revision']},
         {"$set": {"questions.$": q, "status": "review"}, "$inc": {"revision": 1}},
     )
+    if not changed.modified_count:
+        raise HTTPException(409, 'The draft changed while saving. Reload and reconcile your edits.')
     await audit(u["id"], f"Q{q['number']} draft corrected", id, q["review_note"])
     return q
 
@@ -572,6 +585,9 @@ async def approve_question(id: str, qid: str, u=Depends(staff)):
 async def publish(id: str, data: dict, u=Depends(owner)):
     require_capability(Capability.PUBLICATION)
     s = await get(sets, id)
+    if s.get('publication_pending'):
+        await archive_publication(s)
+        s.pop('publication_pending', None)
     if not data.get("confirm"):
         raise HTTPException(400, "Confirm publication for the specified audience.")
     if not all(
@@ -616,22 +632,22 @@ async def publish(id: str, data: dict, u=Depends(owner)):
     await seal_profile(s)
     for q in s["questions"]:
         await validate_refs(s, q)
-    s["version"] = s.get("version", 0) + 1
-    await db.tejas_versions.insert_one(
-        {**copy.deepcopy(s), "id": uid(), "set_id": id, "published_at": now()}
-    )
+    s['version'] = s.get('version', 0) + 1
+    snapshot = {k: copy.deepcopy(v) for k, v in s.items() if k not in ('publication_pending', '_id')}
+    snapshot.update(id=uid(), set_id=id, published_at=now(), status='published')
+    from bson import BSON
+    if len(BSON.encode({**s, 'publication_pending': snapshot})) > 14 * 1024 * 1024:
+        raise HTTPException(413, 'This publication exceeds the safe snapshot size. Split the test.')
     res = await sets.update_one(
-        {"id": id, "revision": s["revision"]},
-        {
-            "$set": {
-                "status": "published",
-                "version": s["version"],
-                "published_at": now(),
-            }
-        },
+        {'id': id, 'revision': s['revision']},
+        {'$set': {'status': 'published', 'version': s['version'],
+                  'published_at': snapshot['published_at'], 'publication_pending': snapshot},
+         '$inc': {'revision': 1}},
     )
     if not res.modified_count:
-        raise HTTPException(409, "Content changed during publication. Review it again.")
+        raise HTTPException(409, 'Content changed during publication. Review it again.')
+    # Only the CAS winner can archive. Its embedded outbox survives process failure.
+    await archive_publication({'id': id, 'publication_pending': snapshot})
     await audit(
         u["id"],
         "Set published",
@@ -639,6 +655,15 @@ async def publish(id: str, data: dict, u=Depends(owner)):
         f"Version {s['version']} | audience {s['audience']}",
     )
     return {"ok": True, "version": s["version"]}
+
+
+async def archive_publication(s):
+    """Idempotent archival of a winning, durably snapshotted publication only."""
+    snapshot = s.get('publication_pending')
+    if not snapshot:
+        return
+    await db.tejas_versions.update_one({'_id': snapshot['id']}, {'$setOnInsert': snapshot}, upsert=True)
+    await sets.update_one({'id': s['id'], 'publication_pending.id': snapshot['id']}, {'$unset': {'publication_pending': ''}})
 
 
 @router.post("/studio/sets/{id}/withdraw")

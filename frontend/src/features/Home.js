@@ -10,6 +10,7 @@ import {
   Empty,
   Badge,
 } from "../components/Shared";
+import { DraftRecoveryPanel } from '../components/offline/DraftRecoveryPanel';
 import { ReportButton } from "../components/ReportButton";
 export default function Home() {
   const { user } = useAuth();
@@ -82,6 +83,7 @@ export default function Home() {
               </Link>
             </div>
           ))}
+          <DraftRecoveryPanel userId={user.id} />
           <div className="subheading">
             <h2>
               <History size={22} /> Your attempt history

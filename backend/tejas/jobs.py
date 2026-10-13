@@ -18,7 +18,7 @@ _active = {kind: set() for kind in LANE_LIMITS}
 
 
 def public_job(j):
-    result = {k: v for k, v in j.items() if k not in ('_id', 'path', 'payload', 'lease')}
+    result = {k: v for k, v in j.items() if k not in ('_id', 'path', 'payload', 'lease', 'proposal')}
     if job_held(j.get('kind')) and j.get('status') != 'done':
         result.update({'processing_held': True, 'hold_code': 'capability_held', 'message': HOLD_MESSAGE})
     return result
@@ -53,7 +53,7 @@ async def require_lease(j):
         raise RuntimeError('Worker lease lost; output must not be published')
 
 
-async def run_job(id):
+async def run_job(id, drain=True):
     if not INLINE_JOBS:
         return
     header = await jobs.find_one({'id': id}, {'kind': 1})
@@ -78,6 +78,7 @@ async def run_job(id):
         if not j:
             return
         try:
+            output = {}
             if kind == 'grade':
                 from .corrections import freeze_ledger
                 a = await get(attempts, j['payload']['attempt_id'])
@@ -95,11 +96,14 @@ async def run_job(id):
                 sraw = await run_in_threadpool(get_object, sf['path'])
                 qs = await run_in_threadpool(build_questions, qraw, sraw, qf['id'], sf['id'], j['payload'].get('known_tejas', False))
                 await require_lease(j)
-                guard = {'id': j['set_id'], 'revision': j['payload']['revision']}
-                updated = await sets.update_one(guard, {'$set': {'questions': qs, 'status': 'review'}, '$inc': {'revision': 1}})
-                if not updated.modified_count:
-                    raise ValueError('Draft changed during extraction; reviewer edits preserved')
-                message = f'{len(qs)} draft questions extracted. Human review is required.'
+                # Legacy extraction may stage a proposal, never mutate academic content.
+                # Completion and proposal visibility share the job document's lease CAS.
+                # The unified importer is the supported organisation/publication path.
+                from bson import BSON
+                output = {'proposal': {'questions': qs, 'source_revision': j['payload']['revision']}}
+                if len(BSON.encode(output)) > 6 * 1024 * 1024:
+                    raise ValueError('Extraction proposal exceeds the safe size budget')
+                message = f'{len(qs)} questions staged privately; no test content was changed.'
             elif kind == 'regrade':
                 from .corrections import run_regrade
                 await require_lease(j)
@@ -125,7 +129,7 @@ async def run_job(id):
             else:
                 raise ValueError('Unknown job type')
             await require_lease(j)
-            completed = await jobs.update_one({'id': id, 'lease': lease, 'status': 'running', 'lease_until': {'$gt': now()}}, {'$set': {'status': 'done', 'progress': 100, 'message': message, 'finished_at': now(), 'error': ''}})
+            completed = await jobs.update_one({'id': id, 'lease': lease, 'status': 'running', 'lease_until': {'$gt': now()}}, {'$set': {'status': 'done', 'progress': 100, 'message': message, 'finished_at': now(), 'error': '', **output}})
             if completed.modified_count:
                 await audit(j['user_id'], kind.title() + ' completed', j['set_id'], message)
         except Exception:
@@ -138,6 +142,31 @@ async def run_job(id):
             }})
     finally:
         lane.discard(id)
+        if drain:
+            await drain_lane(kind)
+
+
+_draining = set()
+
+
+async def drain_lane(kind):
+    """Bounded release-triggered dispatch; platform maintenance remains crash recovery."""
+    if kind in _draining or job_held(kind) or not INLINE_JOBS:
+        return
+    _draining.add(kind)
+    try:
+        for _ in range(32):
+            if len(_active[kind]) >= LANE_LIMITS[kind]:
+                break
+            next_job = await jobs.find_one({'kind': kind, 'status': 'queued',
+                '$and': [{'$or': [{'next_run_at': {'$lte': now()}}, {'next_run_at': {'$exists': False}}]},
+                         {'$or': [{'attempts': {'$lt': JOB_ATTEMPTS}}, {'attempts': {'$exists': False}}]}]},
+                {'id': 1}, sort=[('created_at', 1)])
+            if not next_job:
+                break
+            await run_job(next_job['id'], drain=False)
+    finally:
+        _draining.discard(kind)
 
 
 @router.get('/jobs/{id}')
@@ -181,6 +210,10 @@ async def download(id: str, u=Depends(current)):
 
 async def maintenance():
     from .attempts import finalize, ensure_grade
+    from .content import archive_publication
+    pending = await sets.find({'publication_pending': {'$exists': True}}, {'id': 1, 'publication_pending': 1}).limit(50).to_list(50)
+    for s in pending:
+        await archive_publication(s)
     expired = await attempts.find({'status': 'active', 'deadline': {'$gt': 0, '$lte': now()}}, {'id': 1}).limit(1000).to_list(1000)
     for a in expired:
         await finalize(a['id'], 'time_limit')

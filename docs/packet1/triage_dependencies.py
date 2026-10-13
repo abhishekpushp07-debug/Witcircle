@@ -25,7 +25,9 @@ def main():
     python_path=EVIDENCE/'python-dependency-audit-current.json'
     if not python_path.exists():
         python_path=EVIDENCE/'python-dependency-audit.json'
-    js_path=EVIDENCE/'frontend-dependency-audit.jsonl'
+    js_path=EVIDENCE/'frontend-dependency-audit-current.jsonl'
+    if not js_path.exists():
+        js_path=EVIDENCE/'frontend-dependency-audit.jsonl'
     dependencies=json.loads(python_path.read_text())['dependencies']
     affected=[]; skipped=[]
     for dep in dependencies:

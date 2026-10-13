@@ -99,8 +99,7 @@ export function Header() {
               data-testid="logout"
               onClick={async () => {
                 try {
-                  await logout();
-                  nav("/");
+                  if (await logout()) nav("/");
                 } catch (e) {
                   toast.error(e.message);
                 }

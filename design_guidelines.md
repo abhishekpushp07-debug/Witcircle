@@ -670,5 +670,328 @@
     ]
   },
 
+  "results_analytics_offline_safety_addendum": {
+    "scope": {
+      "goal": "Extend existing Results with an Analytics Workspace + Offline Safety behaviors. This is an addendum only: preserve matte maroon theme (#5C0025), existing Results summary/review UI, and existing navigation. No new images. No decorative charts without evidence.",
+      "non_goals": [
+        "No redesign of Results header/summary cards.",
+        "No new global palette/typography changes.",
+        "No analytics values shown as 0 when telemetry is missing—must show ‘Unavailable’ with reason.",
+        "No cohort percentile/rank unless cohort size >= 100 (authoritative rule)."
+      ]
+    },
+
+    "information_architecture": {
+      "entry_point": {
+        "placement": "Inside existing Results page, add a new section below the current summary: ‘Analytics workspace’.",
+        "pattern": "Tabs (shadcn) with 3 tabs: Overview, Metrics ledger, Offline & drafts.",
+        "data_testids": {
+          "tabs": "results-analytics-tabs",
+          "tab_overview": "results-analytics-tab-overview",
+          "tab_ledger": "results-analytics-tab-ledger",
+          "tab_offline": "results-analytics-tab-offline"
+        }
+      },
+      "drillthrough_rule": {
+        "principle": "All analytics must drill through to existing question review (the canonical evidence). Do not create a parallel review UI.",
+        "interaction": "Clicking any metric row or chart point opens an Evidence Drawer with the exact question list filtered to the evidence set.",
+        "state_preservation": "Keep current tab + filters when opening/closing drawer. Do not navigate away unless user clicks ‘Open full review’."
+      }
+    },
+
+    "metric_registry_A01_A60": {
+      "principle": "Metrics are registered and displayed only if backed by stored telemetry. If missing, show ‘Unavailable’ and explain what evidence is required.",
+      "display_contract": {
+        "must_show": [
+          "metric_id (A01…A60)",
+          "metric_name",
+          "value OR Unavailable",
+          "unit",
+          "evidence_count (n)",
+          "time_window (attempt scope)",
+          "cohort_scope (if applicable)",
+          "last_computed_at"
+        ],
+        "never_show": [
+          "fake zeros",
+          "percentile/rank when cohort < 100",
+          "difficulty buckets unless difficulty tags are approved and present"
+        ]
+      },
+      "ui_modules": {
+        "overview_cards": {
+          "pattern": "A compact 2x2 grid of Cards on desktop, 1-column on mobile. Each card is a metric tile with a ‘View evidence’ link.",
+          "card_states": {
+            "available": "Show value + unit + n evidence.",
+            "unavailable": "Show ‘Unavailable’ + short reason + ‘What’s needed’ link opening Evidence Drawer in ‘Requirements’ mode."
+          },
+          "data_testids": {
+            "grid": "results-analytics-overview-grid",
+            "metric_card": "results-analytics-metric-card",
+            "metric_view_evidence": "results-analytics-metric-view-evidence-button"
+          }
+        },
+        "metrics_ledger": {
+          "pattern": "Table (shadcn) with sticky header inside ScrollArea. Rows are clickable if drillthrough is supported.",
+          "columns": [
+            "Metric",
+            "Value",
+            "Unit",
+            "Evidence (n)",
+            "Scope",
+            "Updated",
+            "Status"
+          ],
+          "row_affordance": "If drillable: show chevron icon + hover background. If not drillable: no chevron and cursor-default.",
+          "data_testids": {
+            "table": "results-analytics-ledger-table",
+            "row": "results-analytics-ledger-row",
+            "filter_input": "results-analytics-ledger-filter-input"
+          }
+        }
+      }
+    },
+
+    "evidence_drawer": {
+      "purpose": "Explain ‘why this metric is what it is’ with traceable evidence. Also used to explain why a metric is unavailable.",
+      "component": "Drawer (shadcn) on mobile; Dialog or Sheet on desktop (prefer Sheet if available; otherwise Dialog).",
+      "layout": {
+        "header": [
+          "Metric ID + name",
+          "Scope chips (Attempt, Subject, Topic, Time window)",
+          "Status badge (Available/Unavailable)",
+          "Actions: Copy link, Open full review"
+        ],
+        "body_sections": [
+          "Definition (plain language)",
+          "Calculation (short formula + assumptions)",
+          "Evidence list (questions) OR Requirements list (what telemetry is missing)",
+          "Notes (edge cases, exclusions)"
+        ]
+      },
+      "evidence_list": {
+        "pattern": "Use existing question list component if present; otherwise a Table/Card list with: Q#, outcome, time_spent, subject/topic tags, ‘Open’ button.",
+        "drillthrough": "Open button navigates to existing Results question review anchored to that question.",
+        "data_testids": {
+          "drawer": "results-evidence-drawer",
+          "copy_link": "results-evidence-copy-link-button",
+          "open_full_review": "results-evidence-open-full-review-button",
+          "evidence_list": "results-evidence-question-list",
+          "evidence_row": "results-evidence-question-row"
+        }
+      },
+      "accessibility": {
+        "rules": [
+          "Drawer/Dialog must include a title element (can be sr-only).",
+          "Focus trap must work; Esc closes.",
+          "Announce drawer open/close via aria-live polite region."
+        ]
+      }
+    },
+
+    "analytics_modules_allowed": {
+      "rule": "Only show modules when their required evidence exists. Otherwise show an empty state with ‘Unavailable’ and a reason.",
+      "modules": [
+        {
+          "id": "A-TimeAccuracy",
+          "name": "Accuracy vs Time",
+          "allowed_visual": "Scatter plot ONLY if per-question time_spent exists for enough questions; otherwise show table summary.",
+          "no_decorative_charts": "If fewer than 20 evidence points, prefer table/list over chart.",
+          "data_testids": {
+            "card": "results-analytics-accuracy-time-card",
+            "chart": "results-analytics-accuracy-time-chart",
+            "empty": "results-analytics-accuracy-time-empty"
+          }
+        },
+        {
+          "id": "A-SubjectBreakdown",
+          "name": "Subject breakdown",
+          "allowed_visual": "Stacked bars or simple table; must match existing subject taxonomy.",
+          "data_testids": {
+            "card": "results-analytics-subject-breakdown-card",
+            "table": "results-analytics-subject-breakdown-table"
+          }
+        },
+        {
+          "id": "A-TopicBreakdown",
+          "name": "Topic breakdown",
+          "allowed_visual": "Table first; optional bar chart if topic tags exist and are approved.",
+          "data_testids": {
+            "card": "results-analytics-topic-breakdown-card",
+            "table": "results-analytics-topic-breakdown-table"
+          }
+        }
+      ]
+    },
+
+    "cohort_and_competition_rules": {
+      "cohort_minimum": 100,
+      "rule": "Any cohort-based metric (percentile, rank, cohort average) must be hidden or marked Unavailable unless cohort_size >= 100.",
+      "ui_copy": {
+        "unavailable_example": "Unavailable: cohort size is below 100 for this test window."
+      },
+      "data_testids": {
+        "cohort_badge": "results-analytics-cohort-badge",
+        "cohort_unavailable": "results-analytics-cohort-unavailable"
+      }
+    },
+
+    "offline_safety_and_draft_recovery": {
+      "principle": "Never lose a student’s answers. Offline-first behavior must be explicit, testable, and reversible.",
+      "player_save_states": {
+        "states": [
+          {
+            "key": "synced",
+            "label": "Saved",
+            "meaning": "Server has confirmed receipt.",
+            "ui": "Green text + timestamp."
+          },
+          {
+            "key": "pending",
+            "label": "Saving…",
+            "meaning": "Queued locally; will sync when online.",
+            "ui": "Amber text + ‘Offline safe’ hint."
+          },
+          {
+            "key": "offline",
+            "label": "Offline",
+            "meaning": "No network; answers stored locally.",
+            "ui": "Amber badge + ‘We’ll sync automatically’."
+          },
+          {
+            "key": "conflict",
+            "label": "Needs review",
+            "meaning": "Local draft differs from server state.",
+            "ui": "Red badge + ‘Resolve’ button opens dialog."
+          }
+        ],
+        "data_testids": {
+          "save_status": "player-save-status",
+          "save_status_timestamp": "player-save-status-timestamp",
+          "resolve_conflict": "player-save-conflict-resolve-button"
+        }
+      },
+      "draft_quarantine_recovery": {
+        "rule": "If an attempt ends unexpectedly (tab close/crash), keep a quarantined draft scoped to the profile until user decides.",
+        "entry_points": [
+          "On next app open: show a non-blocking banner ‘Recovered draft available’.",
+          "On Results page: show ‘Offline & drafts’ tab with a Drafts list."
+        ],
+        "drafts_list": {
+          "fields": ["Test", "Attempt started", "Last saved locally", "Questions answered", "Actions"],
+          "actions": ["Resume", "Discard"],
+          "data_testids": {
+            "banner": "draft-recovery-banner",
+            "open": "draft-recovery-open-button",
+            "list": "draft-recovery-list",
+            "resume": "draft-recovery-resume-button",
+            "discard": "draft-recovery-discard-button"
+          }
+        }
+      },
+      "profile_scoped_signout_dialog": {
+        "rule": "On sign out, if there is any pending draft/unsynced answers for this profile, show a blocking dialog: Keep draft or Discard.",
+        "component": "AlertDialog (shadcn)",
+        "copy": {
+          "title": "Unsynced answers found",
+          "body": "You have answers saved on this device that haven’t synced yet. Choose what to do before signing out.",
+          "keep": "Keep draft on this device",
+          "discard": "Discard draft and sign out"
+        },
+        "data_testids": {
+          "dialog": "signout-draft-dialog",
+          "keep": "signout-draft-keep-button",
+          "discard": "signout-draft-discard-button"
+        }
+      }
+    },
+
+    "typed_option_math_fix": {
+      "goal": "Ensure typed options (A/B/C/D) render math consistently and do not break layout on mobile.",
+      "rules": [
+        "Options must wrap: use existing .math-text with overflow-wrap:anywhere.",
+        "KaTeX blocks must be horizontally scrollable (already via .katex-display overflow-x:auto).",
+        "Never shrink option index below 24px; keep touch target >= 44px height.",
+        "If option contains long inline math, allow line breaks at operators where possible (KaTeX default) and provide horizontal scroll fallback."
+      ],
+      "data_testids": {
+        "option": "question-option",
+        "option_math": "question-option-math"
+      }
+    },
+
+    "components": {
+      "component_path": {
+        "shadcn_primary": [
+          "/app/frontend/src/components/ui/tabs.jsx",
+          "/app/frontend/src/components/ui/card.jsx",
+          "/app/frontend/src/components/ui/table.jsx",
+          "/app/frontend/src/components/ui/scroll-area.jsx",
+          "/app/frontend/src/components/ui/badge.jsx",
+          "/app/frontend/src/components/ui/drawer.jsx",
+          "/app/frontend/src/components/ui/dialog.jsx",
+          "/app/frontend/src/components/ui/alert-dialog.jsx",
+          "/app/frontend/src/components/ui/button.jsx",
+          "/app/frontend/src/components/ui/input.jsx",
+          "/app/frontend/src/components/ui/separator.jsx",
+          "/app/frontend/src/components/ui/skeleton.jsx",
+          "/app/frontend/src/components/ui/tooltip.jsx",
+          "/app/frontend/src/components/ui/sonner.jsx"
+        ]
+      },
+      "custom_components_to_create_js": [
+        {
+          "name": "ResultsAnalyticsWorkspace",
+          "file": "frontend/src/components/results/ResultsAnalyticsWorkspace.js",
+          "purpose": "Tabs wrapper + Overview cards + Metrics ledger + Offline & drafts tab.",
+          "data_testids": ["results-analytics-tabs", "results-analytics-ledger-table"]
+        },
+        {
+          "name": "MetricEvidenceDrawer",
+          "file": "frontend/src/components/results/MetricEvidenceDrawer.js",
+          "purpose": "Evidence Drawer/Sheet with definition, calculation, evidence list, and requirements mode.",
+          "data_testids": ["results-evidence-drawer", "results-evidence-question-list"]
+        },
+        {
+          "name": "DraftRecoveryPanel",
+          "file": "frontend/src/components/offline/DraftRecoveryPanel.js",
+          "purpose": "List quarantined drafts + resume/discard actions.",
+          "data_testids": ["draft-recovery-list", "draft-recovery-resume-button"]
+        },
+        {
+          "name": "SignoutDraftGuardDialog",
+          "file": "frontend/src/components/auth/SignoutDraftGuardDialog.js",
+          "purpose": "Blocking keep/discard dialog when signing out with pending drafts.",
+          "data_testids": ["signout-draft-dialog", "signout-draft-keep-button", "signout-draft-discard-button"]
+        }
+      ]
+    },
+
+    "data_testid_minimums": {
+      "rule": "All interactive and key informational elements must include data-testid.",
+      "minimum": [
+        "results-analytics-tabs",
+        "results-analytics-ledger-table",
+        "results-evidence-drawer",
+        "results-evidence-open-full-review-button",
+        "results-analytics-cohort-unavailable",
+        "draft-recovery-banner",
+        "draft-recovery-resume-button",
+        "signout-draft-dialog",
+        "player-save-status"
+      ]
+    },
+
+    "instructions_to_main_agent": [
+      "This is an addendum only—do not restyle existing Results components; only add the Analytics workspace section and drawers/dialogs.",
+      "Implement metric registry A01–A60 as a data-driven list; render only metrics with evidence. Missing telemetry must show ‘Unavailable’ with reason.",
+      "Cohort-based metrics must enforce cohort_size >= 100; otherwise hide/mark Unavailable.",
+      "All analytics drillthrough must open Evidence Drawer and link to existing question review; do not duplicate review UI.",
+      "Offline safety: implement quarantined draft recovery + profile-scoped signout guard dialog; never discard drafts silently.",
+      "All new React components must be .js (not .tsx) and include data-testid on buttons/inputs/tabs/rows and key values.",
+      "No new images; no decorative charts without evidence; prefer tables when data is sparse."
+    ]
+  },
+
   "general_ui_ux_design_guidelines": "    - You must **not** apply universal transition. Eg: `transition: all`. This results in breaking transforms. Always add transitions for specific interactive elements like button, input excluding transforms\n    - You must **not** center align the app container, ie do not add `.App { text-align: center; }` in the css file. This disrupts the human natural reading flow of text\n   - NEVER: use AI assistant Emoji characters like`🤖🧠💭💡🔮🎯📚🎭🎬🎪🎉🎊🎁🎀🎂🍰🎈🎨🎰💰💵💳🏦💎🪙💸🤑📊📈📉💹🔢🏆🥇 etc for icons. Always use **FontAwesome cdn** or **lucid-react** library already installed in the package.json\n\n **GRADIENT RESTRICTION RULE**\nNEVER use dark/saturated gradient combos (e.g., purple/pink) on any UI element.  Prohibited gradients: blue-500 to purple 600, purple 500 to pink-500, green-500 to blue-500, red to pink etc\nNEVER use dark gradients for logo, testimonial, footer etc\nNEVER let gradients cover more than 20% of the viewport.\nNEVER apply gradients to text-heavy content or reading areas.\nNEVER use gradients on small UI elements (<100px width).\nNEVER stack multiple gradient layers in the same viewport.\n\n**ENFORCEMENT RULE:**\n    • Id gradient area exceeds 20% of viewport OR affects readability, **THEN** use solid colors\n\n**How and where to use:**\n   • Section backgrounds (not content backgrounds)\n   • Hero section header content. Eg: dark to light to dark color\n   • Decorative overlays and accent elements only\n   • Hero section with 2-3 mild color\n   • Gradients creation can be done for any angle say horizontal, vertical or diagonal\n\n- For AI chat, voice application, **do not use purple color. Use color like light green, ocean blue, peach orange etc**\n\n</Font Guidelines>\n\n- Every interaction needs micro-animations - hover states, transitions, parallax effects, and entrance animations. Static = dead. \n   \n- Use 2-3x more spacing than feels comfortable. Cramped designs look cheap.\n\n- Subtle grain textures, noise overlays, custom cursors, selection states, and loading animations: separates good from extraordinary.\n   \n- Before generating UI, infer the visual style from the problem statement (palette, contrast, mood, motion) and immediately instantiate it by setting global design tokens (primary, secondary/accent, background, foreground, ring, state colors), rather than relying on any library defaults. Don't make the background dark as a default step, always understand problem first and define colors accordingly\n    Eg: - if it implies playful/energetic, choose a colorful scheme\n           - if it implies monochrome/minimal, choose a black–white/neutral scheme\n\n**Component Reuse:**\n\t- Prioritize using pre-existing components from src/components/ui when applicable\n\t- Create new components that match the style and conventions of existing components when needed\n\t- Examine existing components to understand the project's component patterns before creating new ones\n\n**IMPORTANT**: Do not use HTML based component like dropdown, calendar, toast etc. You **MUST** always use `/app/frontend/src/components/ui/ ` only as a primary components as these are modern and stylish component\n\n**Best Practices:**\n\t- Use Shadcn/UI as the primary component library for consistency and accessibility\n\t- Import path: ./components/[component-name]\n\n**Export Conventions:**\n\t- Components MUST use named exports (export const ComponentName = ...)\n\t- Pages MUST use default exports (export default function PageName() {...})\n\n**Toasts:**\n  - Use `sonner` for toasts\"\n  - Sonner component are located in `/app/src/components/ui/sonner.tsx`\n\nUse 2–4 color gradients, subtle textures/noise overlays, or CSS-based noise to avoid flat visuals."
 }

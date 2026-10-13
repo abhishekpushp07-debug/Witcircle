@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../lib/auth";
 import { Logo, Loading, ErrorBox, Badge, Confirm } from "../components/Shared";
-import { QuestionContent } from "../components/QuestionContent";
+import { QuestionContent, MathText } from "../components/QuestionContent";
 import { useAttempt } from "./practice/useAttempt";
 
 export default function Player() {
@@ -323,11 +323,11 @@ export default function Player() {
                         data-testid={"player-option-" + key}
                       />
                       <span className="option-index">{key}</span>
-                      <span>
-                        {q.render_mode === "source"
+                      <div className="option-copy" data-testid={'player-option-math-' + key}>
+                        {q.render_mode === 'source'
                           ? `Option ${key} (as shown above)`
-                          : value}
-                      </span>
+                          : <MathText text={value} />}
+                      </div>
                       {current.value === key && (
                         <span className="selected-tick">
                           <Check size={16} />

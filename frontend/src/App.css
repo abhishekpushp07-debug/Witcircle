@@ -1,3 +1,46 @@
+/* Guide04 analytics + offline safety: matte-maroon tokens, no charted guesses. */
+:root { --analytics-modal-max: 56rem; --analytics-dialog-height: 86dvh; --analytics-value-size: 2rem; }
+.analytics-workspace { margin-block: var(--space-10); min-width: 0; }
+.analytics-workspace h2 { font-size: var(--text-2xl); letter-spacing: -0.035em; }
+.analytics-overview { display: grid; grid-template-columns: minmax(0,1fr); gap: var(--space-4); margin-top: var(--space-5); }
+.metric-tile { display: flex; align-items: start; flex-direction: column; gap: var(--space-3); }
+.metric-tile h3, .metric-row h3 { font-size: var(--text-base); font-weight: 600; }
+.metric-value { display: block; font-size: var(--analytics-value-size); color: var(--brand-text); line-height: 1.3; overflow-wrap: anywhere; }
+.metric-value small { margin-left: var(--space-2); font-size: var(--text-sm); color: var(--text-muted); font-weight: 400; }
+.metric-tile button { padding-left: 0; color: var(--brand-text); margin-top: auto; }
+.analytics-workspace [role=tablist] { height: auto; display: inline-flex; flex-wrap: wrap; max-width: 100%; gap: var(--space-1); }
+.analytics-workspace button { min-height: var(--touch-target); white-space: normal; }
+.analytics-workspace [role=tab][data-state=active] { color: var(--brand-text); background: var(--surface-card); box-shadow: inset 0 -2px var(--brand-text); }
+.metric-search { display: flex; align-items: center; gap: var(--space-3); margin-block: var(--space-5); }
+.metric-search input { background: var(--surface-card); color: var(--ink); }
+.metrics-ledger { display: grid; border: 1px solid var(--line); border-radius: var(--radius-card); overflow: hidden; }
+.metric-row { display: flex; flex-direction: column; justify-content: space-between; gap: var(--space-4); padding: var(--space-5); border-bottom: 1px solid var(--line); background: var(--surface-card); overflow-wrap: anywhere; min-width: 0; }
+.metric-row:last-child { border-bottom: 0; }
+.metric-row .import-section-label { margin-bottom: var(--space-2); }
+.metric-row h3 { margin-bottom: var(--space-2); }
+.metric-row-value { display: flex; flex-direction: column; align-items: start; gap: var(--space-2); font-size: var(--text-sm); }
+.metric-row-value small { color: var(--text-muted); }
+.metric-evidence-dialog { max-width: min(var(--analytics-modal-max),calc(100vw - var(--space-8))); max-height: var(--analytics-dialog-height); display: flex; flex-direction: column; overflow: hidden; background: var(--surface-card); color: var(--ink); }
+.metric-evidence-body { overflow-y: auto; min-height: 0; padding-right: var(--space-2); font-size: var(--text-sm); line-height: 1.6; overflow-wrap: anywhere; }
+.metric-evidence-body h4 { font-size: var(--text-base); font-weight: 600; margin-block: var(--space-5) var(--space-2); }
+.metric-question-evidence { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.metric-question-evidence button { min-height: var(--touch-target); }
+.metric-breakdown { display: grid; gap: var(--space-2); margin-top: var(--space-4); padding: var(--space-4); background: var(--surface-alt); border-radius: var(--radius-sm); }
+.metric-breakdown > div { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-2); }
+.draft-recovery { margin-block: var(--space-6); }
+.draft-row { padding: var(--space-4); border: 1px solid var(--line); border-radius: var(--radius-sm); font-size: var(--text-sm); overflow-wrap: anywhere; }
+.draft-row small { color: var(--text-muted); font-size: var(--text-xs); }
+.draft-row button { min-height: var(--touch-target); white-space: normal; }
+.signout-draft-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.signout-draft-actions button { min-height: var(--touch-target); white-space: normal; }
+.answer-option .option-copy { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
+.answer-option .option-copy .math-text { min-width: 0; }
+.review-option-math { display: flex; gap: var(--space-3); min-width: 0; overflow-wrap: anywhere; }
+.review-option-math > .math-text { min-width: 0; }
+.review-question { scroll-margin-top: var(--space-24); }
+@media (min-width: 640px) { .analytics-overview { grid-template-columns: repeat(2,minmax(0,1fr)); } .metric-row { flex-direction: row; } .metric-row > div:first-child { flex: 1; } .metric-row-value { align-items: end; flex-basis: 30%; } }
+
+
 :root {
   --page: #F8FAFC;
   --surface-alt: #FBF7F5;

@@ -99,6 +99,10 @@ async def save_answer(id: str, qid: str, data: AnswerWrite, u=Depends(current)):
                   'command_count': {'$add': [{'$ifNull': ['$command_count', 0]}, 1]}}},
         {'$set': {f'answers.{qid}.accepted_at': epoch, f'answers.{qid}.server_seq': '$server_seq',
                   'visited': {'$setUnion': [{'$ifNull': ['$visited', []]}, [qid]]}}},
+        {'$set': {f'first_answers.{qid}': {'$cond': [
+            {'$ne': [f'$answers.{qid}.normalized_value', '']},
+            {'$ifNull': [f'$first_answers.{qid}', f'$answers.{qid}']},
+            {'$ifNull': [f'$first_answers.{qid}', '$$REMOVE']}]} }},
         {'$set': {f'command_receipts.{key}': {'payload_hash': {'$literal': body_hash}, 'accepted': f'$answers.{qid}'}}},
     ], projection={'_id': 0, f'answers.{qid}': 1}, return_document=ReturnDocument.AFTER)
     if not updated:

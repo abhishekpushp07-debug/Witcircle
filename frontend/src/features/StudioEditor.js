@@ -132,7 +132,7 @@ export default function StudioEditor() {
   }
   async function saveQuestion() {
     return perform(async () => {
-      const saved = await put(`/studio/sets/${id}/questions/${q.id}`, questionPayload(q));
+      const saved = await put(`/studio/sets/${id}/questions/${q.id}`, { ...questionPayload(q), expected_revision: s.revision });
       setQ(saved);
       setDirty(false);
       const d = await api("/studio/sets/" + id);
@@ -142,7 +142,7 @@ export default function StudioEditor() {
   }
   async function saveSettings() {
     return perform(async () => {
-      await put("/studio/sets/" + id, settingsPayload(settings));
+      await put("/studio/sets/" + id, { ...settingsPayload(settings), expected_revision: settings.revision });
       await load();
     }, "Rules and rights saved. Publication is a separate action.");
   }

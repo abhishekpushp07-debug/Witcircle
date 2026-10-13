@@ -2136,6 +2136,78 @@
         ]
       }
     },
+    "/api/attempts/{id}/questions/{qid}/solution-open": {
+      "post": {
+        "tags": [
+          "Practice"
+        ],
+        "summary": "Solution Consulted",
+        "operationId": "solution_consulted_api_attempts__id__questions__qid__solution_open_post",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          },
+          {
+            "name": "qid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Qid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SolutionConsulted"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "x-owner-policy": "attempt_owner_released_solutions",
+        "x-role-scope": [
+          "authenticated_profile"
+        ],
+        "x-workload-tier": "normal",
+        "x-idempotency-mode": "set_membership_idempotent",
+        "x-body-limit-bytes": 4096,
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmptyPayload"
+              }
+            }
+          }
+        },
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
+      }
+    },
     "/api/attempts/{id}/retry": {
       "post": {
         "tags": [
@@ -4253,6 +4325,18 @@
             "type": "object",
             "title": "Rules"
           },
+          "expected_revision": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Revision"
+          },
           "change_reason": {
             "type": "string",
             "maxLength": 1000,
@@ -4304,6 +4388,24 @@
           "measurement"
         ],
         "title": "Slo"
+      },
+      "SolutionConsulted": {
+        "properties": {
+          "question_id": {
+            "type": "string",
+            "title": "Question Id"
+          },
+          "recorded": {
+            "type": "boolean",
+            "title": "Recorded"
+          }
+        },
+        "type": "object",
+        "required": [
+          "question_id",
+          "recorded"
+        ],
+        "title": "SolutionConsulted"
       },
       "Stage": {
         "properties": {
@@ -4690,6 +4792,19 @@
       "SetPayload": {
         "additionalProperties": false,
         "properties": {
+          "expected_revision": {
+            "anyOf": [
+              {
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Expected Revision"
+          },
           "title": {
             "maxLength": 160,
             "minLength": 3,
@@ -4848,6 +4963,19 @@
       "QuestionPayload": {
         "additionalProperties": false,
         "properties": {
+          "expected_revision": {
+            "anyOf": [
+              {
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Expected Revision"
+          },
           "number": {
             "default": 1,
             "maximum": 10000,

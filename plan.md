@@ -14,6 +14,13 @@ Deliver a premium landing page + working practice MVP for **JEE Main** and **BIT
   - **Offline answer recovery**: student drafts persist locally; server-acknowledged responses are scored; late/unacknowledged drafts are disclosed.
   - **No key/solution leakage during an active attempt** (including via direct URL guessing).
 
+### Binding communication preference (critical)
+
+- **Do not ask the user for interim review** before “final product”.
+- **No routine confirmations/menus** asking the user to pick next features.
+- Progress updates may be informational, but **not approval checkpoints**.
+- Only **critical, irreversible, access-impacting actions** (e.g., staff credential rotation + session revocation) may require a single explicit execution-window authorization.
+
 ### LATEST user priority (product-first execution) — CURRENT STATUS: COMPLETED (bounded product feature phase)
 
 Stop repeated confirmation/checkpoint interruptions and deliver a **simple unified owner workflow**:
@@ -29,13 +36,14 @@ Stop repeated confirmation/checkpoint interruptions and deliver a **simple unifi
 5) Deliver **world-class analysis**, **competitions**, and leaderboards—**evidence-based** with correct “unavailable/processing” states.
 
 **Implemented and verified in this phase** (does *not* imply whole-spec completion):
+
 - Unified PDF + XLSX importer in Studio, templates + strict row errors.
-- Sandbox isolation retained (chroot + low UID + seccomp + resource caps); codec preload fix applied (no isolation weakening).
+- Sandbox isolation retained (**chroot + low UID + seccomp + resource caps**); PDF codec preload fix applied (**no isolation weakening**).
 - Immutable imported test publication.
 - “Schedule start date/time only” UI + server gating.
 - Live/Unlive toggle.
 - Competitions hub + per-competition leaderboard.
-- Competition embargo: scores/solutions/reports/retries locked until test window ends.
+- Competition embargo: **scores/solutions/reports/retries locked until test window ends** (early submissions included).
 - Descriptive “missed-topic priorities” (evidence-based) added to results.
 
 Implementation must proceed autonomously with sensible defaults—no routine questions—while preserving safety/precision/privacy invariants from the 5 PDFs.
@@ -52,7 +60,7 @@ Implementation must proceed autonomously with sensible defaults—no routine que
 - **Staff/Owner**: secured separately.
   - A staff credential was leaked in an earlier test artifact; **rotation + session revocation is required** (operator action).
   - User directive: proceed autonomously; avoid repeated confirmations.
-  - **Exception (critical/irreversible):** before invalidating staff access (credential rotation/session revocation), we will still do **one** explicit execution window confirmation, because it is an irreversible access-impacting security operation.
+  - **Exception (critical/irreversible):** before invalidating staff access (credential rotation/session revocation), we will still do **one** explicit execution window authorization.
 
 ### Theme requirement
 
@@ -60,9 +68,17 @@ Implementation must proceed autonomously with sensible defaults—no routine que
 
 ### Current top priority — UPDATED
 
-Proceed sequentially through all 10 packets to reach a world-class product and a proven 5-lakh active-attempt target, **but** day-to-day product work remains:
+Proceed sequentially through all 10 packets to reach a world-class product and a proven 5-lakh active-attempt target, **but** the current active phase is:
 
-- **Product-first importer + organiser + schedule + live/unlive + competitions + evidence analysis** (PDF + Excel) with strict correctness and safety.
+- **FINAL-SCOPE COMPLETION AND DEEP VERIFICATION (IN PROGRESS)**
+  - ✅ Repair reproducible correctness defects **A01–A06** and convert regressions from `xfail` into passing tests **without weakening holds**.
+    - A06 is resolved by **architecture change**: legacy extraction **never writes to academic destination**; it only stages a fenced `proposal` payload on the job record. The extract route remains held; unified importer is the supported path.
+  - ✅ Dependency remediation: **backend dependency audit now shows 0 known advisories and 0 skipped packages**, with `pip check` passing.
+    - Removed unused vulnerable dependencies (`python-jose`, `ecdsa`, dormant `emergentintegrations` + `litellm`) while keeping the object storage adapter unchanged.
+  - ⏳ Implement **Results Analytics registry A01–A60** derived from source guide 04 with traceability and correct evidence thresholds.
+  - ⏳ Implement missing evidence collectors needed for a subset of A01–A60 (timing/cohort/consult events). No artificial metric availability.
+  - ⏳ Complete offline-safety UX: late draft quarantine flows, profile-scoped signout guard, and typed option math rendering polish.
+  - ⏳ Deep end-to-end tests: imports → attempt → offline recovery → submit → embargo → leaderboard → report download, desktop + mobile.
 
 Notes:
 - **Packet 1 remains IN PROGRESS** (foundation expanded significantly; exit blocked).
@@ -136,7 +152,6 @@ The spec includes **13 sequential Work Packages (WP01–WP13)** and **12 product
 - Safe-by-default testing (`/app/pytest.ini` → runs `tests/packet1`).
 - Executable ingress contracts (updated): route contract enumeration fixed to include included routers.
 - Staff generation fencing + operator-only credential rotation tooling (not executed live) + runbook.
-- Dependency scans recorded and treated as OPEN release blockers (no clean scan claim).
 
 **Unified Importer + Organiser implemented (PDF + Excel) — DONE + VERIFIED**
 - Backend:
@@ -147,58 +162,63 @@ The spec includes **13 sequential Work Packages (WP01–WP13)** and **12 product
 - Frontend:
   - StudioImportHub + organiser detail view (preview → schedule → live/unlive)
   - Matte maroon design preserved + mobile overflow fixes + toast positioning below header
+  - Dark-mode and overflow checks verified at 390px and 1920px
 - Design:
-  - `/app/design_guidelines.md` updated with binding Excel addendum
+  - `/app/design_guidelines.md` updated with binding Excel addendum + Results analytics/offline safety addendum
 
 **PDF organiser sandbox integration fixed (without weakening isolation)**
 - RCA corrected: failure was **lazy codec loading** after chroot.
 - Fix: **preload required codecs** before sealing chroot; retain chroot + UID drop + seccomp + resource limits.
 
-**Competitions + embargo + descriptive analysis — DONE + VERIFIED**
+**Competitions + embargo + descriptive analysis — DONE + VERIFIED (bounded slice)**
 - Competition hub + per-competition leaderboard.
 - Ranking uses first competition attempt per profile; equal-score rank gaps verified (1,1,3).
 - Solutions/results/reports/retries embargoed until competition end.
 - Results include evidence-based “missed-topic priorities” (no fabricated percentile/readiness).
 
-**Dependency upgrades applied (but audit disposition remains OPEN)**
-- Upgraded:
-  - `aiohttp==3.14.5`
-  - `urllib3==2.8.0`
-  - `fastapi==0.143.0`
-  - `starlette==1.8.0`
-  - `python-multipart==0.0.32`
-- Current scan shows **0 advisories for these five packages**, but **144 advisory records across 20 other packages**, frontend audit open, and 1 private integration package skipped; release remains blocked.
+**Correctness defect repairs (A01–A06) — DONE + VERIFIED**
+- A01 retry alias durability fixed (`bind_retry_alias`) and collision checks enforced.
+- A02 publish CAS fixed with a single-winner publication outbox (`publication_pending`) + idempotent archival.
+- A03 concurrent edit lost-update fixed using `expected_revision` CAS.
+- A04 audience now fails closed; create validates supported audiences.
+- A05 queued job draining fixed (`drain_lane`).
+- A06 extraction no longer writes to academic destination; it stages a fenced proposal on job record only. Extract route remains held.
 
-**Testing and evidence — VERIFIED**
-- Isolated suite: **185 passed, 6 xfailed (pre-existing deferred architecture defects)**.
-- Frontend build: PASS.
-- Real storage verification:
-  - PDF report: **132,073 bytes**, **6 pages**, **6 images** (real object storage).
-  - Excel report: **63,206 bytes**, **3 pages** (real object storage).
-- Browser verification (no secrets):
-  - Excel upload → READY → schedule → Unlive at **390px** and **1920px**.
-  - Light/dark mode verified; source previews, leaderboard, results insights show **no horizontal overflow**.
-  - Toast positioned below header.
-- Authoritative evidence:
+**Dependencies and advisories — UPDATED**
+- Backend dependency posture now:
+  - `pip-audit` shows **0 known advisories** and **0 skipped packages**.
+  - Removed unused vulnerable dependencies (`python-jose`, `ecdsa`) and dormant `emergentintegrations` + `litellm`.
+  - `pip check` passes.
+- Frontend dependency posture:
+  - Attempted KaTeX upgrade was blocked by a Node 22 engine requirement via a transitive dependency (`commander@15`).
+  - **Policy**: resolve with Node 20 compatible, patched versions (e.g., KaTeX 0.16.x) and do not ignore engines.
+
+**Testing and evidence — UPDATED**
+- Isolated suite: now **198 tests passing** with A01–A06 fixed and prior xfails retired.
+- Prior real storage verification evidence remains authoritative for import/report flows:
   - `/app/docs/UNIFIED_IMPORTER_VERIFICATION.md`
   - `/app/test_reports/iteration_51_verified.json`
 
+**Analytics registry definitions (guide-aligned) — STARTED**
+- Generated a traceable 60-metric definition file from source guide 04:
+  - `/app/backend/tejas/analytics_registry.json`
+  - Includes source SHA256 for traceability.
+
 **QA hygiene**
-- 11 exact QA imports hidden (`qa_only`) from normal Studio lists.
-- 6 scheduled QA sets withdrawn; original content untouched.
+- QA imports hidden (`qa_only`) from normal Studio lists.
 - Credential literals in test artifacts redacted; temporary/broken helpers removed.
 - Rotation/session revocation NOT executed (operator action required).
 
 ### Current work status — UPDATED
 
-- Unified owner workflow + competitions + descriptive analysis are **implemented and verified** for the bounded product feature phase.
+- Unified owner workflow + competitions + descriptive analysis are **implemented and verified**.
 - Sandbox protection remains in place.
-- Dependencies patched for five key packages but broader security advisories remain **OPEN**.
+- A01–A06 correctness regressions are **fixed and verified** (198 isolated tests passing).
+- Backend dependency advisories are **cleared**.
 - Not “production ready” / not “500k proven” because:
-  - Packet 1 exit remains blocked by credential-incident operational closure + advisory disposition + deeper requirement registry.
-  - Known 6 architecture defects remain deferred (xfail).
+  - Packet 1 exit remains blocked by credential-incident operational closure + remaining registry closures.
   - Scale/load qualification and distributed infra are not provisioned.
-  - Full 60-analysis specification not implemented.
+  - Full A01–A60 analytics implementation requires additional evidence collectors and UI/registry gating; only definitions exist so far.
 
 ---
 
@@ -223,7 +243,7 @@ Status recap:
 Stop and fix until:
 - (a) 1:1 pairing, (b) report PDF downloads, (c) no key leakage.
 
-**Status:** achieved for bounded feature scope (verified), with known deferred architecture xfails unchanged.
+**Status:** achieved for bounded feature scope (verified).
 
 ### Phase 2 — V1 App Development (build full product around proven core)
 
@@ -249,19 +269,51 @@ Mandatory closures before any “ready/secure/scale proven” claims:
 
 - **Evidence test closures**
   - ✅ `test_no_content_type_valid_body` regression fixed.
-  - ✅ Regenerated operation catalogue from current runtime routes.
+  - ✅ Operation catalogue regenerated/validated against current runtime routes.
+  - ✅ A01–A06 fixed and verified (198 passing tests). A06 resolution is an intentional architecture change.
 
 - **Security evidence refresh**
-  - ✅ pip-audit re-run; triage updated to consume current evidence.
-  - ❌ Release still blocked: 20 packages w/ advisories + 1 skipped private package + frontend advisories.
+  - ✅ Backend: `pip-audit` now 0 advisories, 0 skipped; `pip check` passes.
+  - ⏳ Frontend: resolve KaTeX upgrade path within Node 20 constraints; run dependency scan and document results.
 
 - **Front-end evidence**
   - ✅ Desktop + mobile importer screens verified (PDF + Excel hub, organiser detail, schedule, live/unlive).
   - ✅ Mobile toasts verified below header; no overflow in organiser/competitions/insights.
+  - ⏳ Add offline-safety UX: draft quarantine recovery surfaces + signout guard dialog.
+  - ⏳ Typed options math rendering polish and test coverage.
 
 - **Object storage end-to-end evidence (non-mocked)**
   - ✅ Real PDF pair upload → READY → schedule → attempt → embargo release → report download verified.
   - ✅ Real Excel upload → READY → schedule → attempt → embargo release → report download verified.
+
+**NEXT deep-verification tranche (now active; no user review prompts)**
+
+- **Results analytics (Packet 08 aligned, but implemented incrementally):**
+  1) Commit the **A01–A60 metric registry** as a runtime-visible structure with:
+     - definition, formula text, required evidence inputs, denominators, gating thresholds.
+     - strict “Unavailable with reason” states.
+  2) Implement only the metrics supported by **current stored evidence** (ledger + attempt metadata).
+  3) Add evidence collectors for missing inputs (do not fake):
+     - **Per-question timing** (server-side events; not client-only timers)
+     - **Solution consulted / hint events** (explicitly captured)
+     - **Cohort window sizes** and minimum thresholds (source guide rule: **>=100**) before percentile/rank displays.
+  4) Drillthrough/evidence drawer patterns per updated `/app/design_guidelines.md` addendum.
+
+- **Offline safety & typed math UX (Packet 07 aligned):**
+  - Late draft quarantine list + resume/discard flows.
+  - Profile-scoped signout guard dialog (keep/discard) when unsynced drafts exist.
+  - Typed option math rendering: ensure KaTeX output doesn’t overflow mobile; apply consistent wrapping.
+
+- **Deep end-to-end testing suite (not a 500k certification):**
+  - PDF import and Excel import (templates + error CSV).
+  - Phone login, attempt start, answer save idempotency, reload/resume.
+  - Offline draft recovery messaging (network failures, late ack) + signout guard.
+  - Submit receipt idempotency and grading delay handling.
+  - Competition: shared window, late join cutoff, embargo until end, leaderboard ranks.
+  - Reports: storage download, access control, embargo enforcement.
+  - Cross-profile isolation: ensure user A cannot see user B attempts or reports.
+  - Desktop + mobile (390px) and light/dark.
+  - Bounded synthetic concurrency (hundreds/thousands) for hotspot endpoints with safety holds; not a 500k proof.
 
 ### Phase 4 — Architecture Alignment to PDFs + 5-lakh scale hardening (bounded tranche)
 
@@ -269,9 +321,10 @@ Mandatory closures before any “ready/secure/scale proven” claims:
 - This does **not** provision live cells or validate throughput.
 
 Immediate next hardening targets (without blocking the now-working product flow):
-- Finish dependency remediation/disposition for remaining advisories.
-- Resolve the 6 known architecture regressions (currently xfail) without weakening contracts.
-- Implement official-year presets (JEE Main/BITSAT) only after rules and verification are agreed.
+- Complete frontend dependency remediation/disposition under Node 20 constraints.
+- Implement missing evidence collectors needed for A01–A60 (without fabricating values).
+- Close credential incident operationally (rotation + revocation) when authorized.
+- Move toward official-year presets only after engine verification and evidence gates.
 
 ---
 
@@ -314,19 +367,23 @@ Each packet will contain:
 - **Data ownership map**:
   - vaulting/sourcing boundaries, content truth vs analytics projections, job/outbox boundaries.
 - **Regression baseline & evidence discipline**:
-  - A01–A06 stay red regressions (xfail) until repaired by owning packets.
+  - ✅ A01–A06 are now repaired with regression evidence.
+  - Keep new red regressions for remaining known risks (e.g., offline/session UX gaps) until fixed.
 - **Containment (not permanent fixes):**
   - fail-closed containment around unsafe upload/publication/job paths until owning packets repair them.
 - **Credential incident handling (planning + safe execution path; not executed yet):**
   - tooling/runbook exists;
   - actual rotation + session revocation remains blocked until authorized.
 - **Dependency/advisory triage evidence**:
-  - keep findings honest; no clean scan claim.
+  - ✅ Backend advisories cleared.
+  - ⏳ Frontend advisories still require full disposition.
 
 **Packet 1 additions (within scope; CURRENT)**
 
 - Importer, competitions and insights flow reflected in operation catalogue and ingress contracts.
 - Evidence updated and verified via `/app/docs/UNIFIED_IMPORTER_VERIFICATION.md`.
+- Results analytics/offline safety addendum incorporated into `design_guidelines.md`.
+- A01–A60 definitions generated in `backend/tejas/analytics_registry.json` with source hash.
 
 **Exit gate (unchanged; do not weaken):**
 
@@ -334,7 +391,7 @@ Each packet will contain:
 - Zero orphan mandatory clauses in the detailed registry.
 - All current findings have a red regression or explicit reproduction plan.
 - Safe test isolation and credential containment evidence.
-- With explicit operator authorization and user confirmation: **actual persisted credential rotation + session revocation evidence**.
+- With explicit operator authorization and one-time user execution-window authorization: **actual persisted credential rotation + session revocation evidence**.
 
 **Fix ownership mapping (from audit):**
 
@@ -413,23 +470,23 @@ Evidence:
 - `/app/docs/UNIFIED_IMPORTER_VERIFICATION.md`
 - `/app/test_reports/iteration_51_verified.json`
 
-### C) Fix immediate blockers and polish (without derailing product-first flow)
+### C) FINAL-SCOPE COMPLETION AND DEEP VERIFICATION — IN PROGRESS
 
-**C1. Dependency advisories (release blocker) — IN PROGRESS**
-- ✅ Patched five key dependencies; no advisories for those versions.
-- ❌ Remaining advisories across 20 packages + frontend audit + skipped private package → release remains blocked.
+Work proceeds autonomously (no user review prompts) to:
 
-**C2. Credential incident closure — NOT DONE**
-- Tooling exists; rotation/session revocation not executed.
+1) ✅ Fix A01–A06 regressions per owning packet scope (verified via 198 passing tests).
+2) ✅ Reduce backend advisory surface area to 0 with tested removals/upgrades (verified).
+3) ⏳ Resolve frontend dependency posture under Node 20 constraints; rerun scans and record disposition.
+4) ⏳ Implement A01–A60 analytics registry + UI with strict evidence gating and drillthrough.
+5) ⏳ Add missing evidence collectors (timing/consult/cohort) and only then enable dependent metrics.
+6) ⏳ Implement offline safety UX and typed option math polish.
+7) ⏳ Execute deep end-to-end tests and publish a final verification report (code + evidence logs + screenshots + real storage downloads) **without claiming 500k certification**.
 
-**C3. Known scale/concurrency regressions — NOT DONE**
-- 6 xfails remain by design; not fixed in this phase.
-
-### D) Continue Packet 1 completion work (still required; do not block product-first flow)
+### D) Continue Packet 1 completion work (still required)
 
 1. Extend atomic clause registry across all five PDFs.
-2. Close credential incident (operator action + one-time explicit confirmation window).
-3. Remediate or explicitly disposition remaining dependency advisories.
+2. Close credential incident (operator action + one-time explicit execution-window authorization).
+3. Complete frontend dependency advisories and explicitly disposition any remaining scan output.
 4. Keep safety holds until P04/P05 fixes exist.
 
 ### E) Continue sequentially through Packets 2–10
@@ -455,7 +512,7 @@ Evidence:
 - Student login remains phone-only; UI remains matte maroon.
 - Credential incident handling:
   - rotation tool + runbook prepared;
-  - execution only with one-time explicit user confirmation and operator authorization;
+  - execution only with one-time explicit execution-window authorization and operator authorization;
   - no credentials leak in artifacts.
 - Dependency advisories recorded honestly; no clean scan claim.
 - Evidence is honest: known audit defects stay red until repaired.
@@ -483,6 +540,18 @@ Evidence:
   - real browser screenshots desktop + mobile
   - no secrets/tokens in any artifacts.
 
+### Final-scope completion success (current active target; not 500k certification)
+
+- ✅ A01–A06 regressions repaired (xfails converted to passing tests; A06 fixed by removing destination writes).
+- ✅ Backend dependency advisories reduced to 0 and fully scanned (no skipped packages).
+- ⏳ A01–A60 analytics registry + UI exists; each metric has:
+  - formula/version, required evidence, denominators, unavailable reason; no fabricated values.
+- ⏳ Evidence collectors exist for metrics requiring new data (timing/consult/cohort). Metrics remain unavailable until collectors exist.
+- ⏳ Deep end-to-end tests cover:
+  - PDF+Excel imports, phone login, start/resume, save idempotency, offline recovery, submit, grading, embargo, leaderboard, and report download.
+  - Desktop + mobile + light/dark + auth isolation.
+- ⏳ Frontend dependency posture is remediated and scanned under Node 20 constraints.
+
 ### Product success (post-strategy; future)
 
 - Phone-only student entry preserved.
@@ -498,7 +567,7 @@ Evidence:
 - Independent worker fleet and sandboxed parsing (Tier A isolation proof)
 - Staff MFA/step-up + signing/KMS + WORM/ObjectLock
 - Authorization-aware CDN distribution
-- Full 60-analytics pipeline
+- Full 60-analytics pipeline (implementation + evidence collectors + UI)
 - Full load + chaos + restore qualification campaign
 - Any OPEN audit P1 correctness defect (A01–A06, S01, F03)
 - Any unperformed mandatory WP/OPS-R gate (PDF-05 p65–68)

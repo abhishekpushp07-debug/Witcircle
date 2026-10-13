@@ -27,6 +27,7 @@ import {
   Confirm,
 } from "../components/Shared";
 import { QuestionContent, MathText } from "../components/QuestionContent";
+import { ResultsAnalyticsWorkspace } from '../components/results/ResultsAnalyticsWorkspace';
 import { ReportButton } from "../components/ReportButton";
 import { Button } from '../components/ui/button';
 export default function Results() {
@@ -44,6 +45,21 @@ export default function Results() {
   const [page, setPage] = useState(1);
   const [refresh, setRefresh] = useState(0);
   const [pending, setPending] = useState(null);
+  const [focusQuestion,setFocusQuestion] = useState(null);
+  useEffect(()=>{
+    if (!focusQuestion) return;
+    const timer=setTimeout(()=>{document.getElementById('review-question-'+focusQuestion)?.scrollIntoView({block:'start',behavior:'instant'});setFocusQuestion(null)},220);
+    return()=>clearTimeout(timer);
+  },[focusQuestion]);
+  async function refreshAnalytics() {
+    try {const result=await api('/attempts/'+id+'/results?score_version='+encodeURIComponent(scoreVersion));if(result.analytics)setR(result);}
+    catch(e){setError(e.message)}
+  }
+  function openQuestion(qid) {
+    if(!r)return;
+    setFilter('all');setPage(Math.ceil((r.questions.findIndex(q=>q.id===qid)+1)/10));setExpanded(old=>({...old,[qid]:true}));setFocusQuestion(qid);
+    post(`/attempts/${id}/questions/${qid}/solution-open`,{}).catch(()=>{});
+  }
   useEffect(() => {
     const controller = new AbortController();
     let timer, polls = 0;
@@ -325,6 +341,7 @@ export default function Results() {
         </section>
       </div>
       {r.insights && <section className="import-card mb-8" data-testid="results-evidence-insights"><div className="import-section-label">YOUR NEXT STUDY SESSION</div><h2>Start where this attempt points.</h2><div className="insight-grid">{r.insights.priorities.length ? r.insights.priorities.map((g,i) => <article className="import-issue" data-testid={'results-priority-' + i} key={g.label}><strong>{g.label}</strong><p>{g.incorrect} incorrect · {g.skipped} skipped · {g.count} questions</p><p>Attempted accuracy: {g.accuracy === null ? 'Not available' : g.accuracy + '%'} ({g.correct}/{g.attempted})</p><p>{g.action}</p><small>{g.evidence} · Review Q{g.questions.join(', Q')}</small></article>) : <p data-testid="results-no-priorities">No incorrect or skipped eligible questions in this attempt. Use fresh questions to gather more evidence.</p>}</div><p className="import-fineprint mt-4" data-testid="results-insights-basis">{r.insights.basis}</p></section>}
+      <ResultsAnalyticsWorkspace analysis={r.analytics} questions={r.questions} userId={user.id} attemptId={id} onOpenQuestion={openQuestion} onRefresh={refreshAnalytics} />
       <div className="review-heading">
         <div>
           <span className="eyebrow">UNDERSTAND THE WHY</span>
@@ -359,6 +376,7 @@ export default function Results() {
         qs.slice(0, page * 10).map((q) => (
           <article
             className="card review-question"
+            id={'review-question-'+q.id}
             data-testid="results-question-review-item"
             key={q.id}
           >
@@ -366,9 +384,7 @@ export default function Results() {
               className="review-question-toggle"
               data-testid={"results-expand-" + q.number}
               aria-expanded={!!expanded[q.id]}
-              onClick={() =>
-                setExpanded({ ...expanded, [q.id]: !expanded[q.id] })
-              }
+              onClick={() => expanded[q.id] ? setExpanded({...expanded,[q.id]:false}) : openQuestion(q.id)}
             >
               <span className={"outcome-icon " + q.outcome}>
                 {q.outcome === "correct" ? (
@@ -416,9 +432,9 @@ export default function Results() {
                 {q.render_mode !== "source" && q.type === "mcq" && (
                   <div className="review-options">
                     {Object.entries(q.options).map(([k, v]) => (
-                      <p key={k}>
-                        <strong>{k}.</strong> {v}
-                      </p>
+                        <div key={k} className="review-option-math" data-testid={'review-option-' + q.number + '-' + k}>
+                          <strong>{k}.</strong> <MathText text={v} />
+                        </div>
                     ))}
                   </div>
                 )}

@@ -66,6 +66,7 @@ class RulesPayload(Payload):
 
 
 class SetPayload(Payload):
+    expected_revision: int | None = Field(default=None, ge=1)
     title: str = Field(min_length=3, max_length=160)
     exam: Literal['JEE Main', 'BITSAT'] = 'JEE Main'
     year: str = Field(default='', max_length=10)
@@ -111,6 +112,7 @@ class RegionPayload(Payload):
 
 
 class QuestionPayload(Payload):
+    expected_revision: int | None = Field(default=None, ge=1)
     # This is a partial update. Missing fields are omitted, not null assignments.
     number: int = Field(default=1, ge=1, le=10000)
     solution_number: int | None = Field(default=None, ge=1, le=10000)
@@ -201,6 +203,7 @@ class RegradePayload(Payload):
 from .import_models import ScheduleInput, LiveInput
 
 MODELS = {
+    'attempts.solution_consulted': EmptyPayload,
     'imports.schedule_import': ScheduleInput, 'imports.toggle_live': LiveInput,
     'auth.login': LoginPayload, 'phone.access': PhonePayload, 'auth.preferences': PreferencePayload,
     'content.create_set': SetPayload, 'content.update_set': SetPayload,
