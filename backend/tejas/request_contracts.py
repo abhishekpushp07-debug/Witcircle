@@ -29,7 +29,7 @@ class PhonePayload(Payload):
 
 class LoginPayload(Payload):
     email: EmailStr
-    password: str = Field(min_length=10, max_length=64)
+    password: str = Field(min_length=8, max_length=64)
     # Explicitly accepted legacy form fields; never role/privilege inputs.
     name: str = Field(default='Reviewer', min_length=1, max_length=80)
     exam: Literal['JEE Main', 'BITSAT'] = 'JEE Main'

@@ -106,7 +106,7 @@ export default function Auth({ staff = false }) {
                 label="Password"
                 type="password"
                 autoComplete="current-password"
-                minLength={10}
+                minLength={8}
                 maxLength={64}
                 required
                 value={password}

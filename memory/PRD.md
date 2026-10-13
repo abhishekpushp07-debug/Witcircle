@@ -1,3 +1,12 @@
+# Latest owner-access checkpoint — authorized identity change
+
+The user explicitly requested changing the Content Studio owner email. Updated the existing owner account in-place to `abhishek@billpe.com`; the user-supplied password is configured only in protected runtime settings / hashed storage and MUST NOT be reproduced in this document, source, tests or reports. Owner UUID/content ownership unchanged. Credential generation advanced to1,97 prior owner sessions revoked,199 existing student phone sessions preserved. Default operator rotation still requires16characters; explicit owner-only identity-change exception supports the user's selected minimum8. Public login and its request contract/UI accept8; no password reset HTTP endpoint was added. Bootstrap environment synced so restarting does not recreate the old owner.
+
+Verification:56 focused isolated auth/rotation/contract tests pass; frontend build passes. Real browser `/owner-login` signs in, redirects to Studio, API returns same owner UUID and new email; previous email rejected401. Desktop1920x800/mobile390x844 Studio access verified without horizontal overflow. Password was not printed in reports/screenshots. This completes ONLY the requested owner-access change, not the entire product/security/scaling specification. Broader deep-testing evidence requires current documentation reconciliation before any final-product claim.
+
+---
+
+
 # Current checkpoint — unified PDF/Excel product flow (supersedes historical status below)
 
 User approved autonomous product-first development and added Excel direct-text questions/options/solutions import. Matte maroon #5C0025 and phone-only student access preserved. Do not repeatedly seek routine confirmation. Latest verified scope:

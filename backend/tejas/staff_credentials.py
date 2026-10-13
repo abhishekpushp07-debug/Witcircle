@@ -8,7 +8,7 @@ from typing import Literal
 from uuid import UUID
 import bcrypt
 from fastapi.concurrency import run_in_threadpool
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, EmailStr, TypeAdapter
 from pymongo import ReturnDocument, WriteConcern
 from pymongo.errors import PyMongoError
 from .db import users, sessions
@@ -51,20 +51,28 @@ class RotationConflict(ValueError):
     pass
 
 
-async def rotate_staff_credential(account_id, expected_generation, replacement_password, operation_id):
+async def rotate_staff_credential(account_id, expected_generation, replacement_password, operation_id, *, replacement_email=None, owner_selected_password=False):
     if str(UUID(account_id)) != account_id or str(UUID(operation_id)) != operation_id:
         raise ValueError('Use canonical account and operation UUIDs')
     if type(expected_generation) is not int or not 0 <= expected_generation < MAX_GENERATION - 1:
         raise ValueError('Invalid expected generation')
-    if not isinstance(replacement_password, str) or not 16 <= len(replacement_password) <= 64 or len(replacement_password.encode('utf-8')) > 64:
-        raise ValueError('Use a 16–64 character replacement within 64 UTF-8 bytes')
+    if type(owner_selected_password) is not bool:
+        raise ValueError('Operator exception must be an explicit boolean')
+    if owner_selected_password and replacement_email is None:
+        raise ValueError('Owner-selected exception requires an explicit owner identity update')
+    email = str(TypeAdapter(EmailStr).validate_python(replacement_email)).lower() if replacement_email is not None else None
+    minimum = 8 if owner_selected_password else 16
+    if not isinstance(replacement_password, str) or not minimum <= len(replacement_password) <= 64 or len(replacement_password.encode('utf-8')) > 64:
+        raise ValueError(f'Use a {minimum}–64 character replacement within 64 UTF-8 bytes')
     hashed = await run_in_threadpool(lambda: bcrypt.hashpw(replacement_password.encode('utf-8'), bcrypt.gensalt()).decode())
     epoch_filter = {'credential_generation': expected_generation} if expected_generation else {
         '$or': [{'credential_generation': 0}, {'credential_generation': {'$exists': False}}]}
     result = await users.with_options(write_concern=WriteConcern(w='majority', j=True)).find_one_and_update(
-        {'id':account_id, 'role':{'$in':['owner','reviewer']}, **epoch_filter},
+        {'id':account_id, 'role':'owner' if email is not None or owner_selected_password else {'$in':['owner','reviewer']}, **epoch_filter},
         {'$set': {'password_hash': hashed, 'credential_generation': expected_generation + 1,
-                  'credential_rotation_operation_id': operation_id},
+                  'credential_rotation_operation_id': operation_id,
+                  **({'email': email} if email is not None else {}),
+                  'owner_selected_password_exception': owner_selected_password},
          '$currentDate': {'credential_rotated_at': True}},
         return_document=ReturnDocument.AFTER, projection={'_id':0,'id':1,'credential_generation':1,'credential_rotated_at':1},
     )
