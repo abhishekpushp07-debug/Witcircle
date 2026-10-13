@@ -2315,7 +2315,7 @@ code {
 }
 .zoom-scroll img {
   width: 100%;
-  min-width: 450px;
+  min-width: 0;
   display: block;
 }
 .question-source details {
@@ -6056,7 +6056,12 @@ code {
 }
 .source-image .image-button {
   min-width: 0;
+  height: auto;
+  min-height: var(--touch-target);
+  padding: 0;
+  line-height: normal;
 }
+.source-image .image-button > img { height: auto; }
 .review-heading > span {
   white-space: nowrap;
 }

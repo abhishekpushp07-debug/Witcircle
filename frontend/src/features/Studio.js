@@ -76,17 +76,17 @@ export default function Studio() {
         title="Your content. Their next breakthrough."
         description="PDF or Excel → organised test → choose a start time. All in one place."
         action={
-          <button
+          <Button
             className="btn btn-primary"
-            data-testid="studio-new-set"
-            onClick={() => setCreate(true)}
+            data-testid="studio-upload-files"
+            onClick={() => { document.querySelector('[data-testid="studio-import-hub"]')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); document.querySelector('[data-testid="studio-create-test-import-mode-pdf"]')?.focus({ preventScroll: true }); }}
           >
-            <Plus size={18} /> Advanced editor
-          </button>
+            <Plus size={18} /> Upload PDF / Excel
+          </Button>
         }
       />
       <StudioImportHub />
-      <h2 className="mt-10 mb-6" data-testid="legacy-studio-heading">Advanced Studio sets</h2>
+      <div className="flex flex-wrap items-center justify-between gap-4 mt-10 mb-6"><h2 data-testid="legacy-studio-heading">Advanced Studio sets</h2><Button variant="outline" data-testid="studio-new-set" onClick={() => setCreate(true)}><Plus size={16} /> Manual editor</Button></div>
       <div className="studio-stats">
         {[
           [

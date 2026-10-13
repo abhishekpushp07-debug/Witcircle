@@ -66,8 +66,9 @@ def open_pdf(data):
     return doc
 
 
-def segment(doc):
-    anchors=[]; headings=[]; columns={}; extracted=0
+def segment(doc, role='questions'):
+    anchors=[]; headings=[]; columns={}; extracted=0; page_lines=[]; prefixed_positions=[]
+    has_prefixed_headers=False
     for pi,page in enumerate(doc):
         lines=[]
         for block in page.get_text('dict')['blocks']:
@@ -76,12 +77,31 @@ def segment(doc):
                 if text:
                     lines.append((line['bbox'],text))
                     extracted+=len(text)
+                    match=ANCHOR.match(text)
+                    if match and match[1] and (line['bbox'][0]<page.rect.width*.27 or page.rect.width*.46<line['bbox'][0]<page.rect.width*.68):
+                        has_prefixed_headers=True
+                        prefixed_positions.append((int(match[1]), line['bbox'][0]/page.rect.width))
         if extracted>3000000:
             raise ValueError('The PDF has too much text; split the paper')
+        page_lines.append(lines)
+    # Same-indent unprefixed numbers absent from the explicit question set are
+    # ambiguous, not proof that the PDF only contains the prefixed subset.
+    if has_prefixed_headers and role=='questions':
+        explicit_numbers={number for number,_ in prefixed_positions}
+        for pi,lines in enumerate(page_lines):
+            width=doc[pi].rect.width
+            for box,text in lines:
+                m=ANCHOR.match(text)
+                if m and m[2] and int(m[2]) not in explicit_numbers and any(abs(box[0]/width-x)<0.006 for _,x in prefixed_positions):
+                    raise ValueError('Mixed question numbering is ambiguous. Prefix every question with Q and indent numbered substeps before uploading again.')
+    # Explicit Q/Question headers outrank bare numerals throughout the document.
+    # Numbered solution steps and continuation lines must never start a new item.
+    for pi,page in enumerate(doc):
+        lines=page_lines[pi]
         found=[]
         for box,text in lines:
             m=ANCHOR.match(text)
-            if m and 1<=int(m[1] or m[2])<=500 and (box[0]<page.rect.width*.27 or page.rect.width*.46<box[0]<page.rect.width*.68):
+            if m and (m[1] or not has_prefixed_headers) and 1<=int(m[1] or m[2])<=500 and (box[0]<page.rect.width*.27 or page.rect.width*.46<box[0]<page.rect.width*.68):
                 found.append({'number':int(m[1] or m[2]),'page':pi,'top':max(12,box[1]-5),'x':box[0],'header':m[3].strip()})
         two=bool(any(a['x']<page.rect.width*.3 for a in found) and any(a['x']>page.rect.width*.46 for a in found))
         columns[pi]=2 if two else 1
@@ -123,13 +143,62 @@ def segment(doc):
     return records
 
 
+def choose_options(text):
+    """Choose the final ordered option block, not A–D statement/diagram labels."""
+    groups=[]; fallback=[]
+    for family in ('ABCD','1234'):
+        pattern=re.compile(r'\((['+family+r'])\)|(?<!\w)(['+family+r'])[.)]\s')
+        matches=list(pattern.finditer(text))
+        leading=[m for m in matches if not text[text.rfind('\n',0,m.start())+1:m.start()].strip()]
+        for candidates in (leading,matches):
+            for i in range(max(0,len(candidates)-3)):
+                run=candidates[i:i+4]
+                if [m[1] or m[2] for m in run]==list(family) and not text[text.rfind('\n',0,run[0].start())+1:run[0].start()].strip():
+                    groups.append((run[0].start(),family,run))
+            if groups and any(g[1]==family for g in groups): break
+        if len(matches)==4 and [m[1] or m[2] for m in matches]==list(family):
+            fallback.append((matches[0].start(),family,matches))
+    if groups:
+        _,family,matches=max(groups,key=lambda item:item[0])
+        return family,matches,False
+    if len(fallback)==1:
+        _,family,matches=fallback[0]
+        return family,matches,False
+    return '',[],len(fallback)>1
+
+
+def plain_text_is_faithful(record, doc, geometry):
+    """Only flatten uncomplicated text. Math layout/figures always retain source regions."""
+    if not record or any(ord(c)>126 or (ord(c)<32 and c not in '\n\t\r') for c in record['text']) or '$' in record['text']:
+        return False
+    for ref in record['refs']:
+        page=doc[ref['page']-1]; rect=fitz.Rect(ref['rect'])
+        index=(id(doc),ref['page'])
+        if index not in geometry:
+            geometry[index]=[fitz.Rect(d['rect']) for d in page.get_drawings()] + [fitz.Rect(d['bbox']) for d in page.get_image_info()]
+        if any(r.intersects(rect) for r in geometry[index]):
+            return False
+        for block in page.get_text('dict',clip=rect)['blocks']:
+            for line in block.get('lines',[]):
+                spans=[s for s in line['spans'] if s.get('text','').strip()]
+                if not spans: continue
+                if max(s['size'] for s in spans)-min(s['size'] for s in spans)>0.7:
+                    return False
+                if max(s['origin'][1] for s in spans)-min(s['origin'][1] for s in spans)>0.7:
+                    return False
+                for span in spans:
+                    if span.get('flags',0)&1 or re.search(r'(cmmi|cmsy|cmex|msam|msbm|math|symbol|stix|mtex)',span['font'],re.I):
+                        return False
+    return True
+
+
 def organise(qdoc,sdoc):
-    questions=segment(qdoc); solutions=segment(sdoc)
-    output=[]; issues=[]; matched_solution_ids=set(); seen=set(); asset_bytes=0
+    questions=segment(qdoc,role='questions'); solutions=segment(sdoc,role='solutions')
+    output=[]; issues=[]; matched_solution_ids=set(); seen=set(); asset_bytes=0; geometry={}
     header=' '.join(qdoc[p].get_text()[:12000] for p in range(min(2,len(qdoc))))
     exam='BITSAT' if re.search(r'\bBITSAT\b',header,re.I) else 'JEE Main'
     duration=180
-    time=re.search(r'(?:duration|time allowed)\s*[:=]\s*(\d+)\s*(minutes?|mins?|hours?|hrs?)',header,re.I)
+    time=re.search(r'(?:duration|time(?:\s+allowed)?)\s*[:=]\s*(\d+)\s*(minutes?|mins?|hours?|hrs?)',header,re.I)
     if time: duration=min(360,max(1,int(time[1])*(60 if time[2].lower().startswith(('h','hr')) else 1)))
     for order,q in enumerate(questions,1):
         local=[]
@@ -140,9 +209,9 @@ def organise(qdoc,sdoc):
         solution=candidates[0][1] if len(candidates)==1 else None
         if solution is None: local.append('No unique matching solution')
         else: matched_solution_ids.add(candidates[0][0])
-        labels=set(re.findall(r'\(([A-D1-4])\)',q['text']))
-        labels.update(re.findall(r'(?:^|\n)\s*([A-D])[.)]\s',q['text']))
-        family='ABCD' if set('ABCD')<=labels else '1234' if set('1234')<=labels else ''
+        family,matches,ambiguous_options=choose_options(q['text'])
+        if ambiguous_options:
+            local.append('The final answer-option block is ambiguous. Use a clearly numbered or lettered option list.')
         kind='mcq' if family else 'integer'
         keys=set(m[1].upper() for m in KEY.finditer(solution['text'] if solution else ''))
         if not keys and solution:
@@ -160,12 +229,18 @@ def organise(qdoc,sdoc):
         if kind=='integer' and answer and re.fullmatch(r'[+-]?\d{1,20}',answer): answer=str(int(answer))
         options={}
         if family:
-            pattern=r'(?:\((['+family+r'])\)|(?:^|\n)\s*(['+family+r'])[.)]\s)'
-            matches=list(re.finditer(pattern,q['text']))
             for n,m in enumerate(matches):
                 label=m[1] or m[2]
                 end=matches[n+1].start() if n+1<len(matches) else len(q['text'])
                 options[label]=q['text'][m.end():end].strip()[:8192] or 'See source option '+label
+        safe_text=plain_text_is_faithful(q,qdoc,geometry) and plain_text_is_faithful(solution,sdoc,geometry)
+        if family:
+            safe_text=safe_text and [m[1] or m[2] for m in matches]==list(family) and all(not value.startswith('See source option ') for value in options.values())
+        text=q['text']
+        if safe_text:
+            if family: text=text[:matches[0].start()].strip()
+            prefix=ANCHOR.match(text)
+            if prefix: text=text[prefix.start(3):].strip()
         assets={'question':[],'solution':[]}
         for role,doc,record in [('question',qdoc,q),('solution',sdoc,solution)]:
             if not record: continue
@@ -177,8 +252,10 @@ def organise(qdoc,sdoc):
                 assets[role].append(base64.b64encode(raw).decode('ascii'))
         output.append({'number':order,'source_number':q['number'],'solution_number':order if solution else None,
             'source_solution_number':solution['number'] if solution else None,'subject':q['subject'],'section':q['subject'],
-            'type':kind,'text':q['text'],'options':options,'answer':answer,'solution':solution['text'] if solution else '',
-            'topic':'','difficulty':'','render_mode':'source','q_refs':q['refs'],'s_refs':solution['refs'] if solution else [],
+            'type':kind,'text':text,'options':options,'answer':answer,'solution':solution['text'] if solution else '',
+            'topic':'','difficulty':'','render_mode':'typed' if safe_text else 'source',
+            'render_reason':'Plain text and option order preserved from both PDFs.' if safe_text else 'Original PDF regions preserve mathematical layout, fonts, or figures.',
+            'q_refs':q['refs'],'s_refs':solution['refs'] if solution else [],
             'assets':assets,'issues':local,'pairing_evidence':'Exact source number and compatible section; explicit key only'})
         issues.extend({'question':order,'message':message} for message in local)
     unmatched=len(solutions)-len(matched_solution_ids)

@@ -1,3 +1,19 @@
+# Current P0 checkpoint — PDF import repaired on supplied real paper
+
+The user's report “By the way pdf se nahi le pa rha direct questions. Ab” paused broader analytics work. Authoritative evidence: `/app/docs/PDF_IMPORT_REPAIR.md` and `/app/test_reports/iteration_67_verified.json`.
+
+- Real Tejas200 questions11pages / solutions32pages previously produced77/338false anchors; solution steps were counted as questions. Explicit-header precedence fixes this without raising the300-question limit or weakening the sandbox. Ambiguous mixed numbering now blocks rather than losing items silently.
+- Final ordered option-block detection fixes A–D stem/diagram labels being mistaken for actual1–4options on six questions. All75literal keys independently match the original first-page table; all60MCQs preserve numeric options, plus15integers.
+- Simple layout-faithful ASCII PDFs import typed text/options/solutions. Math fonts, superscripts, Unicode notation and figures remain faithful source regions; no OCR/general PDF-to-LaTeX claim.
+- Fixed inherited fixed-height source-image buttons causing overlapping PDF questions/solutions; verified real Q37 on1920x800 and390x844 and mobile image dialog, no horizontal overflow.
+- Correct owner-visible READY import: `2a830c16-2da1-5687-9d2e-18d3211236de`,75questions,0issues,191real private source images. Actual browser upload/storage/API confirmed. UNscheduled, NOT live; start time is deliberately the owner's choice. Previous diagnostic import047ee1… is archived/superseded, not published.
+- Full isolated suite257passed/0failed/0xfail; build passes. Existing attempt/report/Excel regressions pass. Do not claim a student attempt/report was performed on this newly unscheduled paper.
+- Iteration65 stale-import diagnosis and iteration66 empty-database lookup were corrected by main live API/DB verification; do not repeat them as active bugs.
+- Owner credentials remain unchanged from the authorized update below. Broader security, fullanalytics and500kqualification are not complete. Latest confidence/review design addendum has NOT been implemented; user PDF blocker took precedence.
+
+---
+
+
 # Latest owner-access checkpoint — authorized identity change
 
 The user explicitly requested changing the Content Studio owner email. Updated the existing owner account in-place to `abhishek@billpe.com`; the user-supplied password is configured only in protected runtime settings / hashed storage and MUST NOT be reproduced in this document, source, tests or reports. Owner UUID/content ownership unchanged. Credential generation advanced to1,97 prior owner sessions revoked,199 existing student phone sessions preserved. Default operator rotation still requires16characters; explicit owner-only identity-change exception supports the user's selected minimum8. Public login and its request contract/UI accept8; no password reset HTTP endpoint was added. Bootstrap environment synced so restarting does not recreate the old owner.

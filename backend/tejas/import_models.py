@@ -29,6 +29,7 @@ class ImportedQuestion(BaseModel):
     answer: str
     solution: str
     render_mode: str
+    render_reason: str = ''
     q_refs: list[dict] = []
     s_refs: list[dict] = []
     issues: list[str] = []

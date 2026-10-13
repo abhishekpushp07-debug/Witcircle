@@ -993,5 +993,273 @@
     ]
   },
 
+  "guide04_confidence_calibration_addendum": {
+    "scope": {
+      "goal": "Add a minimal, optional confidence-probability collection to the existing Player, plus post-result calibration analytics and mistake-review workflow. Preserve existing matte maroon identity (#5C0025), existing Player layout, and strict scoring/submission contracts. No new navigation. No new Studio credential flows.",
+      "non_goals": [
+        "Do not change metric IDs, formulas, or thresholds from guide04/source04.",
+        "Do not delay scoring/submission; confidence collection must be optional and non-blocking.",
+        "Do not invent confidence values or diagnosis categories; only collect what user explicitly provides.",
+        "Do not add routine review questions (per user choice)."
+      ]
+    },
+
+    "visual_constraints": {
+      "identity": "No theme redesign. Keep existing Figtree + maroon tokens + light/dark.",
+      "mobile_first": "Phone-only student login; design for 390px width and 44px touch targets.",
+      "placement_rule": "Confidence UI must live inside existing Player question card (small panel) and Results review controls; no new top-level pages.",
+      "embargo_rule": "Competition embargo rules remain: do not reveal solutions early; confidence UI must not leak correctness."
+    },
+
+    "player_confidence_panel": {
+      "principle": "Optional, fast, and skippable. The student can answer without ever touching confidence.",
+      "when_shown": {
+        "default": "Collapsed (shows a one-line prompt + optional toggle).",
+        "auto_expand": "Never auto-expand on first render; only expand when user taps.",
+        "hide_when": ["question is unattempted and user is scrolling quickly (avoid sticky overlays)"]
+      },
+      "ui": {
+        "component": "Collapsible (shadcn) inside the question card, below options and above navigation.",
+        "collapsed_row": {
+          "copy": "Add confidence (optional)",
+          "right_meta": "‘Takes 1 tap’",
+          "icon": "Lucide ChevronDown",
+          "data_testids": {
+            "toggle": "player-confidence-collapsible-toggle",
+            "summary": "player-confidence-collapsible-summary"
+          }
+        },
+        "expanded_content": {
+          "prompt": "How likely is your answer correct?",
+          "input": {
+            "primary": {
+              "type": "Slider (shadcn)",
+              "range": "0.50 → 1.00 (step 0.05)",
+              "default_value": "No default; show placeholder state until user moves slider.",
+              "labels": ["50%", "70%", "80%", "90%", "100%"],
+              "helper": "Only rate if you didn’t change your answer after seeing hints. (We exclude changed responses from calibration.)",
+              "data_testids": {
+                "slider": "player-confidence-slider",
+                "value": "player-confidence-value"
+              }
+            },
+            "secondary": {
+              "type": "ToggleGroup (shadcn)",
+              "options": ["50%", "70%", "80%", "90%", "100%"],
+              "use_when": "If slider feels fiddly on small screens; keep one input method in UI at a time.",
+              "data_testids": {
+                "toggle_group": "player-confidence-toggle-group",
+                "option": "player-confidence-toggle-option"
+              }
+            }
+          },
+          "actions": {
+            "save": {
+              "label": "Save confidence",
+              "variant": "secondary (not primary)",
+              "behavior": "Saves locally immediately; sync async. Never blocks Next/Submit.",
+              "data_testid": "player-confidence-save-button"
+            },
+            "clear": {
+              "label": "Clear",
+              "variant": "ghost/quiet",
+              "behavior": "Removes confidence for this question.",
+              "data_testid": "player-confidence-clear-button"
+            }
+          },
+          "state_badges": {
+            "saved": "Show small ‘Saved’ meta next to panel title (no toast spam).",
+            "offline": "If offline, show ‘Saved on device’ (amber) using existing offline save language.",
+            "data_testids": {
+              "saved_badge": "player-confidence-saved-bge",
+              "offline_badge": "player-confidence-offline-badge"
+            }
+          }
+        }
+      },
+      "interaction_rules": {
+        "no_delay": "Confidence save must not delay answer submission or scoring.",
+        "changed_response_exclusion": "If user changes selected option after saving confidence, mark confidence as ‘changed-response’ and exclude from A41/A42/A43 computations (per guide04). UI should show a subtle note: ‘Excluded (answer changed)’ without implying correctness.",
+        "data_testids": {
+          "excluded_note": "player-confidence-excluded-note"
+        }
+      }
+    },
+
+    "results_review_controls": {
+      "placement": "Inside existing Results per-question expanded review panel (where options/solution appear), add a compact ‘Confidence & reflection’ strip.",
+      "elements": {
+        "confidence_readonly": {
+          "label": "Your confidence",
+          "value": "Show saved % if present; else ‘Not rated’.",
+          "data_testid": "results-question-confidence-value"
+        },
+        "error_category": {
+          "label": "What went wrong? (optional)",
+          "component": "Select (shadcn)",
+          "options": [
+            "Concept gap",
+            "Calculation error",
+            "Silly mistake",
+            "Time pressure",
+            "Misread question",
+            "Guess",
+            "Other"
+          ],
+          "note": "These are self-reported categories; do not auto-assign.",
+          "data_testids": {
+            "select": "results-error-category-select",
+            "option": "results-error-category-option"
+          }
+        },
+        "notes": {
+          "label": "Notes (optional)",
+          "component": "Textarea (shadcn)",
+          "placeholder": "Write 1 line: what you’ll do differently next time…",
+          "data_testid": "results-error-notes-textarea"
+        },
+        "save": {
+          "label": "Save reflection",
+          "variant": "secondary",
+          "data_testid": "results-reflection-save-button"
+        }
+      },
+      "microcopy": {
+        "privacy": "Only you can see these notes.",
+        "exclusion": "Calibration excludes questions where you changed your answer after rating confidence."
+      }
+    },
+
+    "analytics_workspace_extensions": {
+      "placement": "Inside existing analytics workspace (Results addendum), add Guide04 metric tiles/rows for A41/A42/A43 and mistake-review progress A45/A50.",
+      "metric_ids_and_thresholds": {
+        "A41": "Calibration (requires >=20 rated unchanged single-correct binary outcomes)",
+        "A42": "High-confidence errors (requires >=5 items with p>=0.8)",
+        "A43": "Brier score (requires >=50 rated unchanged binary)",
+        "A45": "Learner error labels count (requires >=5 learner labels)",
+        "A50": "Assigned mistake tasks completed (positive assigned mistake tasks)"
+      },
+      "ui_rules": {
+        "availability": "If minimum samples not met, show ‘Unavailable’ with exact requirement (e.g., ‘Need 20 rated unchanged questions’).",
+        "evidence_dialog": "A44 calculator must live inside the Metric Evidence dialog/drawer for the relevant metric (not a separate page).",
+        "data_testids": {
+          "a41_tile": "results-metric-a41-tile",
+          "a42_tile": "results-metric-a42-tile",
+          "a43_tile": "results-metric-a43-tile",
+          "a45_tile": "results-metric-a45-tile",
+          "a50_tile": "results-metric-a50-tile",
+          "a44_open": "results-a44-open-calculator-button"
+        }
+      }
+    },
+
+    "A44_expected_value_calculator": {
+      "purpose": "Let the student input their own probability (p) and see expected value under frozen scoring rules. This is hypothetical and must not change scoring.",
+      "placement": "Inside MetricEvidenceDrawer body as a collapsible section titled ‘Expected value (what-if)’.",
+      "inputs": {
+        "probability": {
+          "component": "Input (shadcn)",
+          "type": "number",
+          "constraints": "0.00–1.00 step 0.01",
+          "data_testid": "results-a44-probability-input"
+        },
+        "scoring_rules": {
+          "display": "Read-only summary of frozen scoring rules for this test (correct marks, negative marks, unattempted).",
+          "data_testid": "results-a44-scoring-rules-summary"
+        }
+      },
+      "outputs": {
+        "expected_value": {
+          "display": "EV = p*(+marks) + (1-p)*(-negMarks)",
+          "data_testid": "results-a44-expected-value"
+        },
+        "recommendation": {
+          "rule": "Do not give prescriptive advice like ‘always attempt’. Only show neutral interpretation: ‘Positive EV’ / ‘Negative EV’.",
+          "data_testid": "results-a44-ev-interpretation"
+        }
+      },
+      "actions": {
+        "reset": {
+          "label": "Reset",
+          "variant": "ghost",
+          "data_testid": "results-a44-reset-button"
+        }
+      }
+    },
+
+    "mistake_review_checklist": {
+      "principle": "Checklist tracks completion, not mastery. Explicit completion required (A45/A50).",
+      "placement": "In Results per-question review panel, add a ‘Mistake review’ checklist card when the question is incorrect or marked for review.",
+      "items": [
+        "I identified the error category",
+        "I wrote a 1-line note",
+        "I reviewed the correct solution",
+        "I will retry a similar question"
+      ],
+      "ui": {
+        "component": "Checkbox (shadcn) list inside Card",
+        "completion": "Show ‘Completed’ only when all items checked; do not infer.",
+        "data_testids": {
+          "card": "results-mistake-review-card",
+          "item": "results-mistake-review-item",
+          "complete_badge": "results-mistake-review-complete-badge"
+        }
+      }
+    },
+
+    "components": {
+      "component_path": {
+        "shadcn_primary": [
+          "/app/frontend/src/components/ui/collapsible.jsx",
+          "/app/frontend/src/components/ui/slider.jsx",
+          "/app/frontend/src/components/ui/toggle-group.jsx",
+          "/app/frontend/src/components/ui/select.jsx",
+          "/app/frontend/src/components/ui/textarea.jsx",
+          "/app/frontend/src/components/ui/checkbox.jsx",
+          "/app/frontend/src/components/ui/card.jsx",
+          "/app/frontend/src/components/ui/button.jsx",
+          "/app/frontend/src/components/ui/badge.jsx",
+          "/app/frontend/src/components/ui/tooltip.jsx"
+        ]
+      },
+      "custom_components_to_create_js": [
+        {
+          "name": "PlayerConfidencePanel",
+          "file": "frontend/src/components/player/PlayerConfidencePanel.js",
+          "purpose": "Optional collapsible confidence UI with slider/toggles and save/clear.",
+          "data_testids": ["player-confidence-collapsible-toggle", "player-confidence-slider", "player-confidence-save-button"]
+        },
+        {
+          "name": "ResultsReflectionStrip",
+          "file": "frontend/src/components/results/ResultsReflectionStrip.js",
+          "purpose": "Per-question reflection controls (error category + notes + save).",
+          "data_testids": ["results-error-category-select", "results-error-notes-textarea", "results-reflection-save-button"]
+        },
+        {
+          "name": "MistakeReviewChecklist",
+          "file": "frontend/src/components/results/MistakeReviewChecklist.js",
+          "purpose": "Explicit completion checklist for mistake review (A45/A50).",
+          "data_testids": ["results-mistake-review-card", "results-mistake-review-item"]
+        },
+        {
+          "name": "A44ExpectedValueCalculator",
+          "file": "frontend/src/components/results/A44ExpectedValueCalculator.js",
+          "purpose": "What-if EV calculator embedded inside MetricEvidenceDrawer.",
+          "data_testids": ["results-a44-probability-input", "results-a44-expected-value"]
+        }
+      ]
+    },
+
+    "instructions_to_main_agent": [
+      "Add confidence UI as an OPTIONAL Collapsible panel inside existing Player question card; do not change navigation or submission flow.",
+      "Confidence collection must be non-blocking and must not delay scoring/submission.",
+      "Respect guide04/source04 thresholds and exclusions exactly: A41>=20 rated unchanged single-correct binary; A42>=5 p>=0.8; A43>=50 rated unchanged binary; exclude changed-response items.",
+      "Add per-question reflection controls in Results: error category Select + notes Textarea + explicit Save.",
+      "Add mistake-review checklist with explicit completion (not mastery) and wire to A45/A50 counts.",
+      "Embed A44 expected-value calculator inside MetricEvidenceDrawer (collapsible section).",
+      "All new components must be .js (not .tsx) and every interactive/value element must include data-testid."
+    ]
+  },
+
   "general_ui_ux_design_guidelines": "    - You must **not** apply universal transition. Eg: `transition: all`. This results in breaking transforms. Always add transitions for specific interactive elements like button, input excluding transforms\n    - You must **not** center align the app container, ie do not add `.App { text-align: center; }` in the css file. This disrupts the human natural reading flow of text\n   - NEVER: use AI assistant Emoji characters like`🤖🧠💭💡🔮🎯📚🎭🎬🎪🎉🎊🎁🎀🎂🍰🎈🎨🎰💰💵💳🏦💎🪙💸🤑📊📈📉💹🔢🏆🥇 etc for icons. Always use **FontAwesome cdn** or **lucid-react** library already installed in the package.json\n\n **GRADIENT RESTRICTION RULE**\nNEVER use dark/saturated gradient combos (e.g., purple/pink) on any UI element.  Prohibited gradients: blue-500 to purple 600, purple 500 to pink-500, green-500 to blue-500, red to pink etc\nNEVER use dark gradients for logo, testimonial, footer etc\nNEVER let gradients cover more than 20% of the viewport.\nNEVER apply gradients to text-heavy content or reading areas.\nNEVER use gradients on small UI elements (<100px width).\nNEVER stack multiple gradient layers in the same viewport.\n\n**ENFORCEMENT RULE:**\n    • Id gradient area exceeds 20% of viewport OR affects readability, **THEN** use solid colors\n\n**How and where to use:**\n   • Section backgrounds (not content backgrounds)\n   • Hero section header content. Eg: dark to light to dark color\n   • Decorative overlays and accent elements only\n   • Hero section with 2-3 mild color\n   • Gradients creation can be done for any angle say horizontal, vertical or diagonal\n\n- For AI chat, voice application, **do not use purple color. Use color like light green, ocean blue, peach orange etc**\n\n</Font Guidelines>\n\n- Every interaction needs micro-animations - hover states, transitions, parallax effects, and entrance animations. Static = dead. \n   \n- Use 2-3x more spacing than feels comfortable. Cramped designs look cheap.\n\n- Subtle grain textures, noise overlays, custom cursors, selection states, and loading animations: separates good from extraordinary.\n   \n- Before generating UI, infer the visual style from the problem statement (palette, contrast, mood, motion) and immediately instantiate it by setting global design tokens (primary, secondary/accent, background, foreground, ring, state colors), rather than relying on any library defaults. Don't make the background dark as a default step, always understand problem first and define colors accordingly\n    Eg: - if it implies playful/energetic, choose a colorful scheme\n           - if it implies monochrome/minimal, choose a black–white/neutral scheme\n\n**Component Reuse:**\n\t- Prioritize using pre-existing components from src/components/ui when applicable\n\t- Create new components that match the style and conventions of existing components when needed\n\t- Examine existing components to understand the project's component patterns before creating new ones\n\n**IMPORTANT**: Do not use HTML based component like dropdown, calendar, toast etc. You **MUST** always use `/app/frontend/src/components/ui/ ` only as a primary components as these are modern and stylish component\n\n**Best Practices:**\n\t- Use Shadcn/UI as the primary component library for consistency and accessibility\n\t- Import path: ./components/[component-name]\n\n**Export Conventions:**\n\t- Components MUST use named exports (export const ComponentName = ...)\n\t- Pages MUST use default exports (export default function PageName() {...})\n\n**Toasts:**\n  - Use `sonner` for toasts\"\n  - Sonner component are located in `/app/src/components/ui/sonner.tsx`\n\nUse 2–4 color gradients, subtle textures/noise overlays, or CSS-based noise to avoid flat visuals."
 }
