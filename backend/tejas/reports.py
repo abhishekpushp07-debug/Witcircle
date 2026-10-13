@@ -161,7 +161,8 @@ def render_report(a, loader):
                     rect = fitz.Rect(ref["rect"])
                     w = min(515, rect.width)
                     h = rect.height * w / rect.width
-                    report.image(crop_png(loader(ref["file_id"]), ref, 2), w, h)
+                    raw = loader(ref['file_id'])
+                    report.image(raw if ref.get('prerendered') else crop_png(raw, ref, 2), w, h)
                     report.text(
                         f"Source {ref['file_id']} · page {ref['page']}", 8, "#6C8278"
                     )

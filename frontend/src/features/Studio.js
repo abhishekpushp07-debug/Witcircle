@@ -21,6 +21,8 @@ import {
   Field,
   SelectField,
 } from "../components/Shared";
+import { StudioImportHub } from './StudioImport';
+import { Button } from '../components/ui/button';
 import { toast } from "sonner";
 export default function Studio() {
   const [sets, setSets] = useState(null);
@@ -71,18 +73,20 @@ export default function Studio() {
     <div className="container page">
       <PageTitle
         eyebrow="PRIVATE · CONTENT OPERATIONS"
-        title="Good content takes care."
-        description="Prepare, review, and publish. Every step has its own checkpoint."
+        title="Your content. Their next breakthrough."
+        description="PDF or Excel → organised test → choose a start time. All in one place."
         action={
           <button
             className="btn btn-primary"
             data-testid="studio-new-set"
             onClick={() => setCreate(true)}
           >
-            <Plus size={18} /> Create practice set
+            <Plus size={18} /> Advanced editor
           </button>
         }
       />
+      <StudioImportHub />
+      <h2 className="mt-10 mb-6" data-testid="legacy-studio-heading">Advanced Studio sets</h2>
       <div className="studio-stats">
         {[
           [
@@ -113,11 +117,10 @@ export default function Studio() {
       <div className="notice">
         <ShieldCheck size={20} />
         <div>
-          <strong>Nothing is published automatically.</strong>
+          <strong>Advanced editorial workspace</strong>
           <p>
-            Supplying a PDF is not approval of its rights, answers or solution
-            matches. Original files remain private. Review each question, then
-            publish separately.
+            Use this workspace for manually authored sets. Imported tests use the
+            organiser above, with frozen content and separate Live/Unlive controls.
           </p>
         </div>
       </div>

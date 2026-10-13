@@ -19,6 +19,8 @@ const SetDetail = lazy(() => import("./features/SetDetail"));
 const Player = lazy(() => import("./features/Player"));
 const Results = lazy(() => import("./features/Results"));
 const Studio = lazy(() => import("./features/Studio"));
+const Competitions = lazy(() => import('./features/Competitions'));
+const StudioImport = lazy(() => import('./features/StudioImport'));
 const StudioEditor = lazy(() => import("./features/StudioEditor"));
 const Info = lazy(() => import("./features/Info"));
 function Protected({ children, staff = false }) {
@@ -122,6 +124,9 @@ function Shell() {
                 </Protected>
               }
             />
+            <Route path="/competitions" element={<Protected><Competitions /></Protected>} />
+            <Route path="/competitions/:id" element={<Protected><Competitions /></Protected>} />
+            <Route path="/studio/imports/:id" element={<Protected staff><StudioImport /></Protected>} />
             <Route
               path="/studio/:id"
               element={
@@ -144,7 +149,7 @@ function Shell() {
         </Suspense>
       </main>
       {!player && <Footer />}
-      <Toaster position="top-center" visibleToasts={3} closeButton />
+      <Toaster position="top-center" visibleToasts={3} closeButton offset={{ top: 'var(--space-24)' }} mobileOffset={{ top: 'calc(var(--space-16) + var(--space-4))', left: 'var(--space-4)', right: 'var(--space-4)' }} />
     </>
   );
 }

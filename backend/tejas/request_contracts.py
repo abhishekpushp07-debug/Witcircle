@@ -198,7 +198,10 @@ class RegradePayload(Payload):
     note: str = Field(min_length=8, max_length=2000)
 
 
+from .import_models import ScheduleInput, LiveInput
+
 MODELS = {
+    'imports.schedule_import': ScheduleInput, 'imports.toggle_live': LiveInput,
     'auth.login': LoginPayload, 'phone.access': PhonePayload, 'auth.preferences': PreferencePayload,
     'content.create_set': SetPayload, 'content.update_set': SetPayload,
     'content.edit_question': QuestionPayload, 'content.extract': ExtractPayload,

@@ -42,6 +42,7 @@ def available(user=None, exam="", search=""):
     query = {
         "status": "published",
         "$and": [
+            {'$or': [{'import_id': {'$exists': False}}, {'live_enabled': True, 'start_at': {'$lte': datetime.now(timezone.utc).timestamp()}, 'end_at': {'$gt': datetime.now(timezone.utc).timestamp()}}]},
             {"$or": audiences},
             {
                 "$or": [

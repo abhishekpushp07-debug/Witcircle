@@ -14,23 +14,58 @@ Deliver a premium landing page + working practice MVP for **JEE Main** and **BIT
   - **Offline answer recovery**: student drafts persist locally; server-acknowledged responses are scored; late/unacknowledged drafts are disclosed.
   - **No key/solution leakage during an active attempt** (including via direct URL guessing).
 
-- **Auth requirements (non-negotiable)**:
-  - **Students**: phone-number only (no OTP, no password). This is a **convenience profile**, not verified phone ownership.
-  - **Staff/Owner**: secured separately.
-    - A staff credential was leaked in an earlier test artifact; **rotation + session revocation is required** (operator action).
-    - **User directive update (latest):** “Mujhse kuch mat pucho… final product bna kr do… khud bdhte rho.”
-      - We proceed autonomously for routine engineering decisions.
-      - We will not repeatedly ask for confirmations.
-      - **Exception (critical/irreversible):** before invalidating staff access (credential rotation/session revocation), we will still do **one** explicit execution window confirmation, because it is an irreversible access-impacting security operation.
+### LATEST user priority (product-first execution) — CURRENT STATUS: COMPLETED (bounded product feature phase)
 
-- **Theme requirement (updated)**:
-  - **Matte maroon** theme stays as-is (`#5C0025`), with light/dark tokens.
+Stop repeated confirmation/checkpoint interruptions and deliver a **simple unified owner workflow**:
 
-### Current top priority
+1) **One place** (Studio) to upload:
+   - **Questions PDF + Solutions PDF**, OR
+   - **Excel (.xlsx)** import for typed questions/options/answer/solution (to avoid image-only PDFs), including:
+     - single workbook (Questions + Solutions), or
+     - two workbooks / two sheets with deterministic pairing.
+2) System **auto-organises** into a test draft with strict, auditable pairing (no guessing).
+3) Only after organisation is complete, prompt owner **only for attempt start date/time** (IST).
+4) Provide **manual Live / Unlive toggle** (gated by Ready state; and by schedule if set).
+5) Deliver **world-class analysis**, **competitions**, and leaderboards—**evidence-based** with correct “unavailable/processing” states.
 
-Proceed **sequentially through all 10 packets** to reach a world-class product and a proven 5-lakh active-attempt target.
+**Implemented and verified in this phase** (does *not* imply whole-spec completion):
+- Unified PDF + XLSX importer in Studio, templates + strict row errors.
+- Sandbox isolation retained (chroot + low UID + seccomp + resource caps); codec preload fix applied (no isolation weakening).
+- Immutable imported test publication.
+- “Schedule start date/time only” UI + server gating.
+- Live/Unlive toggle.
+- Competitions hub + per-competition leaderboard.
+- Competition embargo: scores/solutions/reports/retries locked until test window ends.
+- Descriptive “missed-topic priorities” (evidence-based) added to results.
 
-- **Packet 1 is IN PROGRESS** (foundation expanded significantly; exit blocked).
+Implementation must proceed autonomously with sensible defaults—no routine questions—while preserving safety/precision/privacy invariants from the 5 PDFs.
+
+- Unknown/uncertain pairings must **block Ready/Live** with explicit issues; we do **not** fabricate academic truth.
+- Existing practice loop (attempt, scoring, PDF report) must remain functional.
+- Existing holds on upload/extraction/publication/regrade cannot be removed until their owning defects are repaired.
+
+---
+
+### Auth requirements (non-negotiable)
+
+- **Students**: phone-number only (no OTP, no password). This is a **convenience profile**, not verified phone ownership.
+- **Staff/Owner**: secured separately.
+  - A staff credential was leaked in an earlier test artifact; **rotation + session revocation is required** (operator action).
+  - User directive: proceed autonomously; avoid repeated confirmations.
+  - **Exception (critical/irreversible):** before invalidating staff access (credential rotation/session revocation), we will still do **one** explicit execution window confirmation, because it is an irreversible access-impacting security operation.
+
+### Theme requirement
+
+- **Matte maroon** theme stays as-is (`#5C0025`), with light/dark tokens.
+
+### Current top priority — UPDATED
+
+Proceed sequentially through all 10 packets to reach a world-class product and a proven 5-lakh active-attempt target, **but** day-to-day product work remains:
+
+- **Product-first importer + organiser + schedule + live/unlive + competitions + evidence analysis** (PDF + Excel) with strict correctness and safety.
+
+Notes:
+- **Packet 1 remains IN PROGRESS** (foundation expanded significantly; exit blocked).
 - We will **not stop** for routine confirmations.
 - We will **not claim** “final product” or “5 lakh concurrent supported” until the qualification gates (Packet 10 / OPS-R) are met with real evidence.
 
@@ -73,8 +108,8 @@ The spec includes **13 sequential Work Packages (WP01–WP13)** and **12 product
 
 ## Execution updates and capacity stance
 
-- Backend modularized into bounded contexts (`auth`, `catalog`, `content`, `attempts`, `answers`, `packs`, `reports`, `scoring`, `jobs`, `corrections`).
-- Core extraction + 75-question workflow + scoring + PDF report generation exists.
+- Backend modularized into bounded contexts (`auth`, `content`, `attempts`, `jobs`, etc.).
+- Core attempt loop + scoring + PDF report generation exists.
 - PDFs stored locally with SHA256 manifest:
   - `/app/docs/source_guides/manifest.json` + per-PDF `.txt` extraction.
 - **Capacity goal** remains: architect for 500,000 concurrently active attempts from launch.
@@ -86,236 +121,84 @@ The spec includes **13 sequential Work Packages (WP01–WP13)** and **12 product
 - Offline draft persistence exists.
 - Report generation exists.
 - UI uses matte maroon light/dark.
-- QA fixture sets were withdrawn; original paper remains in review.
 
 > Earlier “done” items are not treated as full compliance; the audit matrix is the current truth.
 
-### Current work status
+### Completed work (since the strategy-only phase) — UPDATED
 
-A. Player module fixture access bug blocking attempts — ✅ completed earlier
+**Portable strategy PDF**
+- `/app/frontend/public/downloads/Tejas_10_Packet_Strategy_v1.0.pdf` published, verified, and versioned.
 
-B. Verified offline recovery + submission + scoring end-to-end — ✅ completed earlier (scope-limited; not a full spec proof)
+**Packet 1 foundation expanded (still exit BLOCKED)**
+- Strict command/kernel schemas + exact workload calculator.
+- Fail-closed safety holds for upload/source preview/publication/extract/regrade.
+- Staff-only engineering endpoints (`/api/internal/capacity/profile`, `/api/internal/safety/status`).
+- Safe-by-default testing (`/app/pytest.ini` → runs `tests/packet1`).
+- Executable ingress contracts (updated): route contract enumeration fixed to include included routers.
+- Staff generation fencing + operator-only credential rotation tooling (not executed live) + runbook.
+- Dependency scans recorded and treated as OPEN release blockers (no clean scan claim).
 
-C. Matte maroon theme applied across app (`#5C0025`) — ✅ completed earlier
-
-D. Withdraw QA fixtures / clean up audit harness side effects — ✅ completed earlier
-
-E. Rigorous audit against the 5 PDFs — ✅ completed (audit-only)
-
-- Key audit deliverables:
-  - `/app/docs/audit/AUDIT_REPORT.md`
-  - `/app/docs/audit/REQUIREMENTS_MATRIX.md` (62 scoped rows)
-  - `/app/docs/audit/RULEBOOK_ERRATA.md`
-  - `/app/docs/audit/REMEDIATION_PLAN.md`
-  - `/app/docs/audit/EVIDENCE_LEDGER.md`
-  - `/app/docs/audit/analytics_60_matrix.csv` + `.json`
-
-F. 10-packet implementation strategy authored — ✅ completed (strategy-only)
-
-- `/app/docs/strategy/TEN_PACKET_STRATEGY.md`
-- `/app/docs/strategy/SLO_AND_WORKLOAD.md`
-- `/app/docs/strategy/QUALIFICATION_AND_HANDOFF.md`
-
-G. PDF export generator + snapshot handoff (doc-only; no app UI change) — ✅ completed
-
-- Generator + snapshot files:
-  - `/app/docs/strategy/export_strategy_pdf.py`
-  - `/app/docs/strategy/CONTEXT_RESTORE_SNAPSHOT.md`
-  - `/app/docs/strategy/PDF_EXPORT_README.md`
-
-H. **Portable “10 packets” Strategy PDF export** — ✅ **COMPLETED**
-
-- Delivered PDF:
-  - Local: `/app/frontend/public/downloads/Tejas_10_Packet_Strategy_v1.0.pdf`
-  - URL: https://campus-launch-2.preview.emergentagent.com/downloads/Tejas_10_Packet_Strategy_v1.0.pdf
-  - 60 pages; 296,394 bytes; SHA-256 `1868e35fe881051c9436ce530b2a236c253a501bb1f9af3bcc7aaf08dc6fd26f`
-- Contents:
-  - Full 3 strategy sources + context restore + audit/errata + 62 requirements + 60 analysis records + source hashes.
-  - Navigation: 20 bookmarks + clickable TOC.
-  - Embedded: 8 safe documentation attachments + sanitized manifest (no `source_url`, no secrets). Original 5 PDFs are *not embedded*.
-- Verification scope and limitations:
-  - Verified public HTTP 200 `application/pdf` and matching hash by testing-agent iterations 32/33.
-  - These tests are **document checks only**. Do **not** treat as application correctness/capacity evidence or Packet 1 exit evidence.
-
-I. **Packet 1 execution** — 🔧 **IN PROGRESS (FOUNDATION EXPANDED; EXIT STILL BLOCKED)**
-
-Packet 1’s intent remains unchanged: **freeze correctness definitions + build enforceable safety rails + establish isolated evidence discipline**, without claiming scale readiness.
-
-#### Packet 1 deliverables — progress snapshot
-
-✅ **Delivered (implemented in repo)**
-
-1) **Contracts/kernel + scale math (planning-only)**
-- Versioned strict DTOs for command identity, receipts, exact rational marks, source anchors, and candidate-safe question projection:
-  - `/app/backend/tejas/command_contracts.py`
-  - Deterministic canonical bytes, scope digest vs intent digest
-  - Nested command bodies made immutable (frozen dict/list) to prevent mutation after hashing
-- Exact workload calculator using `Fraction` and a typed capacity profile model:
-  - `/app/backend/tejas/capacity.py`
-  - This returns **PLANNING_ONLY_UNQUALIFIED** (explicitly not load evidence)
-
-2) **Fail-closed safety containment (Packet 1 hold; not a permanent fix)**
-- HTTP-level pre-parse holds + direct-function holds for:
-  - upload, source preview/parse, publication, extraction, regrade
-- Worker/job dispatch respects holds and does not proceed when held
-- Implemented as:
-  - `/app/backend/tejas/safety.py`
-  - plus targeted guards in `content.py`, `jobs.py`, `corrections.py`
-- Hard rule: student practice hotpath unchanged; containment targets unsafe content operations
-
-3) **Staff-only baseline readiness endpoints (no-store, typed, read-only)**
-- `/api/internal/capacity/profile` → planning profile
-- `/api/internal/safety/status` → current held capabilities + explicit UNQUALIFIED status
-- Implemented in:
-  - `/app/backend/tejas/engineering.py`
-- Verified: anonymous access returns 401 (no accidental disclosure)
-
-4) **Packet 1 baseline evidence tooling (versioned outputs)**
-- Inventory builder generates:
-  - Source index for **177 pages / 3299 blocks**
-  - Requirements subset: **45 reviewed-subset obligations** + **60 analysis feature obligations** (A01–A60)
-  - Gate inventory: **13 WP + 12 OPS-R = 25 gates**
-  - Runtime OpenAPI + route catalogue with explicit contract metadata
-  - Dependency baseline inventory
-- Implemented in:
-  - `/app/docs/packet1/build_baseline.py`
-  - `/app/docs/packet1/*` outputs
-
-5) **Rulebook correction applied**
-- Rulebook guidance updated to reflect the errata: **all 60 analyses are mandatory** (no “40 minimum”).
-
-6) **Isolated regression/evidence discipline (now verified, corrected, and made safe-by-default)**
-- Packet 1 test harness is stable and truthful.
-- **Safe pytest default** added to prevent accidentally running historical audit scripts:
-  - `/app/pytest.ini` (defaults to `tests/packet1`)
-- Latest accepted suite checkpoint (three fresh-process runs + safe-default run):
-  - **149 total cases = 143 passed + 6 strict xfailed**; 0 unexpected failures; 0 errors
-  - Logs under: `/app/docs/packet1/evidence/packet1-final-run*.log`
-  - Accepted verification report:
-    - `/app/test_reports/iteration_43_verified.json`
-  - Unsigned hashed artifact manifest:
-    - `/app/docs/packet1/evidence/continuation-artifact-manifest.json`
-- Strict rule preserved: **no extra xfails** beyond A01–A06.
-
-7) **Executable route contract registry + ingress hardening (expanded and verified)**
-- All **49 mounted `/api` operations** now:
-  - require explicit catalogue entry (fail-start if unlisted)
-  - expose runtime-derived `x-owner-policy`, `x-role-scope`, `x-workload-tier`, `x-idempotency-mode`, `x-body-limit-bytes`
-  - enforce strict request DTOs and per-operation budgets
-  - fail-closed ingress checks:
-    - missing media type still uses the same schema/body budget; incorrect media type → 415
-    - duplicate keys/non-finite numbers/invalid unicode/too-deep JSON → 400
-    - header ambiguity/length mismatch → 400
-    - stream timeout → 408
-    - query budget → 414
-- ContentSafetyHold remains outside body parsing and continues to deny protected content operations.
-- Implemented in:
-  - `/app/backend/tejas/request_contracts.py`
-  - `/app/backend/tejas/route_contracts.py`
-  - `/app/backend/tejas/http_limits.py` (upgraded)
-  - wired in `/app/backend/server.py`
-- Baseline generator now **copies authoritative runtime metadata** instead of guessing.
-
-8) **Frontend Studio write allowlists (verified by real JS + ASGI, plus mocked UI-only browser proof)**
-- StudioEditor sends only allowlisted editable fields for:
-  - questions
-  - set settings
-- Implemented in:
-  - `/app/frontend/src/lib/studioContracts.js`
-  - wired in `/app/frontend/src/features/StudioEditor.js`
-- Verified:
-  - Node executes real JS allowlist functions
-  - ASGI Studio create/read/save/settings roundtrip passes
-  - Browser-only verification uses API interception (MOCKED UI only; no real auth/write)
-
-9) **Source review mechanical ledger + validator (now live with partial exact-span review)**
-- Validator enforces:
-  - exact codepoint-partition span coverage (gap-free, overlap-free)
-  - source hash binding
-  - evidence path + hash validation
-  - parent-symlink traversal denial + secret/config denial
-  - explicit separation: mechanical coverage ≠ semantic approval
-- Implemented in:
-  - `/app/docs/packet1/source_review.py`
-  - `/app/docs/packet1/review_ledger.v1.json`
-  - `/app/docs/packet1/SOURCE_REVIEW_CONTRACT.md`
-- **Current truth (updated):**
-  - Exact-span agent review completed for **PDF-05 pages 3 and 55** only:
-    - **2 pages / 38 blocks / 65 bound obligations**
-  - Remaining: **3261 blocks**
-  - `semantic_completeness_proven=false` and `operator_approval_present=false`
-
-10) **Staff credential generation fencing + operator-only rotation primitive (strengthened; still not executed live)**
-- Generation-based staff session fencing:
-  - sessions store `credential_generation`
-  - auth validates session generation vs user generation for staff `current()` + `refresh()`
-  - `new_session()` rechecks latest user generation before finalizing issuance
-- Operator-only rotation primitive:
-  - CAS update by expected generation
-  - majority+journal acknowledgement, **server UTC** timestamp
-  - deletes stale staff sessions (cleanup)
-  - delayed old-session insert cannot regain access (generation fencing is authoritative)
-- Implemented in:
-  - `/app/backend/tejas/staff_credentials.py`
-  - `/app/backend/tools/rotate_staff_credential.py`
-  - runbook: `/app/docs/packet1/STAFF_ROTATION_RUNBOOK.md`
-- CLI safety strengthened:
-  - dry-run default
-  - requires `--apply --confirm-revoke --confirm-fenced-deployment` plus protected TTY
-  - does not accept secrets in argv
-- **LIVE rotation is NOT executed** and the incident is NOT closed.
-
-11) **Dependency scans + triage recorded (OPEN; not remediated yet)**
-- Python scan (pip-audit):
-  - scanned 143 dependency rows; 23 affected packages; 191 advisory records
-  - 2 skipped packages: `emergentintegrations`, `litellm`
-- Frontend scan (yarn audit):
-  - 26 unique advisories: 10 high, 14 moderate, 2 low
-- Stored evidence and triage:
-  - `/app/docs/packet1/dependency_triage.v1.json`
-  - scan artifacts under `/app/docs/packet1/evidence/`
-- **Status:** OPEN; no auto-upgrades and no reachability/compatibility claims.
-
-12) **Mobile toast overflow + resize clipping fixed (UI-safe)**
-- Sonner/toast container was overflowing/clipping on mobile resize.
-- Fixed by geometry constraints and disabling transitions for toaster container.
-- No color/token/theme changes.
-
-✅ **Deliberately BLOCKED (by design) in Packet 1**
-
-- `coverage_manifest.json` still declares: **zero_orphan_proven=false** (indexing != atomic clause coverage)
-- Packet 1 exit remains **BLOCKED** pending:
-  - full atomic clause registry across all 5 PDFs
-  - owner-approved contracts & failure scope
-  - credential incident closure with actual authorized rotation/revocation evidence
-  - remaining audit reproductions (S01/A04b/A05b/A07/A08 + frontend defects plan)
-  - dependency advisory remediation/attestation readiness
-
-✅ **Operational/current behavior changes (student-safe, but visible)**
-
-- User-facing limitation: **source upload / staff source preview / publication / extraction / regrade** are held with **503** (pre-body-parse), including direct calls and dispatch. Normal student pilot attempt flow, grading and report lanes are not held.
-
-### Open defects (no permanent fixes yet; remain release blockers for affected capabilities)
-
-- Backend (P1 audit findings; still OPEN):
-  - **A01** retry-resume idempotency gap (owned by Packet 06)
-  - **A02** concurrent publish duplicates same version archive (Packet 05)
-  - **A03** reviewer lost update (Packet 05)
-  - **A04** invalid audience fails open (Packet 05)
-  - **A05** queued jobs don’t self-drain when capacity frees (Packet 04)
-  - **A06** worker/extraction can write after losing lease (Packet 04)
-  - **S01** multipart/form resource budgets not enforced correctly (Packet 04)
-  - Additional audit IDs (A04b, A05b, A07, A08) remain to be ported into Packet 1 red reproductions.
+**Unified Importer + Organiser implemented (PDF + Excel) — DONE + VERIFIED**
+- Backend:
+  - Importer API + immutable imported set publication
+  - Sandbox supports both `pdf` and `xlsx`
+  - Excel organiser worker
+  - Upload guard middleware (bounded multipart budgets + immutable import freeze)
 - Frontend:
-  - **F03** typed MCQ option LaTeX renders raw (Packet 07)
-  - **F02** logout clears drafts for other profiles without immediate discard warning (Packet 07)
-  - **F01** malformed local state recovery is **NOT VERIFIED** (Packet 07)
-- Security incident (P0): leaked staff credential in a historical test report artifact
-  - **Rotation + session revocation is required by an authorized operator**
-  - **NOT executed** yet
-  - Still requires **one-time explicit execution window confirmation before invalidating staff access**
+  - StudioImportHub + organiser detail view (preview → schedule → live/unlive)
+  - Matte maroon design preserved + mobile overflow fixes + toast positioning below header
+- Design:
+  - `/app/design_guidelines.md` updated with binding Excel addendum
 
-Services status (informational only; not a capacity claim): frontend/backend/mongodb are running in this environment.
+**PDF organiser sandbox integration fixed (without weakening isolation)**
+- RCA corrected: failure was **lazy codec loading** after chroot.
+- Fix: **preload required codecs** before sealing chroot; retain chroot + UID drop + seccomp + resource limits.
+
+**Competitions + embargo + descriptive analysis — DONE + VERIFIED**
+- Competition hub + per-competition leaderboard.
+- Ranking uses first competition attempt per profile; equal-score rank gaps verified (1,1,3).
+- Solutions/results/reports/retries embargoed until competition end.
+- Results include evidence-based “missed-topic priorities” (no fabricated percentile/readiness).
+
+**Dependency upgrades applied (but audit disposition remains OPEN)**
+- Upgraded:
+  - `aiohttp==3.14.5`
+  - `urllib3==2.8.0`
+  - `fastapi==0.143.0`
+  - `starlette==1.8.0`
+  - `python-multipart==0.0.32`
+- Current scan shows **0 advisories for these five packages**, but **144 advisory records across 20 other packages**, frontend audit open, and 1 private integration package skipped; release remains blocked.
+
+**Testing and evidence — VERIFIED**
+- Isolated suite: **185 passed, 6 xfailed (pre-existing deferred architecture defects)**.
+- Frontend build: PASS.
+- Real storage verification:
+  - PDF report: **132,073 bytes**, **6 pages**, **6 images** (real object storage).
+  - Excel report: **63,206 bytes**, **3 pages** (real object storage).
+- Browser verification (no secrets):
+  - Excel upload → READY → schedule → Unlive at **390px** and **1920px**.
+  - Light/dark mode verified; source previews, leaderboard, results insights show **no horizontal overflow**.
+  - Toast positioned below header.
+- Authoritative evidence:
+  - `/app/docs/UNIFIED_IMPORTER_VERIFICATION.md`
+  - `/app/test_reports/iteration_51_verified.json`
+
+**QA hygiene**
+- 11 exact QA imports hidden (`qa_only`) from normal Studio lists.
+- 6 scheduled QA sets withdrawn; original content untouched.
+- Credential literals in test artifacts redacted; temporary/broken helpers removed.
+- Rotation/session revocation NOT executed (operator action required).
+
+### Current work status — UPDATED
+
+- Unified owner workflow + competitions + descriptive analysis are **implemented and verified** for the bounded product feature phase.
+- Sandbox protection remains in place.
+- Dependencies patched for five key packages but broader security advisories remain **OPEN**.
+- Not “production ready” / not “500k proven” because:
+  - Packet 1 exit remains blocked by credential-incident operational closure + advisory disposition + deeper requirement registry.
+  - Known 6 architecture defects remain deferred (xfail).
+  - Scale/load qualification and distributed infra are not provisioned.
+  - Full 60-analysis specification not implemented.
 
 ---
 
@@ -326,21 +209,21 @@ Services status (informational only; not a capacity claim): frontend/backend/mon
 User stories:
 
 1. Owner uploads PDFs privately.
-2. Reviewer binds questions and solutions exactly with source refs.
-3. Student can attempt (MCQ + numerical).
-4. Student gets accurate scoring.
-5. Student can download complete matched-solution PDF.
+2. Owner can alternatively upload Excel to import typed questions/options/answer/solution.
+3. System pairs questions and solutions **exactly** and blocks on ambiguity.
+4. Student can attempt (MCQ + numerical).
+5. Student gets accurate scoring.
+6. Student can download complete matched-solution PDF report.
 
-Steps:
-
-- POC-1: Private storage + secure serving — ✅ implemented; ✅ audited
-- POC-2: Deterministic content extraction + pairing scaffold — ✅ implemented; ✅ audited
-- POC-3: Attempt snapshot + scoring + deadline correctness — ✅ implemented; ✅ audited
-- POC-4: Results view + PDF report generation — ✅ implemented; ✅ audited
+Status recap:
+- ✅ POC private storage + attempt loop + scoring + report exist.
+- ✅ Importer/organiser pipeline is integrated.
+- ✅ Competition embargo + leaderboard + descriptive priorities exist.
 
 Stop and fix until:
-
 - (a) 1:1 pairing, (b) report PDF downloads, (c) no key leakage.
+
+**Status:** achieved for bounded feature scope (verified), with known deferred architecture xfails unchanged.
 
 ### Phase 2 — V1 App Development (build full product around proven core)
 
@@ -350,20 +233,45 @@ User stories:
 2. Browse sets.
 3. Phone-only login.
 4. Attempt loop.
-5. Reviewer workflow.
+5. Unified Studio importer/organiser flow (PDF + Excel) with schedule + live/unlive.
+6. Competitions and leaderboards.
+7. Evidence-based descriptive insights.
 
-(✅ implemented; audited as partial compliance.)
+Status:
+- ✅ Unified Studio importer flow implemented.
+- ✅ Legacy Studio editor remains available as fallback.
+- ✅ Competitions and embargo implemented.
+- ✅ Descriptive priorities implemented.
 
-### Phase 3 — Comprehensive testing, hardening, and regression
+### Phase 3 — Comprehensive testing, hardening, and regression — UPDATED
 
-- Backend Packet 1 suite is stable and now safe-by-default (`/app/pytest.ini` + `/app/tests/packet1`).
-- Frontend browser-only allowlist verification exists and is explicitly MOCKED (no real auth/write).
-- Security posture remains partial; production requirements (MFA, signing, cells) are not implemented.
+Mandatory closures before any “ready/secure/scale proven” claims:
+
+- **Evidence test closures**
+  - ✅ `test_no_content_type_valid_body` regression fixed.
+  - ✅ Regenerated operation catalogue from current runtime routes.
+
+- **Security evidence refresh**
+  - ✅ pip-audit re-run; triage updated to consume current evidence.
+  - ❌ Release still blocked: 20 packages w/ advisories + 1 skipped private package + frontend advisories.
+
+- **Front-end evidence**
+  - ✅ Desktop + mobile importer screens verified (PDF + Excel hub, organiser detail, schedule, live/unlive).
+  - ✅ Mobile toasts verified below header; no overflow in organiser/competitions/insights.
+
+- **Object storage end-to-end evidence (non-mocked)**
+  - ✅ Real PDF pair upload → READY → schedule → attempt → embargo release → report download verified.
+  - ✅ Real Excel upload → READY → schedule → attempt → embargo release → report download verified.
 
 ### Phase 4 — Architecture Alignment to PDFs + 5-lakh scale hardening (bounded tranche)
 
 - Rulebook + capacity worksheet exist; Packet 1 includes executable workload math and typed planning DTOs.
 - This does **not** provision live cells or validate throughput.
+
+Immediate next hardening targets (without blocking the now-working product flow):
+- Finish dependency remediation/disposition for remaining advisories.
+- Resolve the 6 known architecture regressions (currently xfail) without weakening contracts.
+- Implement official-year presets (JEE Main/BITSAT) only after rules and verification are agreed.
 
 ---
 
@@ -392,49 +300,41 @@ Each packet will contain:
 - Acceptance tests + exit gates (latency/error/backlog/durability metrics)
 - Ownership split: **application code vs operator-provisioned infrastructure**
 
+---
+
 #### Packet 1 — Rules, Safety & Regression Baseline (P01) — **IN PROGRESS (foundation expanded; exit blocked)**
 
 **Purpose:** Freeze what “correct” means before major refactors; create enforceable safety rails and red regressions for later packets.
 
 **Must deliver (Packet 1 scope only):**
 
-- **Atomic requirement registry**: expand beyond the current 62-row audit matrix into atomic MUST/acceptance clauses from all five PDFs.
-  - The current exact-span review is **partial**: only PDF-05 pp3 & 55 are partitioned/bound.
+- **Atomic requirement registry**: expand beyond the current partial review into atomic MUST/acceptance clauses from all five PDFs.
 - **Contract-first API & permission catalogue**:
-  - strict input/output DTOs, field allowlists, canonical body hashing, typed errors, idempotency scope,
-  - ETags/If-Match semantics, status/Location/Retry-After, payload budgets, UTC/monotonic units.
-  - **Now includes**: executable ingress contracts for all 49 mounted operations.
+  - strict input DTOs, typed errors, idempotency scope, payload budgets.
 - **Data ownership map**:
   - vaulting/sourcing boundaries, content truth vs analytics projections, job/outbox boundaries.
 - **Regression baseline & evidence discipline**:
-  - real-function regressions for A01–A06 are implemented and correctly RED (strict xfail) until repaired by their owning packets.
-  - isolated test data access; tests fail closed if pointed at production namespaces.
-  - secret-safe outputs (no credentials in reports), dependency inventory baseline.
-  - safe-by-default pytest scope.
+  - A01–A06 stay red regressions (xfail) until repaired by owning packets.
 - **Containment (not permanent fixes):**
   - fail-closed containment around unsafe upload/publication/job paths until owning packets repair them.
 - **Credential incident handling (planning + safe execution path; not executed yet):**
-  - persistently rotate hash in `tejas_users` + revoke entries in `tejas_sessions`
-  - race-safe session issuance boundaries
-  - operator-only tool and runbook
-  - **Do not execute rotation/revocation without one-time explicit execution window confirmation**, because it invalidates access.
+  - tooling/runbook exists;
+  - actual rotation + session revocation remains blocked until authorized.
 - **Dependency/advisory triage evidence**:
-  - record vulnerabilities/skips honestly
-  - do not claim clean scans
+  - keep findings honest; no clean scan claim.
 
-**What Packet 1 MUST NOT do:**
+**Packet 1 additions (within scope; CURRENT)**
 
-- Must not silently implement fixes owned by Packet 4/5/6/7.
-- Must not provision infrastructure (DB clusters, queues, cells) or change production environment wiring.
-- Must not claim 5-lakh readiness; must not weaken Packet 1 exit gates.
+- Importer, competitions and insights flow reflected in operation catalogue and ingress contracts.
+- Evidence updated and verified via `/app/docs/UNIFIED_IMPORTER_VERIFICATION.md`.
 
 **Exit gate (unchanged; do not weaken):**
 
-- Owner-approved contracts and failure scope
-- Zero orphan mandatory clauses in the detailed registry
-- All current findings have a red regression or explicitly unverified reproduction task
-- Safe test isolation and credential containment evidence
-- With explicit operator authorization and user confirmation: **actual persisted credential rotation + session revocation evidence**. Packet 1 remains BLOCKED until this evidence exists; a runbook or blocked label does not pass the gate.
+- Owner-approved contracts and failure scope.
+- Zero orphan mandatory clauses in the detailed registry.
+- All current findings have a red regression or explicit reproduction plan.
+- Safe test isolation and credential containment evidence.
+- With explicit operator authorization and user confirmation: **actual persisted credential rotation + session revocation evidence**.
 
 **Fix ownership mapping (from audit):**
 
@@ -443,6 +343,8 @@ Each packet will contain:
   - P05 owns A02/A03/A04
   - P06 owns A01
   - P07 owns F01/F02/F03
+
+---
 
 #### Packet 2 — Database & Live-Cell Foundation (P02)
 
@@ -495,57 +397,44 @@ Each packet will contain:
 - Delivery record: `/app/docs/strategy/PDF_EXPORT_README.md`
 - PDF download: https://campus-launch-2.preview.emergentagent.com/downloads/Tejas_10_Packet_Strategy_v1.0.pdf
 
-### B) Execute Packet 1 implementation — 🔧 IN PROGRESS
+### B) Product-First Owner Flow (Unified Importer + Organiser) — ✅ COMPLETED (bounded feature phase)
 
-Immediate work order (autonomous; no repeated confirmation requests):
+Delivered the user’s requested workflow while respecting packet boundaries:
 
-1. **Lock in Packet 1 evidence checkpoint** — ✅ DONE (updated)
-   - Safe default: `/app/pytest.ini`
-   - Stable suite: `/app/tests/packet1`
-   - Accepted verification:
-     - `/app/test_reports/iteration_43_verified.json`
-     - `143 passed, 6 strict xfailed` repeated 3× plus safe-default run
+- ✅ Studio: PDF pair or Excel import + templates.
+- ✅ Auto pairing + explicit issue lists; blocked state prevents scheduling.
+- ✅ Prompt only for start date/time.
+- ✅ Live/Unlive toggle.
+- ✅ Competitions hub + leaderboard.
+- ✅ Embargo keys/solutions/reports until end.
+- ✅ Descriptive missed-topic priorities in results.
 
-2. **Per-operation contract catalogue (ingress discipline)** — ✅ DONE (expanded)
-   - Executable route registry for all 49 operations (fail-start if unlisted)
-   - Strict request DTOs + per-operation budgets
-   - Baseline generator copies authoritative runtime metadata
+Evidence:
+- `/app/docs/UNIFIED_IMPORTER_VERIFICATION.md`
+- `/app/test_reports/iteration_51_verified.json`
 
-3. **Atomic clause coverage workflow (still Packet 1, still BLOCKED)** — 🔧 IN PROGRESS
-   - Exact-span ledger + validator in place:
-     - `/app/docs/packet1/review_ledger.v1.json`
-     - `/app/docs/packet1/source_review.py`
-   - Partial exact-span review completed for PDF-05 pp3 and p55.
-   - Next: expand exact-span binding beyond these two pages; keep semantic approval false until independent approvals exist.
+### C) Fix immediate blockers and polish (without derailing product-first flow)
 
-4. **Port remaining audit reproductions (still Packet 1; do NOT fix them here)** — ⏭️ NEXT
-   - Add strict red reproductions (or explicit “unverified” tasks) for:
-     - S01 multipart/form parsing budgets (original failure reproduction remains pending; upload hold is not proof)
-     - A04b / A05b / A07 / A08
-     - Frontend defects F01/F02/F03: reproducible evidence plan, owned by Packet 7
-   - Maintain registry:
-     - `/app/docs/packet1/REGRESSION_STATUS.json`
+**C1. Dependency advisories (release blocker) — IN PROGRESS**
+- ✅ Patched five key dependencies; no advisories for those versions.
+- ❌ Remaining advisories across 20 packages + frontend audit + skipped private package → release remains blocked.
 
-5. **Credential incident closure tooling (Packet 1: tool + fencing; execution remains gated)** — ✅ Tooling delivered; ⏭️ closure pending
-   - Tooling & fencing delivered:
-     - `/app/backend/tejas/staff_credentials.py`
-     - `/app/backend/tools/rotate_staff_credential.py`
-     - `/app/docs/packet1/STAFF_ROTATION_RUNBOOK.md`
-   - Next (gated): authorized operator executes rotation + session revocation; record evidence.
+**C2. Credential incident closure — NOT DONE**
+- Tooling exists; rotation/session revocation not executed.
 
-6. **Dependency/advisory triage (Packet 1 baseline; not remediation yet)** — ✅ Baseline evidence recorded; ⏭️ remediation strategy pending
-   - Evidence:
-     - `/app/docs/packet1/dependency_triage.v1.json`
-   - No auto-upgrades; no reachability/compatibility claims.
+**C3. Known scale/concurrency regressions — NOT DONE**
+- 6 xfails remain by design; not fixed in this phase.
 
-7. **Frontend Studio allowlist visual smoke** — ✅ DONE (with explicit scope)
-   - Node + ASGI roundtrip tests prove allowlists.
-   - Browser-only proof is explicitly MOCKED UI (API intercepted; no real auth/write) and preserved as evidence.
+### D) Continue Packet 1 completion work (still required; do not block product-first flow)
 
-### C) Continue sequentially through Packets 2–10
+1. Extend atomic clause registry across all five PDFs.
+2. Close credential incident (operator action + one-time explicit confirmation window).
+3. Remediate or explicitly disposition remaining dependency advisories.
+4. Keep safety holds until P04/P05 fixes exist.
 
-- Proceed **sequentially** once Packet 1 exit gate evidence is complete.
-- Do not “skip ahead” to later packets without meeting dependencies.
+### E) Continue sequentially through Packets 2–10
+
+- Proceed sequentially as Packet 1 exits and dependencies are met.
 - Do not claim production readiness until OPS-R gates and load/fault/restore evidence exist.
 
 ---
@@ -562,24 +451,37 @@ Immediate work order (autonomous; no repeated confirmation requests):
 
 ### Packet 1 success (current phase; must not be overclaimed)
 
-- Packet 1 deliverables completed per `TEN_PACKET_STRATEGY.md`:
-  - atomic requirement registry + coverage artifacts,
-  - contract-first API/permission catalogue,
-  - data ownership map,
-  - red regressions + isolated evidence discipline,
-  - safe containment (where allowed),
-  - ingress contract enforcement and per-operation budgets.
+- Packet 1 deliverables completed per `TEN_PACKET_STRATEGY.md`.
 - Student login remains phone-only; UI remains matte maroon.
 - Credential incident handling:
   - rotation tool + runbook prepared;
   - execution only with one-time explicit user confirmation and operator authorization;
   - no credentials leak in artifacts.
 - Dependency advisories recorded honestly; no clean scan claim.
-- **Evidence is honest**:
-  - green tests are truly green,
-  - known audit defects remain red (strict expected failures) until repaired by their owning packets,
-  - no “critical_bugs=[]” report language is treated as closure,
-  - scope violations in earlier testing-agent work are recorded and superseded rather than hidden.
+- Evidence is honest: known audit defects stay red until repaired.
+- Operation catalogue and baseline evidence match actual runtime routes.
+
+### Product-first owner flow success (updated) — ✅ achieved for bounded feature phase
+
+- Owner can create a test in **one place** via:
+  - **PDF mode**: upload Questions PDF + Solutions PDF, OR
+  - **Excel mode**: upload .xlsx using template (single workbook or two files).
+- System auto-organises a Draft Test and clearly reports ambiguity/issues.
+- **Excel** import provides:
+  - downloadable template
+  - strict header parsing
+  - deterministic pairing by question_id/question_no
+  - row-level errors + downloadable error report
+- Owner is asked **only start date/time** after organisation is Ready.
+- Owner can toggle Live/Unlive; students can attempt only when Live and within windows.
+- Competition features:
+  - first attempt per profile, equal-score ranks (1,1,3)
+  - embargo scores/solutions/reports until end
+  - no fabricated percentiles or participants
+- Evidence includes:
+  - real object storage upload proof
+  - real browser screenshots desktop + mobile
+  - no secrets/tokens in any artifacts.
 
 ### Product success (post-strategy; future)
 
@@ -593,7 +495,7 @@ Immediate work order (autonomous; no repeated confirmation requests):
 - 20×25k home-cell fleet and routing
 - Multi-AZ durability + failover + restore proofs
 - Transactional admission + writer fencing + explicit commit protocol
-- Independent worker fleet and sandboxed parsing
+- Independent worker fleet and sandboxed parsing (Tier A isolation proof)
 - Staff MFA/step-up + signing/KMS + WORM/ObjectLock
 - Authorization-aware CDN distribution
 - Full 60-analytics pipeline

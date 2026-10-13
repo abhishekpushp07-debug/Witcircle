@@ -14,6 +14,11 @@ _locks = [Lock() for _ in range(32)]
 def render_crop(source, ref, scale=2):
     from tejas_core import crop_png
     from tejas_storage import get_object
+    if source.get('kind') == 'rendered_png':
+        raw = get_object(source['path'])
+        if sha256(raw).hexdigest() != source['sha256']:
+            raise ValueError('Frozen image integrity check failed')
+        return raw
     identity = json.dumps({'source': source.get('sha256') or source['path'], 'ref': ref, 'scale': scale, 'render': 1}, sort_keys=True, separators=(',', ':'))
     key = sha256(identity.encode()).hexdigest()
     found = _cache.get(key)

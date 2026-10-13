@@ -1,4 +1,5 @@
 import copy
+import uuid
 from fastapi import APIRouter, Depends, HTTPException, Response, BackgroundTasks
 from pydantic import BaseModel, Field
 from pymongo import ReturnDocument
@@ -110,6 +111,8 @@ def attempt_view(a):
     ]
     return {
         **{k: a.get(k) for k in fields},
+        "summary": a.get('summary') if a.get('competition_end', 0) <= now() else None,
+        "competition_end": a.get('competition_end'),
         "questions": [delivered(q) for q in a["questions"]],
         "server_now": now(),
         "count": len(a["questions"]),
@@ -172,6 +175,12 @@ async def start(id: str, data: Start, u=Depends(current)):
     s = await get(sets, id)
     preview = data.preview and u["role"] in ["owner", "reviewer"]
     mode = "preview" if preview else "practice"
+    competition_id = str(uuid.uuid5(uuid.NAMESPACE_URL, 'competition:' + id + ':' + u['id'])) if s.get('competition') and not preview else None
+    if competition_id:
+        first = await attempts.find_one({'id': competition_id}, {'_id': 0, 'command_receipts': 0, 'response_schema': 0})
+        if first:
+            await bind_start_alias(first, id, data)
+            return attempt_view(await expire(first))
     active = await attempts.find_one(
         {"user_id": u["id"], "set_id": id, "mode": mode, "status": "active"}, {"_id": 0}
     )
@@ -199,7 +208,7 @@ async def start(id: str, data: Start, u=Depends(current)):
     if not s["questions"]:
         raise HTTPException(400, "No questions are available.")
     a = {
-        "id": uid(),
+        "id": competition_id or uid(),
         "user_id": u["id"],
         "set_id": id,
         "start_key": data.start_key,
@@ -224,14 +233,21 @@ async def start(id: str, data: Start, u=Depends(current)):
         "deadline": 0,
         "parent_attempt": None,
     }
+    if s.get('competition') and not preview:
+        a['competition_end'] = s['end_at']
+        a['competition_ranked'] = u.get('role') == 'student' and u.get('access_type') == 'unverified_phone'
     if a["rules"]["minutes"]:
         a["deadline"] = a["started_at"] + a["rules"]["minutes"] * 60
+        if a.get('competition_end'):
+            a['deadline'] = min(a['deadline'], a['competition_end'])
     try:
         await insert_attempt(a)
     except DuplicateKeyError:
-        a = await attempts.find_one(
-            {"user_id": u["id"], "set_id": id, "mode": mode, "status": "active"}
-        )
+        a = await attempts.find_one({'id': competition_id}, {'_id': 0}) if competition_id else None
+        if not a:
+            a = await attempts.find_one(
+                {"user_id": u["id"], "set_id": id, "mode": mode, "status": "active"}
+            )
         if not a:
             a = await attempts.find_one(
                 {"user_id": u["id"], "start_key": data.start_key}, {"_id": 0, "command_receipts": 0, "response_schema": 0}
@@ -247,13 +263,14 @@ async def start(id: str, data: Start, u=Depends(current)):
 
 @router.get("/attempts")
 async def history(page: int = 1, u=Depends(current)):
-    fields = {k: 1 for k in ("id", "set_id", "title", "exam", "mode", "version", "rules", "started_at", "deadline", "status", "submitted_at", "receipt", "reason", "summary", "profile", "count", "grading_status")}
+    fields = {k: 1 for k in ("id", "set_id", "title", "exam", "mode", "version", "rules", "started_at", "deadline", "status", "submitted_at", "receipt", "reason", "summary", "profile", "count", "grading_status", "competition_end")}
     data = await attempts.find({"user_id": u["id"]}, {"_id": 0, **fields}).sort("started_at", -1).skip((max(1, page) - 1) * 20).limit(20).to_list(20)
     for a in data:
         if a["status"] == "active" and a["deadline"] and now() >= a["deadline"]:
             closed = await finalize(a["id"], "time_limit")
             a.update({k: v for k, v in closed.items() if k in fields})
         a["server_now"] = now()
+        if a.get('competition_end', 0) > now(): a['summary'] = None
     return {"items": data, "page": page}
 
 
@@ -324,6 +341,8 @@ async def results(id: str, bg: BackgroundTasks, score_version: str = "original",
     from .corrections import with_grade
 
     a = await expire(await owned(id, u))
+    if a['status'] == 'completed' and a.get('competition_end', 0) > now():
+        return {'id': id, 'title': a['title'], 'status': 'embargoed', 'release_at': a['competition_end'], 'receipt': a.get('receipt'), 'server_now': now()}
     if a["status"] == "completed":
         if not a.get("ledger"):
             job = await ensure_grade(a, bg)
@@ -335,9 +354,11 @@ async def results(id: str, bg: BackgroundTasks, score_version: str = "original",
     for q in result["questions"]:
         q["asset_count"] = len(q.get("q_refs", []))
         q["solution_asset_count"] = len(q.get("s_refs", []))
+    from .insights import insights
     return {
         **attempt_view(a),
         **result,
+        'insights': insights(result),
         "grade_versions": await db.tejas_score_versions.find(
             {"attempt_id": id, "user_id": u["id"]},
             {"_id": 0, "ledger": 0, "pack_id": 0},
@@ -368,7 +389,7 @@ async def asset(
     if a["status"] == "completed":
         a = await with_grade(a, score_version)
     if kind not in ["question", "solution"] or (
-        kind == "solution" and a["status"] != "completed"
+        kind == "solution" and (a["status"] != "completed" or a.get('competition_end', 0) > now())
     ):
         raise HTTPException(403, "Solution assets remain private until submission.")
     q = next((q for q in a["questions"] if q["id"] == qid), None)
@@ -389,6 +410,8 @@ async def retry(id: str, data: dict, u=Depends(current)):
     from .corrections import with_grade
 
     a = await expire(await owned(id, u))
+    if a.get('competition_end', 0) > now():
+        raise HTTPException(403, 'Revision attempts unlock when the competition window closes.')
     if a["status"] == "completed" and not a.get("ledger"):
         raise HTTPException(409, "Your answers are sealed. Wait for grading before starting a retry.", headers={"Retry-After": "2"})
     if a["status"] == "completed":
@@ -493,6 +516,8 @@ async def report(id: str, bg: BackgroundTasks, data: dict, u=Depends(current)):
     from .corrections import with_grade
 
     a = await expire(await owned(id, u))
+    if a.get('competition_end', 0) > now():
+        raise HTTPException(403, 'Reports unlock when the competition window closes.')
     version = str(data.get("score_version", "original"))
     if a["status"] == "completed" and not a.get("ledger"):
         await ensure_grade(a, bg)

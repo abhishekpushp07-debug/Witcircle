@@ -171,6 +171,9 @@ async def download(id: str, u=Depends(current)):
     j = await get(jobs, id)
     if j['kind'] != 'report' or j['user_id'] != u['id']:
         raise HTTPException(404, 'Report not found.')
+    attempt = await attempts.find_one({'id': j['payload']['attempt_id']}, {'_id':0, 'competition_end':1})
+    if attempt and attempt.get('competition_end', 0) > now():
+        raise HTTPException(403, 'Reports unlock when the competition window closes.')
     if j['status'] != 'done':
         raise HTTPException(409, 'The report is not ready yet.', headers={'Retry-After': '3'})
     return Response(await run_in_threadpool(get_object, j['path']), media_type='application/pdf', headers={'Content-Disposition': 'attachment; filename="Tejas-results-and-solutions.pdf"', 'Cache-Control': 'private, no-store'})

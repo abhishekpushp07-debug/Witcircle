@@ -52,7 +52,8 @@ export default function Results() {
       try {
         const result = await api('/attempts/' + id + '/results?score_version=' + encodeURIComponent(scoreVersion), { signal: controller.signal });
         if (controller.signal.aborted) return;
-        if (result.status === 'grading') {
+        if (result.status === 'embargoed') { setPending(result); }
+        else if (result.status === 'grading') {
           setPending(result);
           if (result.grading_status !== 'failed' && ++polls < 45) {
             timer = setTimeout(load, Math.min(10000, Math.max(2000, result.retry_after_ms || 2000) * (1 + polls / 5)) + Math.random() * 1000);
@@ -78,6 +79,7 @@ export default function Results() {
       setBusy(false);
     }
   }
+  if (pending?.status === 'embargoed') return <div className="container page" data-testid="results-embargoed"><PageTitle eyebrow="SUBMISSION RECEIVED" title="Your answers are sealed." description={pending.title} /><section className="import-card"><h2>A fair window for everyone.</h2><p className="import-muted" data-testid="results-release-time">Your results, solutions and PDF report unlock at {new Date(pending.release_at * 1000).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST, after the competition closes.</p><p className="import-fineprint mt-4" data-testid="results-embargo-receipt">Submission receipt: {pending.receipt}</p><div className="flex flex-wrap gap-3 mt-6"><Button data-testid="results-release-refresh" onClick={() => setRefresh(v => v + 1)}>Check results</Button><Button asChild variant="outline"><Link data-testid="results-competition-hub" to="/competitions">Competition hub</Link></Button></div></section></div>;
   if (pending) return <div className="container page" data-testid="results-grading-pending">
     <PageTitle eyebrow="SUBMISSION RECEIVED" title="Your answers are safely submitted." description="Your sealed answers are being graded in the background. You can leave this page and return from My practice." />
     <div className="card">
@@ -213,7 +215,7 @@ export default function Results() {
             <CheckCircle2 size={18} /> Correct
           </span>
           <strong>{s.correct}</strong>
-          <small>Matched the approved key</small>
+          <small>Matched the frozen supplied key</small>
         </div>
         <div className="result-stat">
           <span>
@@ -322,6 +324,7 @@ export default function Results() {
           </details>
         </section>
       </div>
+      {r.insights && <section className="import-card mb-8" data-testid="results-evidence-insights"><div className="import-section-label">YOUR NEXT STUDY SESSION</div><h2>Start where this attempt points.</h2><div className="insight-grid">{r.insights.priorities.length ? r.insights.priorities.map((g,i) => <article className="import-issue" data-testid={'results-priority-' + i} key={g.label}><strong>{g.label}</strong><p>{g.incorrect} incorrect · {g.skipped} skipped · {g.count} questions</p><p>Attempted accuracy: {g.accuracy === null ? 'Not available' : g.accuracy + '%'} ({g.correct}/{g.attempted})</p><p>{g.action}</p><small>{g.evidence} · Review Q{g.questions.join(', Q')}</small></article>) : <p data-testid="results-no-priorities">No incorrect or skipped eligible questions in this attempt. Use fresh questions to gather more evidence.</p>}</div><p className="import-fineprint mt-4" data-testid="results-insights-basis">{r.insights.basis}</p></section>}
       <div className="review-heading">
         <div>
           <span className="eyebrow">UNDERSTAND THE WHY</span>
@@ -454,7 +457,7 @@ export default function Results() {
                   <div className="solution-title">
                     <FileIcon />
                     <h3>Matched solution · Q{q.solution_number}</h3>
-                    <Badge>Reviewed with this version</Badge>
+                    <Badge>Matched to this frozen version</Badge>
                   </div>
                   <QuestionContent
                     question={q}

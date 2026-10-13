@@ -73,6 +73,9 @@ async def audit(actor, action, resource, detail=""):
 
 
 async def indexes():
+    await db.tejas_imports.create_index('id', unique=True)
+    await db.tejas_imports.create_index([('created_at', -1)])
+    await attempts.create_index([('set_id',1),('mode',1),('competition_ranked',1),('summary.score',-1)])
     await db.tejas_phone_profiles.create_index("id", unique=True)
     await db.tejas_phone_profiles.create_index("phone", unique=True)
     await db.tejas_phone_limits.create_index("expires_at", expireAfterSeconds=0)

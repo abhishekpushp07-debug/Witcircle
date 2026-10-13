@@ -126,6 +126,8 @@ class JsonBodyLimits:
             except ValidationError:
                 # No input values, keys or credential echoes in errors/logs.
                 return await reject('Request fields or values do not match this operation’s contract.', 422, 'validation_error')
+        if not media:
+            scope = {**scope, 'headers': [*raw_headers, (b'content-type', b'application/json')]}
         delivered = False
         async def replay():
             nonlocal delivered

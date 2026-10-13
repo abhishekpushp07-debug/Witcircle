@@ -9,6 +9,17 @@ from .request_contracts import MODELS, EmptyPayload
 
 # owner boundary, workload tier, current idempotency behavior
 SPEC = {
+    'imports.template': ('staff_template', 'normal', 'read'),
+    'imports.list_imports': ('staff_imports', 'normal', 'read'),
+    'imports.create_import': ('owner_private_sources', 'batch', 'request_uuid_fingerprint'),
+    'imports.read_import': ('staff_imports', 'normal', 'read'),
+    'imports.retry_import': ('owner_imports', 'batch', 'lease_CAS'),
+    'imports.error_report': ('staff_imports', 'normal', 'read'),
+    'imports.import_asset': ('staff_imports', 'normal', 'read'),
+    'imports.schedule_import': ('owner_immutable_import_publication', 'control', 'insert_or_revision_CAS'),
+    'imports.toggle_live': ('owner_import_admission', 'control', 'revision_CAS'),
+    'competitions.catalogue': ('authenticated_competition_metadata', 'normal', 'read'),
+    'competitions.leaderboard': ('anonymous_cohort_after_close', 'normal', 'read'),
     'server.health': ('public_liveness_only', 'normal', 'read'),
     'auth.register': ('removed_endpoint', 'normal', 'gone'),
     'auth.login': ('staff_password_session', 'normal', 'new_session'),
@@ -91,8 +102,10 @@ def roles(dependant):
 
 
 def install_contracts(app):
+    from fastapi.routing import iter_route_contexts
     registry = []
-    for route in app.routes:
+    for ctx in iter_route_contexts(app.routes):
+        route = ctx.route
         if not isinstance(route, APIRoute) or not route.path.startswith('/api/'):
             continue
         module = route.endpoint.__module__.split('.')[-1]
@@ -101,7 +114,7 @@ def install_contracts(app):
             raise RuntimeError('API route lacks an explicit local contract: ' + key)
         owner, tier, idem = SPEC[key]
         writes = bool(route.methods & {'POST', 'PUT', 'PATCH', 'DELETE'})
-        upload = key == 'content.upload'
+        upload = key in ('content.upload', 'imports.create_import')
         model = (MODELS.get(key, EmptyPayload) if writes and not upload else None)
         if writes and not upload and route.body_field and key not in MODELS:
             raise RuntimeError('Body-bearing route lacks an explicit input model: ' + key)
@@ -126,7 +139,7 @@ def install_contracts(app):
                     schema = c.model.model_json_schema(ref_template='#/components/schemas/{model}')
                     components.update(schema.pop('$defs', {}))
                     components[c.model.__name__] = schema
-                    operation['requestBody'] = {'required': bool(c.route.body_field and c.route.body_field.required),
+                    operation['requestBody'] = {'required': bool(c.route.body_field and getattr(c.route.body_field, 'required', True)),
                         'content': {'application/json': {'schema': {'$ref': '#/components/schemas/' + c.model.__name__}}}}
                 operation['x-known-gaps'] = ['Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements']
         return spec

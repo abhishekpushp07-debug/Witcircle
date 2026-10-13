@@ -332,7 +332,9 @@ class TestOperationCatalogue:
         # Get actual runtime routes from FastAPI app (exclude auto-generated docs)
         actual_routes = set()
         excluded_paths = {'/docs', '/redoc', '/openapi.json', '/api/docs', '/api/openapi.json', '/docs/oauth2-redirect'}
-        for route in app.routes:
+        from fastapi.routing import iter_route_contexts
+        for ctx in iter_route_contexts(app.routes):
+            route = ctx.route
             if hasattr(route, 'methods') and hasattr(route, 'path'):
                 if route.path not in excluded_paths:
                     for method in route.methods:

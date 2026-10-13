@@ -1,79 +1,13 @@
 {
   "schema_version": "dependency-triage-v1",
-  "recorded_at_utc": "2026-10-12T17:53:35.081908+00:00",
+  "recorded_at_utc": "2026-10-13T12:56:04.408110+00:00",
   "status": "OPEN_FINDINGS_NOT_A_CLEAN_SCAN",
   "release_allowed": false,
   "signed_sbom": false,
   "backend": {
     "scanner": "pip-audit",
-    "dependency_rows": 143,
+    "dependency_rows": 161,
     "affected_packages": [
-      {
-        "package": "aiohttp",
-        "installed": "3.13.3",
-        "advisory_record_count": 48,
-        "advisory_ids": [
-          "PYSEC-2026-2094",
-          "PYSEC-2026-2094",
-          "PYSEC-2026-2095",
-          "PYSEC-2026-2095",
-          "PYSEC-2026-2096",
-          "PYSEC-2026-2096",
-          "PYSEC-2026-2097",
-          "PYSEC-2026-2097",
-          "PYSEC-2026-2098",
-          "PYSEC-2026-2098",
-          "PYSEC-2026-2099",
-          "PYSEC-2026-2099",
-          "PYSEC-2026-2100",
-          "PYSEC-2026-2100",
-          "PYSEC-2026-2101",
-          "PYSEC-2026-2101",
-          "PYSEC-2026-2102",
-          "PYSEC-2026-2102",
-          "PYSEC-2026-2103",
-          "PYSEC-2026-2103",
-          "PYSEC-2026-2104",
-          "PYSEC-2026-2104",
-          "PYSEC-2026-2105",
-          "PYSEC-2026-2105",
-          "PYSEC-2026-2106",
-          "PYSEC-2026-2106",
-          "PYSEC-2026-2107",
-          "PYSEC-2026-2107",
-          "PYSEC-2026-2108",
-          "PYSEC-2026-2108",
-          "PYSEC-2026-2109",
-          "PYSEC-2026-2109",
-          "PYSEC-2026-2110",
-          "PYSEC-2026-2110",
-          "PYSEC-2026-2111",
-          "PYSEC-2026-2111",
-          "PYSEC-2026-2112",
-          "PYSEC-2026-2112",
-          "PYSEC-2026-2113",
-          "PYSEC-2026-2113",
-          "PYSEC-2026-237",
-          "PYSEC-2026-237",
-          "PYSEC-2026-3545",
-          "PYSEC-2026-3545",
-          "PYSEC-2026-3546",
-          "PYSEC-2026-3546",
-          "PYSEC-2026-3547",
-          "PYSEC-2026-3547"
-        ],
-        "listed_fixed_versions": [
-          "3.13.4",
-          "3.14.0",
-          "3.14.1",
-          "3.14.2",
-          "3.14.3"
-        ],
-        "no_fix_listed_for_some_findings": false,
-        "owning_packet": 10,
-        "triage": "OPEN_COMPATIBILITY_AND_REACHABILITY_REVIEW_REQUIRED",
-        "note": "Scanner records may share aliases. A listed fix is not a tested compatible upgrade; absence of direct imports is not proof of non-reachability."
-      },
       {
         "package": "anyio",
         "installed": "4.12.1",
@@ -199,6 +133,67 @@
         ],
         "no_fix_listed_for_some_findings": false,
         "owning_packet": 3,
+        "triage": "OPEN_COMPATIBILITY_AND_REACHABILITY_REVIEW_REQUIRED",
+        "note": "Scanner records may share aliases. A listed fix is not a tested compatible upgrade; absence of direct imports is not proof of non-reachability."
+      },
+      {
+        "package": "litellm",
+        "installed": "1.80.0",
+        "advisory_record_count": 32,
+        "advisory_ids": [
+          "GHSA-69x8-hrgq-fjj8",
+          "PYSEC-2026-2597",
+          "PYSEC-2026-2597",
+          "PYSEC-2026-2598",
+          "PYSEC-2026-2598",
+          "PYSEC-2026-2599",
+          "PYSEC-2026-2599",
+          "PYSEC-2026-2600",
+          "PYSEC-2026-2600",
+          "PYSEC-2026-3476",
+          "PYSEC-2026-3476",
+          "PYSEC-2026-3477",
+          "PYSEC-2026-3477",
+          "PYSEC-2026-3478",
+          "PYSEC-2026-3478",
+          "PYSEC-2026-3479",
+          "PYSEC-2026-3479",
+          "PYSEC-2026-3861",
+          "PYSEC-2026-388",
+          "PYSEC-2026-388",
+          "PYSEC-2026-390",
+          "PYSEC-2026-390",
+          "PYSEC-2026-4066",
+          "PYSEC-2026-4067",
+          "PYSEC-2026-4069",
+          "PYSEC-2026-4070",
+          "PYSEC-2026-4071",
+          "PYSEC-2026-4072",
+          "PYSEC-2026-4073",
+          "PYSEC-2026-4074",
+          "PYSEC-2026-4075",
+          "PYSEC-2026-4076"
+        ],
+        "listed_fixed_versions": [
+          "1.82.0",
+          "1.83.0",
+          "1.83.7",
+          "1.83.9",
+          "1.83.10",
+          "1.83.14",
+          "1.84.0",
+          "1.88.6",
+          "1.89.7",
+          "1.90.7",
+          "1.91.5",
+          "1.92.2",
+          "1.93.2",
+          "1.94.3",
+          "1.95.1",
+          "1.96.2"
+        ],
+        "no_fix_listed_for_some_findings": true,
+        "owning_packet": 10,
         "triage": "OPEN_COMPATIBILITY_AND_REACHABILITY_REVIEW_REQUIRED",
         "note": "Scanner records may share aliases. A listed fix is not a tested compatible upgrade; absence of direct imports is not proof of non-reachability."
       },
@@ -428,33 +423,6 @@
         "note": "Scanner records may share aliases. A listed fix is not a tested compatible upgrade; absence of direct imports is not proof of non-reachability."
       },
       {
-        "package": "python-multipart",
-        "installed": "0.0.22",
-        "advisory_record_count": 10,
-        "advisory_ids": [
-          "PYSEC-2026-3036",
-          "PYSEC-2026-3036",
-          "PYSEC-2026-3037",
-          "PYSEC-2026-3037",
-          "PYSEC-2026-3038",
-          "PYSEC-2026-3038",
-          "PYSEC-2026-3039",
-          "PYSEC-2026-3039",
-          "PYSEC-2026-3040",
-          "PYSEC-2026-3040"
-        ],
-        "listed_fixed_versions": [
-          "0.0.26",
-          "0.0.27",
-          "0.0.30",
-          "0.0.31"
-        ],
-        "no_fix_listed_for_some_findings": false,
-        "owning_packet": 4,
-        "triage": "OPEN_COMPATIBILITY_AND_REACHABILITY_REVIEW_REQUIRED",
-        "note": "Scanner records may share aliases. A listed fix is not a tested compatible upgrade; absence of direct imports is not proof of non-reachability."
-      },
-      {
         "package": "requests",
         "installed": "2.32.5",
         "advisory_record_count": 2,
@@ -490,72 +458,13 @@
         "owning_packet": 10,
         "triage": "OPEN_COMPATIBILITY_AND_REACHABILITY_REVIEW_REQUIRED",
         "note": "Scanner records may share aliases. A listed fix is not a tested compatible upgrade; absence of direct imports is not proof of non-reachability."
-      },
-      {
-        "package": "starlette",
-        "installed": "0.37.2",
-        "advisory_record_count": 14,
-        "advisory_ids": [
-          "PYSEC-2026-161",
-          "PYSEC-2026-161",
-          "PYSEC-2026-1941",
-          "PYSEC-2026-1941",
-          "PYSEC-2026-1943",
-          "PYSEC-2026-1943",
-          "PYSEC-2026-2280",
-          "PYSEC-2026-2280",
-          "PYSEC-2026-2281",
-          "PYSEC-2026-2281",
-          "PYSEC-2026-248",
-          "PYSEC-2026-248",
-          "PYSEC-2026-249",
-          "PYSEC-2026-249"
-        ],
-        "listed_fixed_versions": [
-          "0.40.0",
-          "0.47.2",
-          "1.0.1",
-          "1.1.0",
-          "1.3.0",
-          "1.3.1"
-        ],
-        "no_fix_listed_for_some_findings": false,
-        "owning_packet": 4,
-        "triage": "OPEN_COMPATIBILITY_AND_REACHABILITY_REVIEW_REQUIRED",
-        "note": "Scanner records may share aliases. A listed fix is not a tested compatible upgrade; absence of direct imports is not proof of non-reachability."
-      },
-      {
-        "package": "urllib3",
-        "installed": "2.6.3",
-        "advisory_record_count": 7,
-        "advisory_ids": [
-          "PYSEC-2026-141",
-          "PYSEC-2026-141",
-          "PYSEC-2026-142",
-          "PYSEC-2026-142",
-          "PYSEC-2026-4175",
-          "PYSEC-2026-4176",
-          "PYSEC-2026-4177"
-        ],
-        "listed_fixed_versions": [
-          "2.7.0",
-          "2.8.0"
-        ],
-        "no_fix_listed_for_some_findings": false,
-        "owning_packet": 4,
-        "triage": "OPEN_COMPATIBILITY_AND_REACHABILITY_REVIEW_REQUIRED",
-        "note": "Scanner records may share aliases. A listed fix is not a tested compatible upgrade; absence of direct imports is not proof of non-reachability."
       }
     ],
-    "advisory_records": 191,
+    "advisory_records": 144,
     "unscanned": [
       {
         "package": "emergentintegrations",
         "reason": "Dependency not found on PyPI and could not be audited: emergentintegrations (0.1.0)"
-      },
-      {
-        "package": "litellm",
-        "reason": "URL requirements cannot be pinned to a specific package version"
       }
     ]
   },
@@ -780,9 +689,9 @@
     "scanner_errors": []
   },
   "artifact_sha256": {
-    "docs/packet1/evidence/python-dependency-audit.json": "fc5bbff11479c7387d13fcd0fb40ede2edb07acf1c55c308757e0ff3e6f2eaa2",
+    "docs/packet1/evidence/python-dependency-audit-current.json": "0bcded5a358d3dfc1fa84cda64dbcf161082682371950d99125ba098c6f9b67d",
     "docs/packet1/evidence/frontend-dependency-audit.jsonl": "23e6bdc432241994078b74bb48402e48a7d6079398f0bf82784a54643566aa32",
-    "backend/requirements.txt": "bfa254eca8d409f1219e13fe0d61190d619c0a84fca958349e9b51de0126f268",
+    "backend/requirements.txt": "ebe982cd78eb77a91830817a5452595dcb51ef4165c463d932360625d3dc83e5",
     "frontend/yarn.lock": "b3f72dfccf3817d8c72c0cbbf5aa4d520914ea3b8b6bb703036ae87a231075d6"
   },
   "requirements": [

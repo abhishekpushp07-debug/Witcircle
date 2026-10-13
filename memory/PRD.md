@@ -1,3 +1,23 @@
+# Current checkpoint — unified PDF/Excel product flow (supersedes historical status below)
+
+User approved autonomous product-first development and added Excel direct-text questions/options/solutions import. Matte maroon #5C0025 and phone-only student access preserved. Do not repeatedly seek routine confirmation. Latest verified scope:
+
+- Studio: Questions PDF + Solutions PDF OR `.xlsx` combined / two-sheet / two-file imports; four downloadable templates; strict ID/number pairing, explicit supplied keys, row errors and CSV download; no guessed answers.
+- Isolated PDF/XLSX workers retain chroot, low UID, seccomp and resource budgets. PDF codec failure repaired without weakening isolation. PDF regions preserved; Excel imports typed text. Unsupported/ambiguous sources block scheduling.
+- Organisation → only start date/time in IST → Live/Unlive. Imported publication is immutable, revision-checked; server gates shared competition window. Unlive pauses new attempts, not existing answers.
+- Competition pages use real original scored student-profile attempts; one attempt per competition/profile, equal-score ranks1,1,3; pseudonyms/no exposed phones. No verified identity, official percentile or fabricated competitors.
+- Early submissions keep results/solutions/reports/retries embargoed until shared end. New descriptive review priorities supplement existing subject/topic summaries. Full60 analyses remain unfinished.
+- Verification:185 passed +6 known deferred xfailed; frontend build passes; real object-storage PDF and Excel report downloads confirmed; actual Excel upload/preview/schedule/toggle UI tested. Desktop1920x800/mobile390x844 plus light/dark checked with no horizontal overflow. Mobile toast positioned below header.
+- Read `/app/docs/UNIFIED_IMPORTER_VERIFICATION.md` and `/app/test_reports/iteration_51_verified.json` as the authoritative reconciliation of earlier incomplete/overstated testing-agent reports.
+-11 identified QA imports archived from normal Studio lists and6 scheduled QA tests withdrawn; original content untouched. App storage/report APIs are real, not mocked. Isolated tests mock storage separately.
+- Dependencies: patched aiohttp/urllib3/FastAPI/Starlette/multipart; pip check passes. Current audit still reports144 advisory records across20 other packages; private integration package skipped; frontend findings open. Release NOT cleared. Prior exposed staff credentials still require operator rotation/session revocation (not executed); literals removed/redacted from local QA artifacts.
+- Scale500,000 remains unqualified; distributed infrastructure, known6 architecture regressions, official-year presets and all60 analytics remain backlog. Do not describe this feature completion as final specification/production completion.
+
+Next visible product work: custom Excel header mapping, richer cohort comparisons, multi-attempt progress/revision planning; full analytics remains user-requested backlog. Architecture packets2–10 remain secondary to product flow per user.
+
+---
+
+
 # Latest authoritative checkpoint — audit completed, NO fixes applied
 
 The user explicitly required an **audit first**, not more implementation. Read `/app/docs/audit/AUDIT_REPORT.md`, `REQUIREMENTS_MATRIX.md`, `RULEBOOK_ERRATA.md`, `EVIDENCE_LEDGER.md` and `REMEDIATION_PLAN.md` before making any new claims or changes.

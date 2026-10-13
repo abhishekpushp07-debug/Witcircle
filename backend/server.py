@@ -18,6 +18,8 @@ from tejas import (
     corrections,
     answers,
     engineering,
+    imports,
+    competitions,
 )
 from tejas.db import indexes, client
 from tejas.contracts import EnvelopeResponse, error_response, request_id
@@ -44,6 +46,8 @@ from tejas.http_limits import JsonBodyLimits
 from tejas.safety import ContentSafetyHold
 app.add_middleware(JsonBodyLimits, contracts_owner=app)
 app.add_middleware(ContentSafetyHold)
+from tejas.import_guard import ImportGuard
+app.add_middleware(ImportGuard)
 origins = [os.environ["FRONTEND_URL"].rstrip("/")]
 app.add_middleware(
     CORSMiddleware,
@@ -135,6 +139,8 @@ for module in [
     profiles,
     corrections,
     engineering,
+    imports,
+    competitions,
 ]:
     app.include_router(module.router)
 

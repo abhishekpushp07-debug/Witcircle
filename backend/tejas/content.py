@@ -83,6 +83,8 @@ def valid_rules(r):
 
 
 def permitted(s, u=None):
+    if s.get('import_id') and (not s.get('live_enabled') or now() < s.get('start_at', float('inf')) or now() >= s.get('end_at', 0)):
+        return False
     if (
         s.get("expires")
         and s["expires"] < datetime.now(timezone.utc).date().isoformat()
@@ -153,7 +155,7 @@ async def set_detail(id: str):
 async def studio_sets(u=Depends(staff)):
     from .catalog import page
 
-    return [summary(s) for s in await page({"qa_only": {"$ne": True}}, size=100)]
+    return [summary(s) for s in await page({"qa_only": {"$ne": True}, 'import_id': {'$exists': False}}, size=100)]
 
 
 @router.post("/studio/sets")

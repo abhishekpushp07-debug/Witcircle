@@ -1,288 +1,674 @@
 {
-  "addendum_meta": {
-    "purpose": "ADDENDUM ONLY: normalize existing teal/blue literals to a matte maroon semantic token system + add coherent light/dark roles. No layout rewrite, no new component architecture.",
-    "requested_change": "Change teal blue to maroon matte; preserve approved nav + ExamDetails polish and existing practice/player/results/staff architecture.",
-    "critical_constraints": [
-      "Do not change scope or code architecture.",
-      "App.css is large (~6000 lines) with many historic blue/teal literals; migrate by mapping to tokens (no new styles).",
-      "Add a dark palette system preference support via tokens (do not redesign layouts).",
-      "Fonts must be Figtree (UI) + Roboto Mono (numbers).",
-      "Primary buttons in dark mode must remain maroon with WHITE text (not pink/white).",
-      "All interactive and key informational elements MUST include data-testid (kebab-case, role-based)."
-    ]
-  },
-
-  "typography_addendum": {
-    "font_pairing": {
-      "ui": {
-        "family": "Figtree",
-        "weights": [400, 500, 600, 700],
-        "use_for": ["body", "headings", "buttons", "labels", "nav"]
-      },
-      "numbers": {
-        "family": "Roboto Mono",
-        "weights": [400, 500, 600],
-        "use_for": ["timer", "scores", "marks", "question numbers", "codes", "file extensions"],
-        "css_note": "Apply tabular figures where possible: font-variant-numeric: tabular-nums;"
-      }
-    },
-    "implementation_note_js": {
-      "index_css_google_fonts_import": "Replace existing Google Fonts import with: https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;600&display=swap",
-      "global_font_rules": {
-        "body": "font-family: 'Figtree', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;",
-        "headings": "font-family: 'Figtree', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;",
-        "mono": "font-family: 'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;"
-      }
-    }
-  },
-
-  "color_system_addendum": {
-    "strategy": {
-      "goal": "Single coherent matte maroon system with explicit light + dark roles. Replace historical teal/blue literals by semantic roles without changing layout.",
-      "brand_character": "premium, exam-serious, matte (low gloss), high contrast, calm",
-      "non_negotiables": [
-        "Brand primary is matte maroon (not rose/pink).",
-        "Dark mode uses deep maroon surfaces + white on-brand text.",
-        "Keep success green semantic; do not recolor success to maroon.",
-        "Avoid gradients except subtle hero wash (<=20% viewport)."
+  "product_flow_addendum": {
+    "scope": {
+      "goal": "Define a concrete PRODUCT-FIRST Studio flow for creating tests from two PDFs (Questions + Solutions), auto-organising, then scheduling + manual live/unlive, plus competitions + analytics. Preserve existing light/dark identity and matte maroon brand (#5C0025). Do not redesign landing/auth/player or phone-only login. Do not implement code—design + UI behavior only.",
+      "non_goals": [
+        "No multi-step forms that ask routine metadata (title/exam/duration/rights/approval) before organisation.",
+        "No fabricated analytics (rank/percentile) when data is missing.",
+        "No pretending uncertain pairings are correct—block readiness with actionable review/replace.",
+        "No new marketing/landing visuals; no image-heavy UI. Use PDF tiles + Lucide icons."
       ]
     },
 
-    "semantic_roles_light": {
-      "surface": "#F8FAFC",
-      "surface_alt": "#FBF7F5",
-      "card": "#FFFFFF",
-      "card_alt": "#FCFCFD",
-      "ink": "#0B1F2A",
-      "muted": "#4B6476",
-      "muted_2": "#6B8192",
-      "line": "#D7DEE7",
-
-      "brand_primary": "#5C0025",
-      "brand_hover": "#4A001E",
-      "brand_active": "#3B0018",
-      "brand_soft": "#F6E9EE",
-      "brand_line": "#EBCFD9",
-      "on_brand": "#FFFFFF",
-      "focus_ring": "#8B1D3D",
-
-      "success": "#16714B",
-      "success_soft": "#EAF7F0",
-      "success_line": "#CFEBDD",
-
-      "warning": "#905515",
-      "warning_soft": "#FFF7E9",
-      "warning_line": "#F3E5C6",
-
-      "danger": "#B42332",
-      "danger_soft": "#FFF1F2",
-      "danger_line": "#F0D7DD",
-
-      "review": "#6B1B3A",
-      "review_soft": "#F4EFF2",
-      "review_line": "#D9B8C6",
-
-      "hero_dark": "#1A0B12"
+    "brand_personality": {
+      "keywords": ["product-first", "fast", "no-nonsense", "trustworthy", "exam-serious", "teacher-efficient"],
+      "tone": "Minimal friction. The UI should feel like a tool: upload → organise → schedule → live. Every screen answers: ‘what’s happening, what’s blocked, what can I do next?’",
+      "visual_style": "Matte surfaces, crisp borders, subtle shadows tinted by maroon. No loud gradients. Use restrained accent color only for primary actions and status."
     },
 
-    "semantic_roles_dark": {
-      "surface": "#0E0A0C",
-      "surface_alt": "#141013",
-      "card": "#151114",
-      "card_alt": "#1B1519",
-      "ink": "#F6F7F9",
-      "muted": "#C7CDD6",
-      "muted_2": "#9AA6B2",
-      "line": "#2A2227",
-
-      "brand_primary": "#5C0025",
-      "brand_hover": "#6A0A2F",
-      "brand_active": "#4A001E",
-      "brand_soft": "rgba(92,0,37,0.22)",
-      "brand_line": "rgba(235,207,217,0.22)",
-      "on_brand": "#FFFFFF",
-      "focus_ring": "#D9B8C6",
-
-      "success": "#2AA36B",
-      "success_soft": "rgba(42,163,107,0.16)",
-      "success_line": "rgba(42,163,107,0.28)",
-
-      "warning": "#E0A24A",
-      "warning_soft": "rgba(224,162,74,0.16)",
-      "warning_line": "rgba(224,162,74,0.28)",
-
-      "danger": "#E05A6A",
-      "danger_soft": "rgba(224,90,106,0.16)",
-      "danger_line": "rgba(224,90,106,0.28)",
-
-      "review": "#E2B6C6",
-      "review_soft": "rgba(217,184,198,0.14)",
-      "review_line": "rgba(217,184,198,0.26)",
-
-      "hero_dark": "#0B0709"
-    },
-
-    "token_binding_plan_existing_css": {
-      "principle": "Keep existing variable names to avoid layout rewrite; only swap values and map literals to semantic roles.",
-      "App_css_root_vars": {
-        "keep_names_swap_values": {
-          "--blue": "brand_primary",
-          "--navy": "ink (light) / ink-like heading color; in dark becomes ink (light text) but keep --navy as heading token",
-          "--page": "surface",
-          "--ink": "ink",
-          "--muted": "muted",
-          "--line": "line",
-          "--green": "success",
-          "--amber": "warning",
-          "--red": "danger"
+    "design_tokens": {
+      "source_of_truth": {
+        "existing_css": ["/app/frontend/src/index.css", "/app/frontend/src/App.css"],
+        "instruction": "Reuse existing tokens; do not introduce a new palette system. Extend only if a missing semantic token is required for new states (e.g., ‘info’)."
+      },
+      "colors": {
+        "brand": {
+          "primary_hex": "#5C0025",
+          "primary_hsl_token": "--primary (338 100% 18%)",
+          "primary_usage": [
+            "Primary CTA buttons (Organise, Schedule, Go Live)",
+            "Active tab/step indicator",
+            "Key numbers in analytics (sparingly)"
+          ]
         },
-        "dark_mode_extension": {
-          "how": "Add a prefers-color-scheme: dark block that overrides the same vars (no new classnames).",
-          "vars_to_override": ["--page", "--navy", "--ink", "--muted", "--line", "--blue", "--green", "--amber", "--red"]
+        "surfaces": {
+          "page": "var(--page) / hsl(var(--background))",
+          "card": "var(--surface-card) / hsl(var(--card))",
+          "muted": "var(--surface-alt) / hsl(var(--muted))",
+          "border": "var(--line) / hsl(var(--border))"
+        },
+        "text": {
+          "primary": "var(--ink) / hsl(var(--foreground))",
+          "muted": "var(--text-muted) / hsl(var(--muted-foreground))"
+        },
+        "status_semantics": {
+          "success": "var(--success)",
+          "warning": "var(--warning)",
+          "danger": "var(--danger)",
+          "review": "var(--review)",
+          "focus_ring": "var(--focus-ring) / hsl(var(--ring))"
+        },
+        "studio_specific_status_badges": {
+          "draft": {"bg": "var(--surface-alt)", "fg": "var(--text-muted)", "border": "var(--line)"},
+          "organising": {"bg": "var(--warning-soft)", "fg": "var(--warning)", "border": "var(--warning-line)"},
+          "blocked": {"bg": "var(--danger-soft)", "fg": "var(--danger)", "border": "var(--danger-line)"},
+          "ready": {"bg": "var(--success-soft)", "fg": "var(--success)", "border": "var(--success-line)"},
+          "scheduled": {"bg": "var(--brand-soft)", "fg": "var(--brand-text)", "border": "var(--brand-line)"},
+          "live": {"bg": "var(--hero-dark)", "fg": "var(--on-brand)", "border": "var(--hero-dark)"}
         }
       },
-      "index_css_shadcn_hsl_tokens": {
-        "light": {
-          "--primary": "338 100% 18%",
-          "--primary-foreground": "0 0% 100%",
-          "--ring": "345 65% 33%",
-          "--background": "210 40% 98%",
-          "--foreground": "205 45% 12%",
-          "--border": "214 20% 88%",
-          "--muted": "210 25% 95%",
-          "--muted-foreground": "205 18% 38%"
+      "radius_shadow": {
+        "radius": {
+          "global": "var(--radius) (0.875rem)",
+          "card": "14px (matches .card)",
+          "button": "8px (matches .btn)"
         },
-        "dark": {
-          "note": "Add .dark or prefers-color-scheme mapping depending on existing setup; do not change architecture—only define tokens.",
-          "--background": "330 10% 5%",
-          "--foreground": "210 20% 98%",
-          "--card": "330 12% 8%",
-          "--card-foreground": "210 20% 98%",
-          "--primary": "338 100% 18%",
-          "--primary-foreground": "0 0% 100%",
-          "--border": "330 10% 16%",
-          "--muted": "330 10% 12%",
-          "--muted-foreground": "215 12% 78%",
-          "--ring": "345 35% 78%"
+        "shadow": {
+          "tint": "var(--shadow-tint)",
+          "hover": "0 4px 12px var(--shadow-tint)",
+          "card": "0 8px 30px var(--shadow-tint) (already used in auth-card)"
+        }
+      },
+      "gradients": {
+        "policy": "Avoid gradients in Studio. If used at all, only as a thin decorative header strip (<20% viewport) using very mild neutrals + brand-soft; never on text-heavy areas.",
+        "allowed_example": "background: linear-gradient(90deg, rgba(92,0,37,0.06), rgba(251,247,245,0.0));"
+      }
+    },
+
+    "typography": {
+      "fonts": {
+        "ui": "Figtree (already in index.css)",
+        "mono": "Roboto Mono (already in index.css)",
+        "instruction": "Keep Figtree for continuity. Use mono only for file hashes, IDs, and timestamps."
+      },
+      "scale": {
+        "h1": "text-4xl sm:text-5xl lg:text-6xl (use only on marketing/landing; Studio should cap at ~text-3xl equivalent)",
+        "studio_page_title": "Tailwind: text-2xl sm:text-3xl font-semibold tracking-tight",
+        "section_title": "text-lg font-semibold",
+        "body": "text-sm sm:text-base",
+        "meta": "text-xs text-muted-foreground",
+        "numbers": "Use tabular-nums for timers, counts, and schedule times"
+      }
+    },
+
+    "layout_and_grid": {
+      "studio_overview": {
+        "pattern": "Two-column on desktop: left = Create Test (primary), right = Recent/All tests list + competitions quick panel. Mobile collapses to single column with Create Test first.",
+        "container": "Use existing .container widths; avoid centered text blocks.",
+        "spacing": "Prefer generous spacing: gap-4/6/8; card padding p-5 sm:p-6; section spacing mt-6 sm:mt-8"
+      },
+      "organiser_detail": {
+        "pattern": "Top: breadcrumb + title + status badge + actions. Body: left = progress + pairing preview; right = schedule panel (disabled until ready) + live/unlive controls.",
+        "sticky": "On desktop, schedule panel can be sticky (top aligned below header). On mobile, schedule panel becomes a bottom sheet/drawer."
+      },
+      "mobile_390": {
+        "rules": [
+          "Primary CTA always visible without scrolling when possible (use sticky bottom action bar).",
+          "Dropzones become full-width stacked cards.",
+          "Tables become cards or horizontal scroll with ScrollArea.",
+          "Minimum touch target: var(--touch-target) ~ 44px."
+        ]
+      }
+    },
+
+    "core_pages_and_flow": {
+      "1_studio_overview": {
+        "page_goal": "Single place to upload Questions PDF + Solutions PDF and start Organise. No extra questions.",
+        "primary_card": {
+          "name": "CreateTestCard",
+          "layout": "Card with two equal dropzones side-by-side on desktop; stacked on mobile.",
+          "dropzones": {
+            "questions_pdf": {
+              "label": "Questions PDF",
+              "helper": "Drop PDF here or browse",
+              "states": ["empty", "selected", "uploading", "uploaded", "error"],
+              "file_tile": "Show filename, size, last modified; allow Replace + Remove.",
+              "data_testids": {
+                "dropzone": "studio-create-test-questions-dropzone",
+                "browse_button": "studio-create-test-questions-browse-button",
+                "replace_button": "studio-create-test-questions-replace-button",
+                "remove_button": "studio-create-test-questions-remove-button"
+              }
+            },
+            "solutions_pdf": {
+              "label": "Solutions PDF",
+              "helper": "Drop PDF here or browse",
+              "states": ["empty", "selected", "uploading", "uploaded", "error"],
+              "file_tile": "Same as questions.",
+              "data_testids": {
+                "dropzone": "studio-create-test-solutions-dropzone",
+                "browse_button": "studio-create-test-solutions-browse-button",
+                "replace_button": "studio-create-test-solutions-replace-button",
+                "remove_button": "studio-create-test-solutions-remove-button"
+              }
+            }
+          },
+          "organise_cta": {
+            "button_label": "Organise & Preview",
+            "enabled_when": "Both PDFs uploaded successfully.",
+            "secondary_link": "Use old Studio Editor (fallback)",
+            "attestation_copy": "Inline text under CTA: ‘By uploading, you confirm you have rights to use these PDFs for your students.’ (no forced checkbox step)",
+            "data_testids": {
+              "organise_button": "studio-create-test-organise-button",
+              "fallback_link": "studio-create-test-fallback-editor-link"
+            }
+          },
+          "micro_interactions": [
+            "Dropzone hover: border color shifts to brand-line; background to surface-alt (no scale).",
+            "On file drop: show immediate file tile + optimistic ‘Queued’ badge.",
+            "Upload progress: Progress component with percent + bytes; allow Cancel.",
+            "Error: Alert component with actionable ‘Replace file’ button."
+          ]
+        },
+        "test_list": {
+          "list_goal": "Show existing tests with clear status: Draft/Organising/Blocked/Ready/Scheduled/Live.",
+          "row_pattern": "Card rows (not dense table) with: title (derived), counts, schedule, status badge, actions.",
+          "actions": ["Open", "Live/Unlive toggle (if allowed)", "Copy link (if live)"]
+        }
+      },
+
+      "2_organiser_detail_progress": {
+        "page_goal": "Show organisation progress, pairing preview, and what’s blocking readiness. Only after ready, ask for start date/time.",
+        "top_bar": {
+          "elements": ["Breadcrumb", "Derived test name (editable optional, not required)", "Status badge", "Owner actions"],
+          "data_testids": {
+            "breadcrumb": "studio-organiser-breadcrumb",
+            "status_badge": "studio-organiser-status-badge",
+            "rename_button": "studio-organiser-rename-button"
+          }
+        },
+        "progress_block": {
+          "visual": "Use Progress + step labels: Upload → Extract → Pair → Validate → Ready",
+          "rule": "Never show 100% unless Ready. If blocked, show ‘Blocked’ badge and list blockers.",
+          "data_testids": {
+            "progress": "studio-organiser-progress",
+            "stepper": "studio-organiser-stepper"
+          }
+        },
+        "pairing_preview": {
+          "principle": "Preview pairings without guessing. Unmatched questions/solutions must be explicit.",
+          "ui": "Tabs: Matched / Unmatched Questions / Unmatched Solutions / Conflicts",
+          "matched_view": "Paginated list with question #, detected topic (if available), solution page reference; click opens side-by-side preview modal/drawer.",
+          "blocked_states": [
+            "No solution found for question #X",
+            "Multiple candidate solutions for question #X",
+            "Low confidence pairing (below threshold)"
+          ],
+          "actions": [
+            "Replace Questions PDF",
+            "Replace Solutions PDF",
+            "Open in old Studio Editor (fallback)",
+            "Download pairing CSV (optional)"
+          ],
+          "data_testids": {
+            "tabs": "studio-organiser-pairing-tabs",
+            "matched_tab": "studio-organiser-pairing-tab-matched",
+            "unmatched_questions_tab": "studio-organiser-pairing-tab-unmatched-questions",
+            "unmatched_solutions_tab": "studio-organiser-pairing-tab-unmatched-solutions",
+            "conflicts_tab": "studio-organiser-pairing-tab-conflicts",
+            "replace_questions": "studio-organiser-replace-questions-button",
+            "replace_solutions": "studio-organiser-replace-solutions-button"
+          }
+        },
+        "schedule_panel": {
+          "rule": "Schedule inputs are disabled/hidden until status == Ready.",
+          "when_ready": {
+            "fields": [
+              "Start date (Calendar)",
+              "Start time (Select or Input with validation)",
+              "Timezone label fixed: Asia/Kolkata"
+            ],
+            "cta": "Schedule",
+            "data_testids": {
+              "start_date": "studio-schedule-start-date",
+              "start_time": "studio-schedule-start-time",
+              "timezone_label": "studio-schedule-timezone-label",
+              "schedule_button": "studio-schedule-submit-button"
+            }
+          },
+          "after_scheduled": {
+            "show": ["Scheduled for …", "Edit schedule", "Unschedule"],
+            "data_testids": {
+              "scheduled_summary": "studio-schedule-summary",
+              "edit_button": "studio-schedule-edit-button",
+              "unschedule_button": "studio-schedule-unschedule-button"
+            }
+          }
+        },
+        "live_unlive_controls": {
+          "rule": "Manual live/unlive only. Live toggle is disabled unless Ready AND (if scheduled) current time >= start time.",
+          "ui": "Switch with confirmation AlertDialog when going Live/Unlive.",
+          "copy": {
+            "live": "Students can attempt now.",
+            "unlive": "Students can’t start new attempts. Existing attempts continue per policy (show exact behavior)."
+          },
+          "data_testids": {
+            "live_switch": "studio-live-toggle-switch",
+            "live_confirm": "studio-live-toggle-confirm-button",
+            "unlive_confirm": "studio-unlive-toggle-confirm-button"
+          }
+        }
+      },
+
+      "3_student_competitions": {
+        "page_goal": "List competitions/tests students can join; show time-gated states and leaderboard after window.",
+        "list_cards": {
+          "fields": ["Test name", "Starts at (IST)", "Status badge (Upcoming/Live/Ended)", "CTA"],
+          "cta_rules": {
+            "upcoming": "Show ‘Starts in …’ + disabled Attempt button",
+            "live": "Show Attempt button",
+            "ended": "Show View Results (if available)"
+          },
+          "data_testids": {
+            "competition_list": "student-competitions-list",
+            "competition_card": "student-competitions-card",
+            "attempt_button": "student-competitions-attempt-button"
+          }
+        },
+        "detail": {
+          "solutions_embargo": "Hide solutions until competition window ends. Show lock copy + unlock time.",
+          "leaderboard": "Table with rank only when computed; otherwise show ‘Processing’ state. Never fabricate percentile.",
+          "data_testids": {
+            "solutions_lock": "student-competition-solutions-locked",
+            "leaderboard_table": "student-competition-leaderboard-table"
+          }
+        }
+      },
+
+      "4_results_analysis_additions": {
+        "goal": "Add evidence-based analysis context to existing Results without changing core player/report continuity.",
+        "modules": [
+          "Accuracy vs Time scatter (if data exists)",
+          "Subject-wise breakdown",
+          "Question difficulty buckets (only if inferred with confidence; else omit)",
+          "Recovery indicator: ‘Offline saved at …, synced at …’"
+        ],
+        "empty_states": {
+          "rule": "If data missing, show neutral empty state with what will appear once enough attempts exist.",
+          "copy_example": "Not enough attempts to compute percentile. Keep practicing—this section will unlock after 50+ attempts."
         }
       }
     },
 
-    "migration_guidance_literal_to_semantic": {
-      "goal": "Consolidate ~300 historic blue/teal literals into a small set of semantic roles.",
-      "rules": [
-        "Any teal/blue used for PRIMARY actions/active states -> brand_primary (var(--blue)).",
-        "Any light blue tint backgrounds (e.g., #edf3ff, #eef4ff, #eaf2ff, #f0f5ff) -> brand_soft OR surface_alt depending on intent:",
-        "- If it indicates selection/active/brand emphasis -> brand_soft.",
-        "- If it is just a gentle section background -> surface_alt.",
-        "Any blue borders (e.g., #d9e5f8, #dbe6f6, #d6e6ef) -> line.",
-        "Any blue focus outlines (#1d4ed8, #2563eb) -> focus_ring.",
-        "Keep success greens as success; keep warning ambers as warning; keep danger reds as danger.",
-        "Marked-for-review purple literals must be migrated to review_* tokens (plum-rose, not neon purple)."
-      ],
-      "high_value_targets_in_App_css": {
-        "focus": {
-          "current": ":focus-visible outline: 3px solid #1d4ed8",
-          "migrate_to": "outline: 3px solid var(--focus-ring, #8B1D3D) OR replace literal with brand focus token"
+    "excel_import_addendum": {
+      "goal": "Add Excel import alongside PDF so staff can directly import typed questions/options/answers/solutions without image extraction. Must be deterministic, bounded parsing (no guessed keys), and incremental (no redesign).",
+      "supported_inputs": {
+        "modes": [
+          {
+            "mode": "single_workbook",
+            "label": "Excel workbook (Questions + Solutions)",
+            "description": "One .xlsx containing a Questions sheet and a Solutions sheet (or a single combined sheet)."
+          },
+          {
+            "mode": "two_workbooks",
+            "label": "Two Excel files (Questions + Solutions)",
+            "description": "Upload questions.xlsx and solutions.xlsx separately; pairing happens by question_id or question_no."
+          }
+        ],
+        "file_types": [".xlsx"],
+        "non_goals": [
+          "No OCR inside Excel images.",
+          "No auto-detecting arbitrary column names beyond a strict allowlist.",
+          "No importing macros (.xlsm) in v1."
+        ]
+      },
+      "studio_overview_ui_extension": {
+        "placement": "Inside existing CreateTestCard, add a compact segmented control above dropzones: ‘PDF’ | ‘Excel’. Default stays ‘PDF’.",
+        "segmented_control": {
+          "component": "Tabs (shadcn) or ToggleGroup (shadcn)",
+          "data_testids": {
+            "mode_tabs": "studio-create-test-import-mode-tabs",
+            "pdf_tab": "studio-create-test-import-mode-pdf",
+            "excel_tab": "studio-create-test-import-mode-excel"
+          }
         },
-        "player": {
-          "timer_chip": "#edf3ff/#d9e6fa/#38669f -> brand_soft/brand_line/brand_primary",
-          "answer_selected": "#f0f5ff/#4f83e4/#245ba8 -> brand_soft/brand_primary/ink",
-          "current_question_outline": "var(--blue) already maps to maroon; keep",
-          "marked_state": "#9b86c4/#6f539d/#f6f2ff -> review_line/review/review_soft"
+        "excel_dropzones": {
+          "layout": "Mirror the PDF dual-dropzone layout. If single_workbook selected, show one dropzone; if two_workbooks selected, show two dropzones.",
+          "data_testids": {
+            "single_workbook_dropzone": "studio-create-test-excel-workbook-dropzone",
+            "questions_workbook_dropzone": "studio-create-test-excel-questions-dropzone",
+            "solutions_workbook_dropzone": "studio-create-test-excel-solutions-dropzone",
+            "template_download_button": "studio-create-test-excel-template-download-button"
+          },
+          "helper_copy": [
+            "Import typed questions/options/answer/solution from Excel.",
+            "Use the template to avoid column mismatch.",
+            "We will show row-level errors before anything goes live."
+          ]
         },
-        "results": {
-          "score_card": "background var(--blue) becomes maroon; ensure small text uses on-brand white",
-          "progress_bar": "background var(--blue) becomes maroon"
-        },
-        "landing": {
-          "hero_bg": "#f5f9ff -> surface_alt",
-          "cta_panel": "var(--navy) -> hero_dark (solid)"
+        "primary_cta": {
+          "label": "Validate & Preview",
+          "enabled_when": "Required Excel file(s) uploaded successfully.",
+          "data_testid": "studio-create-test-excel-validate-button"
         }
+      },
+      "template_download": {
+        "principle": "Template is the contract. Parsing is strict: only template headers are accepted.",
+        "ui": {
+          "component": "Button (secondary) + Tooltip",
+          "copy": "Download Excel template",
+          "data_testid": "studio-excel-template-download"
+        },
+        "template_variants": [
+          {
+            "name": "combined_sheet",
+            "sheets": ["Questions"],
+            "when_to_use": "Small sets or when solutions are short.",
+            "required_columns": [
+              "question_id",
+              "question_no",
+              "subject",
+              "question_text",
+              "option_a",
+              "option_b",
+              "option_c",
+              "option_d",
+              "correct_option",
+              "solution_text"
+            ],
+            "optional_columns": ["topic", "difficulty", "marks", "negative_marks", "source"],
+            "rules": [
+              "correct_option must be one of: A, B, C, D (uppercase).",
+              "question_id must be unique if provided.",
+              "question_no must be integer >= 1."
+            ]
+          },
+          {
+            "name": "two_sheets",
+            "sheets": ["Questions", "Solutions"],
+            "when_to_use": "Long solutions or when solutions are maintained separately.",
+            "questions_required_columns": [
+              "question_id",
+              "question_no",
+              "subject",
+              "question_text",
+              "option_a",
+              "option_b",
+              "option_c",
+              "option_d",
+              "correct_option"
+            ],
+            "solutions_required_columns": ["question_id", "question_no", "solution_text"],
+            "pairing_rule": "Pair by question_id if present in both; else pair by question_no. If both present but disagree → conflict.",
+            "rules": [
+              "No fuzzy matching.",
+              "If a question has no solution row → Blocked.",
+              "If multiple solution rows match same question_id/question_no → Conflict."
+            ]
+          }
+        ]
+      },
+      "validation_and_preview": {
+        "principle": "Deterministic import with row-level errors. Nothing is created as Ready until all blocking errors are resolved.",
+        "preview_layout": {
+          "pattern": "Same Organiser Detail page, but PairingPreviewTabs becomes ‘Rows’ preview.",
+          "tabs": ["Valid", "Errors", "Warnings"],
+          "right_panel": "SchedulePanel remains locked until Valid rows cover 100% of required questions.",
+          "data_testids": {
+            "rows_tabs": "studio-excel-preview-tabs",
+            "errors_tab": "studio-excel-preview-tab-errors",
+            "warnings_tab": "studio-excel-preview-tab-warnings",
+            "valid_tab": "studio-excel-preview-tab-valid"
+          }
+        },
+        "error_table": {
+          "component": "Table + ScrollArea (shadcn)",
+          "columns": ["row", "sheet", "field", "message", "action"],
+          "actions": [
+            "Download error report (.csv)",
+            "Replace Excel file",
+            "Open template"
+          ],
+          "data_testids": {
+            "error_table": "studio-excel-error-table",
+            "download_error_report": "studio-excel-download-error-report-button",
+            "replace_excel": "studio-excel-replace-file-button"
+          }
+        },
+        "blocking_errors": [
+          "Missing required column",
+          "Empty question_text",
+          "Missing any of option_a/option_b/option_c/option_d",
+          "correct_option not in {A,B,C,D}",
+          "Duplicate question_id",
+          "Unpaired solution (two-sheet mode)",
+          "Conflicting pair (question_id vs question_no mismatch)"
+        ],
+        "warnings": [
+          "Very long question_text (> N chars) — may affect mobile readability",
+          "solution_text empty (allowed only if solutions embargoed / optional per test policy)",
+          "subject missing — will default to ‘General’ (only if product allows; otherwise treat as blocking)"
+        ]
+      },
+      "imported_question_rendering_rules": {
+        "principle": "Excel content is text-first. Preserve line breaks. Support basic math via existing KaTeX pipeline if present.",
+        "question_text": {
+          "render": "Use existing .math-text styling; preserve \\n as line breaks.",
+          "sanitization": "Escape HTML; do not render raw HTML from Excel."
+        },
+        "options": {
+          "layout": "Same 2-column options grid on desktop; 1-column on mobile 390px.",
+          "data_testid_pattern": "question-option-{questionNo}-{optionKey} (e.g., question-option-12-a)"
+        },
+        "solution": {
+          "embargo": "Follow existing competition embargo rules: hide solution_text until competition ends.",
+          "data_testid": "student-solution-text"
+        }
+      },
+      "components": {
+        "component_path": {
+          "shadcn_primary": [
+            "/app/frontend/src/components/ui/tabs.jsx",
+            "/app/frontend/src/components/ui/toggle-group.jsx",
+            "/app/frontend/src/components/ui/button.jsx",
+            "/app/frontend/src/components/ui/card.jsx",
+            "/app/frontend/src/components/ui/alert.jsx",
+            "/app/frontend/src/components/ui/table.jsx",
+            "/app/frontend/src/components/ui/scroll-area.jsx",
+            "/app/frontend/src/components/ui/tooltip.jsx",
+            "/app/frontend/src/components/ui/progress.jsx",
+            "/app/frontend/src/components/ui/dialog.jsx",
+            "/app/frontend/src/components/ui/drawer.jsx",
+            "/app/frontend/src/components/ui/input.jsx"
+          ]
+        },
+        "studio_custom_components_to_create": [
+          {
+            "name": "ExcelImportMode",
+            "purpose": "Segmented control + dropzones + template download + validate CTA.",
+            "file": "frontend/src/components/studio/ExcelImportMode.js",
+            "export": "named",
+            "data_testids": ["studio-create-test-import-mode-tabs", "studio-create-test-excel-validate-button"]
+          },
+          {
+            "name": "ExcelRowErrorsTable",
+            "purpose": "Row-level errors/warnings table with download report action.",
+            "file": "frontend/src/components/studio/ExcelRowErrorsTable.js",
+            "export": "named",
+            "data_testids": ["studio-excel-error-table", "studio-excel-download-error-report-button"]
+          }
+        ]
+      },
+      "api_contract_notes_for_main_agent": {
+        "principle": "No guessed keys. Backend should reject unknown headers and return structured errors.",
+        "suggested_endpoints": [
+          {
+            "method": "GET",
+            "path": "/api/studio/import/excel/template",
+            "returns": "xlsx file (template variant selectable via query param)"
+          },
+          {
+            "method": "POST",
+            "path": "/api/studio/import/excel/validate",
+            "returns": "{ summary: { total_rows, valid_rows, error_rows, warning_rows }, errors: [...], warnings: [...], preview: [...] }"
+          },
+          {
+            "method": "POST",
+            "path": "/api/studio/import/excel/commit",
+            "returns": "Creates/updates test draft only when validate passes; returns organiser_id"
+          }
+        ],
+        "error_shape": {
+          "fields": ["row", "sheet", "field", "code", "message"],
+          "ui_mapping": "Map code → human message; keep message short; show field + row always."
+        }
+      },
+      "data_testid_requirements": {
+        "rule": "All Excel import controls and error outputs must be testable.",
+        "minimum": [
+          "studio-create-test-import-mode-tabs",
+          "studio-create-test-excel-workbook-dropzone",
+          "studio-create-test-excel-template-download-button",
+          "studio-create-test-excel-validate-button",
+          "studio-excel-error-table",
+          "studio-excel-download-error-report-button"
+        ]
+      },
+      "instructions_to_main_agent": [
+        "Do NOT change existing maroon tokens or typography; Excel import is an additive mode inside CreateTestCard.",
+        "Keep parsing strict: accept only template headers; reject unknown/missing headers with row-level errors.",
+        "Implement deterministic pairing by question_id then question_no; no fuzzy matching.",
+        "Reuse Organiser Detail page for preview; schedule/live gates remain identical to PDF flow.",
+        "All new React components must be .js (not .tsx) and include data-testid on interactive elements.",
+        "No new images or visual identity changes."
+      ]
+    },
+
+    "components": {
+      "component_path": {
+        "shadcn_primary": [
+          "/app/frontend/src/components/ui/button.jsx",
+          "/app/frontend/src/components/ui/card.jsx",
+          "/app/frontend/src/components/ui/badge.jsx",
+          "/app/frontend/src/components/ui/progress.jsx",
+          "/app/frontend/src/components/ui/tabs.jsx",
+          "/app/frontend/src/components/ui/dialog.jsx",
+          "/app/frontend/src/components/ui/drawer.jsx",
+          "/app/frontend/src/components/ui/alert.jsx",
+          "/app/frontend/src/components/ui/alert-dialog.jsx",
+          "/app/frontend/src/components/ui/switch.jsx",
+          "/app/frontend/src/components/ui/calendar.jsx",
+          "/app/frontend/src/components/ui/select.jsx",
+          "/app/frontend/src/components/ui/scroll-area.jsx",
+          "/app/frontend/src/components/ui/separator.jsx",
+          "/app/frontend/src/components/ui/table.jsx",
+          "/app/frontend/src/components/ui/tooltip.jsx",
+          "/app/frontend/src/components/ui/sonner.jsx"
+        ]
+      },
+      "studio_custom_components_to_create": {
+        "note": "Create as React .js components (NOT .tsx). Named exports for components; pages default export.",
+        "list": [
+          {
+            "name": "DualPdfDropzone",
+            "purpose": "Two dropzones with shared validation + progress + replace/remove.",
+            "uses": ["Card", "Button", "Progress", "Alert"],
+            "data_testids": ["studio-create-test-questions-dropzone", "studio-create-test-solutions-dropzone"]
+          },
+          {
+            "name": "OrganiserStepper",
+            "purpose": "Upload→Extract→Pair→Validate→Ready stepper with blocked state.",
+            "uses": ["Progress", "Badge", "Tooltip"]
+          },
+          {
+            "name": "PairingPreviewTabs",
+            "purpose": "Matched/Unmatched/Conflicts views with actionable blockers.",
+            "uses": ["Tabs", "Table or card list", "ScrollArea"]
+          },
+          {
+            "name": "SchedulePanel",
+            "purpose": "Calendar + time select + IST label; disabled until Ready.",
+            "uses": ["Calendar", "Select", "Button", "AlertDialog"]
+          },
+          {
+            "name": "LiveToggle",
+            "purpose": "Manual live/unlive with confirmation and clear policy copy.",
+            "uses": ["Switch", "AlertDialog", "Badge"]
+          }
+        ]
       }
     },
 
-    "button_readability_in_dark": {
-      "requirement": "Primary buttons must be maroon background with WHITE text in both themes.",
-      "do_not": [
-        "Do not invert to light/pink buttons in dark mode.",
-        "Do not use gradients on buttons.",
-        "Do not reduce contrast by using off-white text on maroon below AA."
-      ],
-      "recommended_states": {
-        "default": "bg brand_primary, text on_brand",
-        "hover": "bg brand_hover",
-        "active": "bg brand_active",
-        "focus": "ring focus_ring with offset matching surface"
+    "states_and_error_handling": {
+      "upload": {
+        "validation": ["PDF only", "max size (define in UI copy)", "show filename + size"],
+        "errors": {
+          "network": "Alert: ‘Upload failed. Retry or replace file.’",
+          "parse_failed": "Alert: ‘We couldn’t read this PDF. Try exporting again or upload a clearer scan.’",
+          "mismatch": "Alert: ‘This looks like solutions in the Questions slot (or vice versa). Please swap/replace.’ (only if detection confidence high)"
+        }
+      },
+      "organisation": {
+        "blocked": {
+          "principle": "Blocked means user action required. Provide the action in the same panel.",
+          "examples": [
+            "Unmatched questions > 0 → show ‘Replace Solutions PDF’ primary action",
+            "Conflicts > 0 → show ‘Review conflicts’ action"
+          ]
+        },
+        "ready": {
+          "principle": "Ready means schedule panel unlocks. Still allow optional edits, but never force them."
+        }
+      },
+      "live": {
+        "gates": [
+          "Cannot go Live if Blocked/Organising",
+          "If Scheduled and start time not reached: disable switch + show tooltip ‘Available at … IST’"
+        ]
       }
-    }
+    },
+
+    "motion_microinteractions": {
+      "principles": [
+        "No ‘transition: all’. Only transition background-color, border-color, box-shadow, opacity.",
+        "Use subtle elevation on hover for cards/rows.",
+        "Use skeletons for loading lists; progress for long tasks."
+      ],
+      "recommended": {
+        "hover": "transition-[background-color,border-color,box-shadow] duration-200",
+        "press": "active:translate-y-[1px] (only on buttons)",
+        "loading": "Skeleton + Progress; avoid spinners-only for >2s tasks"
+      },
+      "optional_library": {
+        "name": "framer-motion",
+        "use_cases": ["organiser step transitions", "drawer entrance", "list item appear"],
+        "install": "npm i framer-motion",
+        "note": "Keep motion minimal; Studio is productivity-first."
+      }
+    },
+
+    "accessibility": {
+      "requirements": [
+        "All interactive elements must have visible focus (already via :focus-visible).",
+        "Dropzones must be keyboard operable (Enter/Space triggers file picker).",
+        "Status conveyed by text + icon, not color alone.",
+        "Use aria-live polite region for upload/progress updates.",
+        "Ensure contrast on maroon buttons with white text (already --on-brand)."
+      ]
+    },
+
+    "data_testid_schema": {
+      "convention": "kebab-case, role-based, stable. Prefix by area: studio-, student-, results-.",
+      "examples": [
+        "studio-create-test-organise-button",
+        "studio-organiser-pairing-tab-conflicts",
+        "studio-schedule-submit-button",
+        "student-competitions-attempt-button",
+        "results-analysis-subject-breakdown-card"
+      ]
+    },
+
+    "instructions_to_main_agent": [
+      "Preserve existing tokens in index.css/App.css; do not change global identity.",
+      "Implement the new Studio flow as: Studio Overview → Organiser Detail (progress + pairing preview) → Schedule (only after Ready) → Manual Live/Unlive.",
+      "Do not add extra required metadata steps. Derived title/exam/duration can be shown read-only with optional edit.",
+      "Use shadcn/ui components from /frontend/src/components/ui (JS versions). Avoid raw HTML dropdowns/calendars.",
+      "Every button/input/toggle/tab trigger must include data-testid.",
+      "Competitions: enforce solutions embargo until end; leaderboard shows only computed values; no fake percentile/rank.",
+      "Keep old advanced Studio Editor accessible as a secondary fallback link; do not remove it.",
+      "No mocked integrations: if an API isn’t ready, show ‘Coming soon’ only if backed by real feature flag; otherwise keep UI hidden/disabled with clear copy."
+    ]
   },
 
-  "component_path": {
-    "shadcn_primary": "/app/frontend/src/components/ui",
-    "use_existing": [
-      "button.jsx",
-      "badge.jsx",
-      "card.jsx",
-      "input.jsx",
-      "label.jsx",
-      "tabs.jsx",
-      "sheet.jsx",
-      "dialog.jsx",
-      "alert.jsx",
-      "progress.jsx",
-      "sonner.jsx"
-    ],
-    "note": "No new components required for this addendum; only ensure shadcn tokens align with maroon palette and dark mode tokens exist. Project uses .js/.jsx (not .tsx)."
-  },
-
-  "instructions_to_main_agent": [
-    "Treat this as an addendum: update only tokens + font imports + literal-to-token mapping guidance; do not change layout or architecture.",
-    "Replace Google Fonts import in index.css to Figtree + Roboto Mono; update body/headings/mono font-family accordingly.",
-    "Implement explicit light + dark semantic roles by overriding existing CSS vars in App.css (:root + prefers-color-scheme: dark).",
-    "Normalize historical teal/blue literals using the mapping rules: tints -> brand_soft/surface_alt, borders -> line, focus blues -> focus_ring, primary blues -> brand_primary.",
-    "Ensure all primary CTAs remain maroon with white text in dark mode; verify hover/active states are darker maroon (not pink).",
-    "When touching any interactive element during polish, add/keep data-testid attributes (kebab-case, role-based)."
-  ],
-
-  "General_UI_UX_Design_Guidelines": [
-    "You must **not** apply universal transition. Eg: `transition: all`. This results in breaking transforms. Always add transitions for specific interactive elements like button, input excluding transforms",
-    "You must **not** center align the app container, ie do not add `.App { text-align: center; }` in the css file. This disrupts the human natural reading flow of text",
-    "NEVER: use AI assistant Emoji characters like`🤖🧠💭💡🔮🎯📚🎭🎬🎪🎉🎊🎁🎀🎂🍰🎈🎨🎰💰💵💳🏦💎🪙💸🤑📊📈📉💹🔢🏆🥇 etc for icons. Always use **FontAwesome cdn** or **lucid-react** library already installed in the package.json",
-    "GRADIENT RESTRICTION RULE",
-    "NEVER use dark/saturated gradient combos (e.g., purple/pink) on any UI element.  Prohibited gradients: blue-500 to purple 600, purple 500 to pink-500, green-500 to blue-500, red to pink etc",
-    "NEVER use dark gradients for logo, testimonial, footer etc",
-    "NEVER let gradients cover more than 20% of the viewport.",
-    "NEVER apply gradients to text-heavy content or reading areas.",
-    "NEVER use gradients on small UI elements (<100px width).",
-    "NEVER stack multiple gradient layers in the same viewport.",
-    "ENFORCEMENT RULE:",
-    "    • Id gradient area exceeds 20% of viewport OR affects readability, **THEN** use solid colors",
-    "How and where to use:",
-    "   • Section backgrounds (not content backgrounds)",
-    "   • Hero section header content. Eg: dark to light to dark color",
-    "   • Decorative overlays and accent elements only",
-    "   • Hero section with 2-3 mild color",
-    "   • Gradients creation can be done for any angle say horizontal, vertical or diagonal",
-    "- For AI chat, voice application, **do not use purple color. Use color like light green, ocean blue, peach orange etc",
-    "- Every interaction needs micro-animations - hover states, transitions, parallax effects, and entrance animations. Static = dead.",
-    "- Use 2-3x more spacing than feels comfortable. Cramped designs look cheap.",
-    "- Subtle grain textures, noise overlays, custom cursors, selection states, and loading animations: separates good from extraordinary.",
-    "- Before generating UI, infer the visual style from the problem statement (palette, contrast, mood, motion) and immediately instantiate it by setting global design tokens (primary, secondary/accent, background, foreground, ring, state colors), rather than relying on any library defaults. Don't make the background dark as a default step, always understand problem first and define colors accordingly",
-    "Component Reuse:",
-    "\t- Prioritize using pre-existing components from src/components/ui when applicable",
-    "\t- Create new components that match the style and conventions of existing components when needed",
-    "\t- Examine existing components to understand the project's component patterns before creating new ones",
-    "IMPORTANT: Do not use HTML based component like dropdown, calendar, toast etc. You **MUST** always use `/app/frontend/src/components/ui/ ` only as a primary components as these are modern and stylish component",
-    "Best Practices:",
-    "\t- Use Shadcn/UI as the primary component library for consistency and accessibility",
-    "\t- Import path: ./components/[component-name]",
-    "Export Conventions:",
-    "\t- Components MUST use named exports (export const ComponentName = ...)",
-    "\t- Pages MUST use default exports (export default function PageName() {...})",
-    "Toasts:",
-    "  - Use `sonner` for toasts",
-    "  - Sonner component are located in `/app/src/components/ui/sonner.tsx`",
-    "Use 2–4 color gradients, subtle textures/noise overlays, or CSS-based noise to avoid flat visuals."
-  ]
+  "general_ui_ux_design_guidelines": "    - You must **not** apply universal transition. Eg: `transition: all`. This results in breaking transforms. Always add transitions for specific interactive elements like button, input excluding transforms\n    - You must **not** center align the app container, ie do not add `.App { text-align: center; }` in the css file. This disrupts the human natural reading flow of text\n   - NEVER: use AI assistant Emoji characters like`🤖🧠💭💡🔮🎯📚🎭🎬🎪🎉🎊🎁🎀🎂🍰🎈🎨🎰💰💵💳🏦💎🪙💸🤑📊📈📉💹🔢🏆🥇 etc for icons. Always use **FontAwesome cdn** or **lucid-react** library already installed in the package.json\n\n **GRADIENT RESTRICTION RULE**\nNEVER use dark/saturated gradient combos (e.g., purple/pink) on any UI element.  Prohibited gradients: blue-500 to purple 600, purple 500 to pink-500, green-500 to blue-500, red to pink etc\nNEVER use dark gradients for logo, testimonial, footer etc\nNEVER let gradients cover more than 20% of the viewport.\nNEVER apply gradients to text-heavy content or reading areas.\nNEVER use gradients on small UI elements (<100px width).\nNEVER stack multiple gradient layers in the same viewport.\n\n**ENFORCEMENT RULE:**\n    • Id gradient area exceeds 20% of viewport OR affects readability, **THEN** use solid colors\n\n**How and where to use:**\n   • Section backgrounds (not content backgrounds)\n   • Hero section header content. Eg: dark to light to dark color\n   • Decorative overlays and accent elements only\n   • Hero section with 2-3 mild color\n   • Gradients creation can be done for any angle say horizontal, vertical or diagonal\n\n- For AI chat, voice application, **do not use purple color. Use color like light green, ocean blue, peach orange etc**\n\n</Font Guidelines>\n\n- Every interaction needs micro-animations - hover states, transitions, parallax effects, and entrance animations. Static = dead. \n   \n- Use 2-3x more spacing than feels comfortable. Cramped designs look cheap.\n\n- Subtle grain textures, noise overlays, custom cursors, selection states, and loading animations: separates good from extraordinary.\n   \n- Before generating UI, infer the visual style from the problem statement (palette, contrast, mood, motion) and immediately instantiate it by setting global design tokens (primary, secondary/accent, background, foreground, ring, state colors), rather than relying on any library defaults. Don't make the background dark as a default step, always understand problem first and define colors accordingly\n    Eg: - if it implies playful/energetic, choose a colorful scheme\n           - if it implies monochrome/minimal, choose a black–white/neutral scheme\n\n**Component Reuse:**\n\t- Prioritize using pre-existing components from src/components/ui when applicable\n\t- Create new components that match the style and conventions of existing components when needed\n\t- Examine existing components to understand the project's component patterns before creating new ones\n\n**IMPORTANT**: Do not use HTML based component like dropdown, calendar, toast etc. You **MUST** always use `/app/frontend/src/components/ui/ ` only as a primary components as these are modern and stylish component\n\n**Best Practices:**\n\t- Use Shadcn/UI as the primary component library for consistency and accessibility\n\t- Import path: ./components/[component-name]\n\n**Export Conventions:**\n\t- Components MUST use named exports (export const ComponentName = ...)\n\t- Pages MUST use default exports (export default function PageName() {...})\n\n**Toasts:**\n  - Use `sonner` for toasts\"\n  - Sonner component are located in `/app/src/components/ui/sonner.tsx`\n\nUse 2–4 color gradients, subtle textures/noise overlays, or CSS-based noise to avoid flat visuals."
 }

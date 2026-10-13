@@ -81,6 +81,7 @@ export function Header() {
                 : "My practice"}
             </NavLink>
           )}
+          <NavLink to="/competitions" data-testid="nav-competitions">Competitions</NavLink>
           <NavLink to="/exams" data-testid="nav-exams">
             Explore exams
           </NavLink>
@@ -146,6 +147,7 @@ export function Header() {
                     Content Studio
                   </NavLink>
                 )}
+                <NavLink to="/competitions" data-testid="mobile-competitions">Competitions</NavLink>
                 <NavLink to="/exams" data-testid="mobile-exams">
                   Explore exams
                 </NavLink>
