@@ -113,6 +113,8 @@ def attempt_view(a):
         **{k: a.get(k) for k in fields},
         "summary": a.get('summary') if a.get('competition_end', 0) <= now() else None,
         "competition_end": a.get('competition_end'),
+        'confidence_observations': {qid: {'probability': x.get('confidence'), 'response': x.get('normalized_value', x.get('value',''))} for qid,x in a.get('first_answers',{}).items()},
+        'confidence_changed_questions': a.get('confidence_changed_questions', []),
         "questions": [delivered(q) for q in a["questions"]],
         "server_now": now(),
         "count": len(a["questions"]),
@@ -341,7 +343,9 @@ async def submit(id: str, bg: BackgroundTasks, response: Response, u=Depends(cur
 
 
 @router.get("/attempts/{id}/results")
-async def results(id: str, bg: BackgroundTasks, score_version: str = "original", u=Depends(current)):
+async def results(id: str, bg: BackgroundTasks, score_version: str = "original", u=Depends(current), confidence_threshold: float = 0.2):
+    if not 0 <= confidence_threshold <= 1:
+        raise HTTPException(422, 'Confidence threshold must be between 0 and 1.')
     from .corrections import with_grade
 
     a = await expire(await owned(id, u))
@@ -359,11 +363,15 @@ async def results(id: str, bg: BackgroundTasks, score_version: str = "original",
         q["asset_count"] = len(q.get("q_refs", []))
         q["solution_asset_count"] = len(q.get("s_refs", []))
     from .insights import insights
+    from .reviews import states_for, review_summary
+    a['review_states'] = await states_for(a)
+    a['review_tracking_enabled'] = True
     from .analytics import build_analytics
     return {
         **attempt_view(a),
         **result,
-        'analytics': build_analytics(a, result),
+        'analytics': build_analytics(a, result, confidence_threshold),
+        'review': review_summary(a, result['questions']),
         'insights': insights(result),
         "grade_versions": await db.tejas_score_versions.find(
             {"attempt_id": id, "user_id": u["id"]},
@@ -423,6 +431,7 @@ async def solution_consulted(id: str, qid: str, u=Depends(current)):
         raise HTTPException(403, 'Solutions are not released for this attempt yet.')
     if not any(q['id'] == qid for q in a['questions']):
         raise HTTPException(404, 'Question not found.')
+    await attempts.update_one({'id':id,'user_id':u['id'],'status':'completed'}, {'$addToSet':{'review_solution_opened':qid}})
     if a.get('solution_events_version') != 1:
         return SolutionConsulted(question_id=qid, recorded=False)
     await attempts.update_one({'id':id,'user_id':u['id'],'status':'completed'}, {'$addToSet':{'solution_opened':qid}})
@@ -508,6 +517,10 @@ async def retry(id: str, data: dict, u=Depends(current)):
         "sealed_at",
         "sealed_seq",
         "command_receipts",
+        'confidence_changed_questions',
+        'review_states',
+        'review_tracking_enabled',
+        'review_solution_opened',
         'competition_end',
         'competition_ranked',
     ]:

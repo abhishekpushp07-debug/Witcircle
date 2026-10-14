@@ -18,6 +18,7 @@ class AnswerWrite(BaseModel):
     model_config = ConfigDict(extra='forbid', strict=True)
     value: str = Field(default='', max_length=30)
     marked: bool = False
+    confidence: float | None = Field(default=None, ge=0, le=1, allow_inf_nan=False)
     revision: int = Field(ge=1, le=MAX_ANSWER_COMMANDS + 1)
     request_id: str = Field(min_length=8, max_length=100)
 
@@ -49,7 +50,8 @@ async def save_answer(id: str, qid: str, data: AnswerWrite, u=Depends(current)):
     except ValueError:
         raise HTTPException(404, 'Question not found.')
     key = fingerprint({'qid': qid, 'request_id': data.request_id})
-    body_hash = fingerprint(data.model_dump())
+    body = data.model_dump(exclude_none=True)
+    body_hash = fingerprint(body)
     projection = {'_id': 0, 'id': 1, 'user_id': 1, 'status': 1, 'deadline': 1,
                   f'answers.{qid}': 1, f'response_schema.{qid}': 1,
                   f'command_receipts.{key}': 1, 'command_count': 1}
@@ -62,7 +64,7 @@ async def save_answer(id: str, qid: str, data: AnswerWrite, u=Depends(current)):
         return receipt_result(existing, body_hash, old.get('revision', 0))
     # Compatibility: historical attempts may have only their latest acknowledged response.
     if old.get('request_id') == data.request_id:
-        if any(old.get(k) != v for k, v in data.model_dump().items()):
+        if any(old.get(k) != v for k, v in body.items()):
             raise HTTPException(409, 'This save identifier was already used for different content or revision.')
         return {'accepted': old, 'server_now': now(), 'duplicate': True, 'current_revision': old['revision']}
     if a['status'] != 'active' or (a['deadline'] and now() >= a['deadline']):
@@ -94,7 +96,7 @@ async def save_answer(id: str, qid: str, data: AnswerWrite, u=Depends(current)):
                  {'$lt': [{'$ifNull': ['$command_count', 0]}, MAX_ANSWER_COMMANDS]}]},
              '$or': [{f'answers.{qid}.revision': data.revision - 1}] + ([{f'answers.{qid}': {'$exists': False}}] if data.revision == 1 else [])}
     updated = await attempts.find_one_and_update(guard, [
-        {'$set': {f'answers.{qid}': {'$literal': {**data.model_dump(), 'normalized_value': value}},
+        {'$set': {f'answers.{qid}': {'$literal': {**body, 'normalized_value': value}},
                   'server_seq': {'$add': [{'$ifNull': ['$server_seq', 0]}, 1]},
                   'command_count': {'$add': [{'$ifNull': ['$command_count', 0]}, 1]}}},
         {'$set': {f'answers.{qid}.accepted_at': epoch, f'answers.{qid}.server_seq': '$server_seq',
@@ -103,6 +105,11 @@ async def save_answer(id: str, qid: str, data: AnswerWrite, u=Depends(current)):
             {'$ne': [f'$answers.{qid}.normalized_value', '']},
             {'$ifNull': [f'$first_answers.{qid}', f'$answers.{qid}']},
             {'$ifNull': [f'$first_answers.{qid}', '$$REMOVE']}]} }},
+        {'$set': {'confidence_changed_questions': {'$cond': [
+            {'$and': [{'$ne': [{'$ifNull': [f'$first_answers.{qid}.confidence', None]}, None]},
+                      {'$ne': [f'$first_answers.{qid}.normalized_value', f'$answers.{qid}.normalized_value']}]},
+            {'$setUnion': [{'$ifNull': ['$confidence_changed_questions', []]}, [qid]]},
+            {'$ifNull': ['$confidence_changed_questions', []]}]}}},
         {'$set': {f'command_receipts.{key}': {'payload_hash': {'$literal': body_hash}, 'accepted': f'$answers.{qid}'}}},
     ], projection={'_id': 0, f'answers.{qid}': 1}, return_document=ReturnDocument.AFTER)
     if not updated:

@@ -168,6 +168,7 @@ class VisitPayload(Payload):
 
 
 class AnswerPayload(Payload):
+    confidence: float | None = Field(default=None, ge=0, le=1, allow_inf_nan=False)
     value: str = Field(max_length=128)
     marked: bool = False
     revision: int = Field(ge=1, le=100000)
@@ -202,7 +203,10 @@ class RegradePayload(Payload):
 
 from .import_models import ScheduleInput, LiveInput
 
+from .reviews import ReviewWrite, ProbabilityInput
+
 MODELS = {
+    'reviews.save_review': ReviewWrite, 'reviews.expected_value': ProbabilityInput,
     'attempts.solution_consulted': EmptyPayload,
     'imports.schedule_import': ScheduleInput, 'imports.toggle_live': LiveInput,
     'auth.login': LoginPayload, 'phone.access': PhonePayload, 'auth.preferences': PreferencePayload,

@@ -9,16 +9,24 @@
         "No new marketing/landing visuals; no image-heavy UI. Use PDF tiles + Lucide icons."
       ]
     },
-
     "brand_personality": {
-      "keywords": ["product-first", "fast", "no-nonsense", "trustworthy", "exam-serious", "teacher-efficient"],
+      "keywords": [
+        "product-first",
+        "fast",
+        "no-nonsense",
+        "trustworthy",
+        "exam-serious",
+        "teacher-efficient"
+      ],
       "tone": "Minimal friction. The UI should feel like a tool: upload → organise → schedule → live. Every screen answers: ‘what’s happening, what’s blocked, what can I do next?’",
       "visual_style": "Matte surfaces, crisp borders, subtle shadows tinted by maroon. No loud gradients. Use restrained accent color only for primary actions and status."
     },
-
     "design_tokens": {
       "source_of_truth": {
-        "existing_css": ["/app/frontend/src/index.css", "/app/frontend/src/App.css"],
+        "existing_css": [
+          "/app/frontend/src/index.css",
+          "/app/frontend/src/App.css"
+        ],
         "instruction": "Reuse existing tokens; do not introduce a new palette system. Extend only if a missing semantic token is required for new states (e.g., ‘info’)."
       },
       "colors": {
@@ -49,12 +57,36 @@
           "focus_ring": "var(--focus-ring) / hsl(var(--ring))"
         },
         "studio_specific_status_badges": {
-          "draft": {"bg": "var(--surface-alt)", "fg": "var(--text-muted)", "border": "var(--line)"},
-          "organising": {"bg": "var(--warning-soft)", "fg": "var(--warning)", "border": "var(--warning-line)"},
-          "blocked": {"bg": "var(--danger-soft)", "fg": "var(--danger)", "border": "var(--danger-line)"},
-          "ready": {"bg": "var(--success-soft)", "fg": "var(--success)", "border": "var(--success-line)"},
-          "scheduled": {"bg": "var(--brand-soft)", "fg": "var(--brand-text)", "border": "var(--brand-line)"},
-          "live": {"bg": "var(--hero-dark)", "fg": "var(--on-brand)", "border": "var(--hero-dark)"}
+          "draft": {
+            "bg": "var(--surface-alt)",
+            "fg": "var(--text-muted)",
+            "border": "var(--line)"
+          },
+          "organising": {
+            "bg": "var(--warning-soft)",
+            "fg": "var(--warning)",
+            "border": "var(--warning-line)"
+          },
+          "blocked": {
+            "bg": "var(--danger-soft)",
+            "fg": "var(--danger)",
+            "border": "var(--danger-line)"
+          },
+          "ready": {
+            "bg": "var(--success-soft)",
+            "fg": "var(--success)",
+            "border": "var(--success-line)"
+          },
+          "scheduled": {
+            "bg": "var(--brand-soft)",
+            "fg": "var(--brand-text)",
+            "border": "var(--brand-line)"
+          },
+          "live": {
+            "bg": "var(--hero-dark)",
+            "fg": "var(--on-brand)",
+            "border": "var(--hero-dark)"
+          }
         }
       },
       "radius_shadow": {
@@ -74,7 +106,6 @@
         "allowed_example": "background: linear-gradient(90deg, rgba(92,0,37,0.06), rgba(251,247,245,0.0));"
       }
     },
-
     "typography": {
       "fonts": {
         "ui": "Figtree (already in index.css)",
@@ -90,7 +121,6 @@
         "numbers": "Use tabular-nums for timers, counts, and schedule times"
       }
     },
-
     "layout_and_grid": {
       "studio_overview": {
         "pattern": "Two-column on desktop: left = Create Test (primary), right = Recent/All tests list + competitions quick panel. Mobile collapses to single column with Create Test first.",
@@ -110,7 +140,6 @@
         ]
       }
     },
-
     "core_pages_and_flow": {
       "1_studio_overview": {
         "page_goal": "Single place to upload Questions PDF + Solutions PDF and start Organise. No extra questions.",
@@ -121,7 +150,13 @@
             "questions_pdf": {
               "label": "Questions PDF",
               "helper": "Drop PDF here or browse",
-              "states": ["empty", "selected", "uploading", "uploaded", "error"],
+              "states": [
+                "empty",
+                "selected",
+                "uploading",
+                "uploaded",
+                "error"
+              ],
               "file_tile": "Show filename, size, last modified; allow Replace + Remove.",
               "data_testids": {
                 "dropzone": "studio-create-test-questions-dropzone",
@@ -133,7 +168,13 @@
             "solutions_pdf": {
               "label": "Solutions PDF",
               "helper": "Drop PDF here or browse",
-              "states": ["empty", "selected", "uploading", "uploaded", "error"],
+              "states": [
+                "empty",
+                "selected",
+                "uploading",
+                "uploaded",
+                "error"
+              ],
               "file_tile": "Same as questions.",
               "data_testids": {
                 "dropzone": "studio-create-test-solutions-dropzone",
@@ -163,14 +204,22 @@
         "test_list": {
           "list_goal": "Show existing tests with clear status: Draft/Organising/Blocked/Ready/Scheduled/Live.",
           "row_pattern": "Card rows (not dense table) with: title (derived), counts, schedule, status badge, actions.",
-          "actions": ["Open", "Live/Unlive toggle (if allowed)", "Copy link (if live)"]
+          "actions": [
+            "Open",
+            "Live/Unlive toggle (if allowed)",
+            "Copy link (if live)"
+          ]
         }
       },
-
       "2_organiser_detail_progress": {
         "page_goal": "Show organisation progress, pairing preview, and what’s blocking readiness. Only after ready, ask for start date/time.",
         "top_bar": {
-          "elements": ["Breadcrumb", "Derived test name (editable optional, not required)", "Status badge", "Owner actions"],
+          "elements": [
+            "Breadcrumb",
+            "Derived test name (editable optional, not required)",
+            "Status badge",
+            "Owner actions"
+          ],
           "data_testids": {
             "breadcrumb": "studio-organiser-breadcrumb",
             "status_badge": "studio-organiser-status-badge",
@@ -227,7 +276,11 @@
             }
           },
           "after_scheduled": {
-            "show": ["Scheduled for …", "Edit schedule", "Unschedule"],
+            "show": [
+              "Scheduled for …",
+              "Edit schedule",
+              "Unschedule"
+            ],
             "data_testids": {
               "scheduled_summary": "studio-schedule-summary",
               "edit_button": "studio-schedule-edit-button",
@@ -249,11 +302,15 @@
           }
         }
       },
-
       "3_student_competitions": {
         "page_goal": "List competitions/tests students can join; show time-gated states and leaderboard after window.",
         "list_cards": {
-          "fields": ["Test name", "Starts at (IST)", "Status badge (Upcoming/Live/Ended)", "CTA"],
+          "fields": [
+            "Test name",
+            "Starts at (IST)",
+            "Status badge (Upcoming/Live/Ended)",
+            "CTA"
+          ],
           "cta_rules": {
             "upcoming": "Show ‘Starts in …’ + disabled Attempt button",
             "live": "Show Attempt button",
@@ -274,7 +331,6 @@
           }
         }
       },
-
       "4_results_analysis_additions": {
         "goal": "Add evidence-based analysis context to existing Results without changing core player/report continuity.",
         "modules": [
@@ -289,7 +345,6 @@
         }
       }
     },
-
     "excel_import_addendum": {
       "goal": "Add Excel import alongside PDF so staff can directly import typed questions/options/answers/solutions without image extraction. Must be deterministic, bounded parsing (no guessed keys), and incremental (no redesign).",
       "supported_inputs": {
@@ -305,7 +360,9 @@
             "description": "Upload questions.xlsx and solutions.xlsx separately; pairing happens by question_id or question_no."
           }
         ],
-        "file_types": [".xlsx"],
+        "file_types": [
+          ".xlsx"
+        ],
         "non_goals": [
           "No OCR inside Excel images.",
           "No auto-detecting arbitrary column names beyond a strict allowlist.",
@@ -352,7 +409,9 @@
         "template_variants": [
           {
             "name": "combined_sheet",
-            "sheets": ["Questions"],
+            "sheets": [
+              "Questions"
+            ],
             "when_to_use": "Small sets or when solutions are short.",
             "required_columns": [
               "question_id",
@@ -366,7 +425,13 @@
               "correct_option",
               "solution_text"
             ],
-            "optional_columns": ["topic", "difficulty", "marks", "negative_marks", "source"],
+            "optional_columns": [
+              "topic",
+              "difficulty",
+              "marks",
+              "negative_marks",
+              "source"
+            ],
             "rules": [
               "correct_option must be one of: A, B, C, D (uppercase).",
               "question_id must be unique if provided.",
@@ -375,7 +440,10 @@
           },
           {
             "name": "two_sheets",
-            "sheets": ["Questions", "Solutions"],
+            "sheets": [
+              "Questions",
+              "Solutions"
+            ],
             "when_to_use": "Long solutions or when solutions are maintained separately.",
             "questions_required_columns": [
               "question_id",
@@ -388,7 +456,11 @@
               "option_d",
               "correct_option"
             ],
-            "solutions_required_columns": ["question_id", "question_no", "solution_text"],
+            "solutions_required_columns": [
+              "question_id",
+              "question_no",
+              "solution_text"
+            ],
             "pairing_rule": "Pair by question_id if present in both; else pair by question_no. If both present but disagree → conflict.",
             "rules": [
               "No fuzzy matching.",
@@ -402,7 +474,11 @@
         "principle": "Deterministic import with row-level errors. Nothing is created as Ready until all blocking errors are resolved.",
         "preview_layout": {
           "pattern": "Same Organiser Detail page, but PairingPreviewTabs becomes ‘Rows’ preview.",
-          "tabs": ["Valid", "Errors", "Warnings"],
+          "tabs": [
+            "Valid",
+            "Errors",
+            "Warnings"
+          ],
           "right_panel": "SchedulePanel remains locked until Valid rows cover 100% of required questions.",
           "data_testids": {
             "rows_tabs": "studio-excel-preview-tabs",
@@ -413,7 +489,13 @@
         },
         "error_table": {
           "component": "Table + ScrollArea (shadcn)",
-          "columns": ["row", "sheet", "field", "message", "action"],
+          "columns": [
+            "row",
+            "sheet",
+            "field",
+            "message",
+            "action"
+          ],
           "actions": [
             "Download error report (.csv)",
             "Replace Excel file",
@@ -478,14 +560,20 @@
             "purpose": "Segmented control + dropzones + template download + validate CTA.",
             "file": "frontend/src/components/studio/ExcelImportMode.js",
             "export": "named",
-            "data_testids": ["studio-create-test-import-mode-tabs", "studio-create-test-excel-validate-button"]
+            "data_testids": [
+              "studio-create-test-import-mode-tabs",
+              "studio-create-test-excel-validate-button"
+            ]
           },
           {
             "name": "ExcelRowErrorsTable",
             "purpose": "Row-level errors/warnings table with download report action.",
             "file": "frontend/src/components/studio/ExcelRowErrorsTable.js",
             "export": "named",
-            "data_testids": ["studio-excel-error-table", "studio-excel-download-error-report-button"]
+            "data_testids": [
+              "studio-excel-error-table",
+              "studio-excel-download-error-report-button"
+            ]
           }
         ]
       },
@@ -509,7 +597,13 @@
           }
         ],
         "error_shape": {
-          "fields": ["row", "sheet", "field", "code", "message"],
+          "fields": [
+            "row",
+            "sheet",
+            "field",
+            "code",
+            "message"
+          ],
           "ui_mapping": "Map code → human message; keep message short; show field + row always."
         }
       },
@@ -533,7 +627,6 @@
         "No new images or visual identity changes."
       ]
     },
-
     "components": {
       "component_path": {
         "shadcn_primary": [
@@ -562,36 +655,64 @@
           {
             "name": "DualPdfDropzone",
             "purpose": "Two dropzones with shared validation + progress + replace/remove.",
-            "uses": ["Card", "Button", "Progress", "Alert"],
-            "data_testids": ["studio-create-test-questions-dropzone", "studio-create-test-solutions-dropzone"]
+            "uses": [
+              "Card",
+              "Button",
+              "Progress",
+              "Alert"
+            ],
+            "data_testids": [
+              "studio-create-test-questions-dropzone",
+              "studio-create-test-solutions-dropzone"
+            ]
           },
           {
             "name": "OrganiserStepper",
             "purpose": "Upload→Extract→Pair→Validate→Ready stepper with blocked state.",
-            "uses": ["Progress", "Badge", "Tooltip"]
+            "uses": [
+              "Progress",
+              "Badge",
+              "Tooltip"
+            ]
           },
           {
             "name": "PairingPreviewTabs",
             "purpose": "Matched/Unmatched/Conflicts views with actionable blockers.",
-            "uses": ["Tabs", "Table or card list", "ScrollArea"]
+            "uses": [
+              "Tabs",
+              "Table or card list",
+              "ScrollArea"
+            ]
           },
           {
             "name": "SchedulePanel",
             "purpose": "Calendar + time select + IST label; disabled until Ready.",
-            "uses": ["Calendar", "Select", "Button", "AlertDialog"]
+            "uses": [
+              "Calendar",
+              "Select",
+              "Button",
+              "AlertDialog"
+            ]
           },
           {
             "name": "LiveToggle",
             "purpose": "Manual live/unlive with confirmation and clear policy copy.",
-            "uses": ["Switch", "AlertDialog", "Badge"]
+            "uses": [
+              "Switch",
+              "AlertDialog",
+              "Badge"
+            ]
           }
         ]
       }
     },
-
     "states_and_error_handling": {
       "upload": {
-        "validation": ["PDF only", "max size (define in UI copy)", "show filename + size"],
+        "validation": [
+          "PDF only",
+          "max size (define in UI copy)",
+          "show filename + size"
+        ],
         "errors": {
           "network": "Alert: ‘Upload failed. Retry or replace file.’",
           "parse_failed": "Alert: ‘We couldn’t read this PDF. Try exporting again or upload a clearer scan.’",
@@ -617,7 +738,6 @@
         ]
       }
     },
-
     "motion_microinteractions": {
       "principles": [
         "No ‘transition: all’. Only transition background-color, border-color, box-shadow, opacity.",
@@ -631,12 +751,15 @@
       },
       "optional_library": {
         "name": "framer-motion",
-        "use_cases": ["organiser step transitions", "drawer entrance", "list item appear"],
+        "use_cases": [
+          "organiser step transitions",
+          "drawer entrance",
+          "list item appear"
+        ],
         "install": "npm i framer-motion",
         "note": "Keep motion minimal; Studio is productivity-first."
       }
     },
-
     "accessibility": {
       "requirements": [
         "All interactive elements must have visible focus (already via :focus-visible).",
@@ -646,7 +769,6 @@
         "Ensure contrast on maroon buttons with white text (already --on-brand)."
       ]
     },
-
     "data_testid_schema": {
       "convention": "kebab-case, role-based, stable. Prefix by area: studio-, student-, results-.",
       "examples": [
@@ -657,7 +779,6 @@
         "results-analysis-subject-breakdown-card"
       ]
     },
-
     "instructions_to_main_agent": [
       "Preserve existing tokens in index.css/App.css; do not change global identity.",
       "Implement the new Studio flow as: Studio Overview → Organiser Detail (progress + pairing preview) → Schedule (only after Ready) → Manual Live/Unlive.",
@@ -669,7 +790,6 @@
       "No mocked integrations: if an API isn’t ready, show ‘Coming soon’ only if backed by real feature flag; otherwise keep UI hidden/disabled with clear copy."
     ]
   },
-
   "results_analytics_offline_safety_addendum": {
     "scope": {
       "goal": "Extend existing Results with an Analytics Workspace + Offline Safety behaviors. This is an addendum only: preserve matte maroon theme (#5C0025), existing Results summary/review UI, and existing navigation. No new images. No decorative charts without evidence.",
@@ -680,7 +800,6 @@
         "No cohort percentile/rank unless cohort size >= 100 (authoritative rule)."
       ]
     },
-
     "information_architecture": {
       "entry_point": {
         "placement": "Inside existing Results page, add a new section below the current summary: ‘Analytics workspace’.",
@@ -698,7 +817,6 @@
         "state_preservation": "Keep current tab + filters when opening/closing drawer. Do not navigate away unless user clicks ‘Open full review’."
       }
     },
-
     "metric_registry_A01_A60": {
       "principle": "Metrics are registered and displayed only if backed by stored telemetry. If missing, show ‘Unavailable’ and explain what evidence is required.",
       "display_contract": {
@@ -751,7 +869,6 @@
         }
       }
     },
-
     "evidence_drawer": {
       "purpose": "Explain ‘why this metric is what it is’ with traceable evidence. Also used to explain why a metric is unavailable.",
       "component": "Drawer (shadcn) on mobile; Dialog or Sheet on desktop (prefer Sheet if available; otherwise Dialog).",
@@ -788,7 +905,6 @@
         ]
       }
     },
-
     "analytics_modules_allowed": {
       "rule": "Only show modules when their required evidence exists. Otherwise show an empty state with ‘Unavailable’ and a reason.",
       "modules": [
@@ -823,7 +939,6 @@
         }
       ]
     },
-
     "cohort_and_competition_rules": {
       "cohort_minimum": 100,
       "rule": "Any cohort-based metric (percentile, rank, cohort average) must be hidden or marked Unavailable unless cohort_size >= 100.",
@@ -835,7 +950,6 @@
         "cohort_unavailable": "results-analytics-cohort-unavailable"
       }
     },
-
     "offline_safety_and_draft_recovery": {
       "principle": "Never lose a student’s answers. Offline-first behavior must be explicit, testable, and reversible.",
       "player_save_states": {
@@ -878,8 +992,17 @@
           "On Results page: show ‘Offline & drafts’ tab with a Drafts list."
         ],
         "drafts_list": {
-          "fields": ["Test", "Attempt started", "Last saved locally", "Questions answered", "Actions"],
-          "actions": ["Resume", "Discard"],
+          "fields": [
+            "Test",
+            "Attempt started",
+            "Last saved locally",
+            "Questions answered",
+            "Actions"
+          ],
+          "actions": [
+            "Resume",
+            "Discard"
+          ],
           "data_testids": {
             "banner": "draft-recovery-banner",
             "open": "draft-recovery-open-button",
@@ -905,7 +1028,6 @@
         }
       }
     },
-
     "typed_option_math_fix": {
       "goal": "Ensure typed options (A/B/C/D) render math consistently and do not break layout on mobile.",
       "rules": [
@@ -919,7 +1041,6 @@
         "option_math": "question-option-math"
       }
     },
-
     "components": {
       "component_path": {
         "shadcn_primary": [
@@ -944,29 +1065,41 @@
           "name": "ResultsAnalyticsWorkspace",
           "file": "frontend/src/components/results/ResultsAnalyticsWorkspace.js",
           "purpose": "Tabs wrapper + Overview cards + Metrics ledger + Offline & drafts tab.",
-          "data_testids": ["results-analytics-tabs", "results-analytics-ledger-table"]
+          "data_testids": [
+            "results-analytics-tabs",
+            "results-analytics-ledger-table"
+          ]
         },
         {
           "name": "MetricEvidenceDrawer",
           "file": "frontend/src/components/results/MetricEvidenceDrawer.js",
           "purpose": "Evidence Drawer/Sheet with definition, calculation, evidence list, and requirements mode.",
-          "data_testids": ["results-evidence-drawer", "results-evidence-question-list"]
+          "data_testids": [
+            "results-evidence-drawer",
+            "results-evidence-question-list"
+          ]
         },
         {
           "name": "DraftRecoveryPanel",
           "file": "frontend/src/components/offline/DraftRecoveryPanel.js",
           "purpose": "List quarantined drafts + resume/discard actions.",
-          "data_testids": ["draft-recovery-list", "draft-recovery-resume-button"]
+          "data_testids": [
+            "draft-recovery-list",
+            "draft-recovery-resume-button"
+          ]
         },
         {
           "name": "SignoutDraftGuardDialog",
           "file": "frontend/src/components/auth/SignoutDraftGuardDialog.js",
           "purpose": "Blocking keep/discard dialog when signing out with pending drafts.",
-          "data_testids": ["signout-draft-dialog", "signout-draft-keep-button", "signout-draft-discard-button"]
+          "data_testids": [
+            "signout-draft-dialog",
+            "signout-draft-keep-button",
+            "signout-draft-discard-button"
+          ]
         }
       ]
     },
-
     "data_testid_minimums": {
       "rule": "All interactive and key informational elements must include data-testid.",
       "minimum": [
@@ -981,7 +1114,6 @@
         "player-save-status"
       ]
     },
-
     "instructions_to_main_agent": [
       "This is an addendum only—do not restyle existing Results components; only add the Analytics workspace section and drawers/dialogs.",
       "Implement metric registry A01–A60 as a data-driven list; render only metrics with evidence. Missing telemetry must show ‘Unavailable’ with reason.",
@@ -992,7 +1124,6 @@
       "No new images; no decorative charts without evidence; prefer tables when data is sparse."
     ]
   },
-
   "guide04_confidence_calibration_addendum": {
     "scope": {
       "goal": "Add a minimal, optional confidence-probability collection to the existing Player, plus post-result calibration analytics and mistake-review workflow. Preserve existing matte maroon identity (#5C0025), existing Player layout, and strict scoring/submission contracts. No new navigation. No new Studio credential flows.",
@@ -1003,20 +1134,20 @@
         "Do not add routine review questions (per user choice)."
       ]
     },
-
     "visual_constraints": {
       "identity": "No theme redesign. Keep existing Figtree + maroon tokens + light/dark.",
       "mobile_first": "Phone-only student login; design for 390px width and 44px touch targets.",
       "placement_rule": "Confidence UI must live inside existing Player question card (small panel) and Results review controls; no new top-level pages.",
       "embargo_rule": "Competition embargo rules remain: do not reveal solutions early; confidence UI must not leak correctness."
     },
-
     "player_confidence_panel": {
       "principle": "Optional, fast, and skippable. The student can answer without ever touching confidence.",
       "when_shown": {
         "default": "Collapsed (shows a one-line prompt + optional toggle).",
         "auto_expand": "Never auto-expand on first render; only expand when user taps.",
-        "hide_when": ["question is unattempted and user is scrolling quickly (avoid sticky overlays)"]
+        "hide_when": [
+          "question is unattempted and user is scrolling quickly (avoid sticky overlays)"
+        ]
       },
       "ui": {
         "component": "Collapsible (shadcn) inside the question card, below options and above navigation.",
@@ -1036,7 +1167,13 @@
               "type": "Slider (shadcn)",
               "range": "0.50 → 1.00 (step 0.05)",
               "default_value": "No default; show placeholder state until user moves slider.",
-              "labels": ["50%", "70%", "80%", "90%", "100%"],
+              "labels": [
+                "50%",
+                "70%",
+                "80%",
+                "90%",
+                "100%"
+              ],
               "helper": "Only rate if you didn’t change your answer after seeing hints. (We exclude changed responses from calibration.)",
               "data_testids": {
                 "slider": "player-confidence-slider",
@@ -1045,7 +1182,13 @@
             },
             "secondary": {
               "type": "ToggleGroup (shadcn)",
-              "options": ["50%", "70%", "80%", "90%", "100%"],
+              "options": [
+                "50%",
+                "70%",
+                "80%",
+                "90%",
+                "100%"
+              ],
               "use_when": "If slider feels fiddly on small screens; keep one input method in UI at a time.",
               "data_testids": {
                 "toggle_group": "player-confidence-toggle-group",
@@ -1085,7 +1228,6 @@
         }
       }
     },
-
     "results_review_controls": {
       "placement": "Inside existing Results per-question expanded review panel (where options/solution appear), add a compact ‘Confidence & reflection’ strip.",
       "elements": {
@@ -1129,7 +1271,6 @@
         "exclusion": "Calibration excludes questions where you changed your answer after rating confidence."
       }
     },
-
     "analytics_workspace_extensions": {
       "placement": "Inside existing analytics workspace (Results addendum), add Guide04 metric tiles/rows for A41/A42/A43 and mistake-review progress A45/A50.",
       "metric_ids_and_thresholds": {
@@ -1152,7 +1293,6 @@
         }
       }
     },
-
     "A44_expected_value_calculator": {
       "purpose": "Let the student input their own probability (p) and see expected value under frozen scoring rules. This is hypothetical and must not change scoring.",
       "placement": "Inside MetricEvidenceDrawer body as a collapsible section titled ‘Expected value (what-if)’.",
@@ -1186,7 +1326,6 @@
         }
       }
     },
-
     "mistake_review_checklist": {
       "principle": "Checklist tracks completion, not mastery. Explicit completion required (A45/A50).",
       "placement": "In Results per-question review panel, add a ‘Mistake review’ checklist card when the question is incorrect or marked for review.",
@@ -1206,7 +1345,6 @@
         }
       }
     },
-
     "components": {
       "component_path": {
         "shadcn_primary": [
@@ -1227,29 +1365,42 @@
           "name": "PlayerConfidencePanel",
           "file": "frontend/src/components/player/PlayerConfidencePanel.js",
           "purpose": "Optional collapsible confidence UI with slider/toggles and save/clear.",
-          "data_testids": ["player-confidence-collapsible-toggle", "player-confidence-slider", "player-confidence-save-button"]
+          "data_testids": [
+            "player-confidence-collapsible-toggle",
+            "player-confidence-slider",
+            "player-confidence-save-button"
+          ]
         },
         {
           "name": "ResultsReflectionStrip",
           "file": "frontend/src/components/results/ResultsReflectionStrip.js",
           "purpose": "Per-question reflection controls (error category + notes + save).",
-          "data_testids": ["results-error-category-select", "results-error-notes-textarea", "results-reflection-save-button"]
+          "data_testids": [
+            "results-error-category-select",
+            "results-error-notes-textarea",
+            "results-reflection-save-button"
+          ]
         },
         {
           "name": "MistakeReviewChecklist",
           "file": "frontend/src/components/results/MistakeReviewChecklist.js",
           "purpose": "Explicit completion checklist for mistake review (A45/A50).",
-          "data_testids": ["results-mistake-review-card", "results-mistake-review-item"]
+          "data_testids": [
+            "results-mistake-review-card",
+            "results-mistake-review-item"
+          ]
         },
         {
           "name": "A44ExpectedValueCalculator",
           "file": "frontend/src/components/results/A44ExpectedValueCalculator.js",
           "purpose": "What-if EV calculator embedded inside MetricEvidenceDrawer.",
-          "data_testids": ["results-a44-probability-input", "results-a44-expected-value"]
+          "data_testids": [
+            "results-a44-probability-input",
+            "results-a44-expected-value"
+          ]
         }
       ]
     },
-
     "instructions_to_main_agent": [
       "Add confidence UI as an OPTIONAL Collapsible panel inside existing Player question card; do not change navigation or submission flow.",
       "Confidence collection must be non-blocking and must not delay scoring/submission.",
@@ -1260,6 +1411,191 @@
       "All new components must be .js (not .tsx) and every interactive/value element must include data-testid."
     ]
   },
-
-  "general_ui_ux_design_guidelines": "    - You must **not** apply universal transition. Eg: `transition: all`. This results in breaking transforms. Always add transitions for specific interactive elements like button, input excluding transforms\n    - You must **not** center align the app container, ie do not add `.App { text-align: center; }` in the css file. This disrupts the human natural reading flow of text\n   - NEVER: use AI assistant Emoji characters like`🤖🧠💭💡🔮🎯📚🎭🎬🎪🎉🎊🎁🎀🎂🍰🎈🎨🎰💰💵💳🏦💎🪙💸🤑📊📈📉💹🔢🏆🥇 etc for icons. Always use **FontAwesome cdn** or **lucid-react** library already installed in the package.json\n\n **GRADIENT RESTRICTION RULE**\nNEVER use dark/saturated gradient combos (e.g., purple/pink) on any UI element.  Prohibited gradients: blue-500 to purple 600, purple 500 to pink-500, green-500 to blue-500, red to pink etc\nNEVER use dark gradients for logo, testimonial, footer etc\nNEVER let gradients cover more than 20% of the viewport.\nNEVER apply gradients to text-heavy content or reading areas.\nNEVER use gradients on small UI elements (<100px width).\nNEVER stack multiple gradient layers in the same viewport.\n\n**ENFORCEMENT RULE:**\n    • Id gradient area exceeds 20% of viewport OR affects readability, **THEN** use solid colors\n\n**How and where to use:**\n   • Section backgrounds (not content backgrounds)\n   • Hero section header content. Eg: dark to light to dark color\n   • Decorative overlays and accent elements only\n   • Hero section with 2-3 mild color\n   • Gradients creation can be done for any angle say horizontal, vertical or diagonal\n\n- For AI chat, voice application, **do not use purple color. Use color like light green, ocean blue, peach orange etc**\n\n</Font Guidelines>\n\n- Every interaction needs micro-animations - hover states, transitions, parallax effects, and entrance animations. Static = dead. \n   \n- Use 2-3x more spacing than feels comfortable. Cramped designs look cheap.\n\n- Subtle grain textures, noise overlays, custom cursors, selection states, and loading animations: separates good from extraordinary.\n   \n- Before generating UI, infer the visual style from the problem statement (palette, contrast, mood, motion) and immediately instantiate it by setting global design tokens (primary, secondary/accent, background, foreground, ring, state colors), rather than relying on any library defaults. Don't make the background dark as a default step, always understand problem first and define colors accordingly\n    Eg: - if it implies playful/energetic, choose a colorful scheme\n           - if it implies monochrome/minimal, choose a black–white/neutral scheme\n\n**Component Reuse:**\n\t- Prioritize using pre-existing components from src/components/ui when applicable\n\t- Create new components that match the style and conventions of existing components when needed\n\t- Examine existing components to understand the project's component patterns before creating new ones\n\n**IMPORTANT**: Do not use HTML based component like dropdown, calendar, toast etc. You **MUST** always use `/app/frontend/src/components/ui/ ` only as a primary components as these are modern and stylish component\n\n**Best Practices:**\n\t- Use Shadcn/UI as the primary component library for consistency and accessibility\n\t- Import path: ./components/[component-name]\n\n**Export Conventions:**\n\t- Components MUST use named exports (export const ComponentName = ...)\n\t- Pages MUST use default exports (export default function PageName() {...})\n\n**Toasts:**\n  - Use `sonner` for toasts\"\n  - Sonner component are located in `/app/src/components/ui/sonner.tsx`\n\nUse 2–4 color gradients, subtle textures/noise overlays, or CSS-based noise to avoid flat visuals."
+  "general_ui_ux_design_guidelines": "    - You must **not** apply universal transition. Eg: `transition: all`. This results in breaking transforms. Always add transitions for specific interactive elements like button, input excluding transforms\n    - You must **not** center align the app container, ie do not add `.App { text-align: center; }` in the css file. This disrupts the human natural reading flow of text\n   - NEVER: use AI assistant Emoji characters like`🤖🧠💭💡🔮🎯📚🎭🎬🎪🎉🎊🎁🎀🎂🍰🎈🎨🎰💰💵💳🏦💎🪙💸🤑📊📈📉💹🔢🏆🥇 etc for icons. Always use **FontAwesome cdn** or **lucid-react** library already installed in the package.json\n\n **GRADIENT RESTRICTION RULE**\nNEVER use dark/saturated gradient combos (e.g., purple/pink) on any UI element.  Prohibited gradients: blue-500 to purple 600, purple 500 to pink-500, green-500 to blue-500, red to pink etc\nNEVER use dark gradients for logo, testimonial, footer etc\nNEVER let gradients cover more than 20% of the viewport.\nNEVER apply gradients to text-heavy content or reading areas.\nNEVER use gradients on small UI elements (<100px width).\nNEVER stack multiple gradient layers in the same viewport.\n\n**ENFORCEMENT RULE:**\n    • Id gradient area exceeds 20% of viewport OR affects readability, **THEN** use solid colors\n\n**How and where to use:**\n   • Section backgrounds (not content backgrounds)\n   • Hero section header content. Eg: dark to light to dark color\n   • Decorative overlays and accent elements only\n   • Hero section with 2-3 mild color\n   • Gradients creation can be done for any angle say horizontal, vertical or diagonal\n\n- For AI chat, voice application, **do not use purple color. Use color like light green, ocean blue, peach orange etc**\n\n</Font Guidelines>\n\n- Every interaction needs micro-animations - hover states, transitions, parallax effects, and entrance animations. Static = dead. \n   \n- Use 2-3x more spacing than feels comfortable. Cramped designs look cheap.\n\n- Subtle grain textures, noise overlays, custom cursors, selection states, and loading animations: separates good from extraordinary.\n   \n- Before generating UI, infer the visual style from the problem statement (palette, contrast, mood, motion) and immediately instantiate it by setting global design tokens (primary, secondary/accent, background, foreground, ring, state colors), rather than relying on any library defaults. Don't make the background dark as a default step, always understand problem first and define colors accordingly\n    Eg: - if it implies playful/energetic, choose a colorful scheme\n           - if it implies monochrome/minimal, choose a black–white/neutral scheme\n\n**Component Reuse:**\n\t- Prioritize using pre-existing components from src/components/ui when applicable\n\t- Create new components that match the style and conventions of existing components when needed\n\t- Examine existing components to understand the project's component patterns before creating new ones\n\n**IMPORTANT**: Do not use HTML based component like dropdown, calendar, toast etc. You **MUST** always use `/app/frontend/src/components/ui/ ` only as a primary components as these are modern and stylish component\n\n**Best Practices:**\n\t- Use Shadcn/UI as the primary component library for consistency and accessibility\n\t- Import path: ./components/[component-name]\n\n**Export Conventions:**\n\t- Components MUST use named exports (export const ComponentName = ...)\n\t- Pages MUST use default exports (export default function PageName() {...})\n\n**Toasts:**\n  - Use `sonner` for toasts\"\n  - Sonner component are located in `/app/src/components/ui/sonner.tsx`\n\nUse 2–4 color gradients, subtle textures/noise overlays, or CSS-based noise to avoid flat visuals.",
+  "scoped_correction_addendum_guide04_metrics_alignment": {
+    "scope": {
+      "goal": "Correct ONLY the previously-added Guide04 confidence/mistake-review analytics guidelines so they match the authoritative source guide (docs/source_guides/04_Results_60_Analyses_and_Question_Insights.pdf.txt) and backend registry (backend/tejas/analytics_registry.json). Preserve the rest of this file verbatim; do not rename metric IDs or invent new formulas. No UI redesign; only additive corrections + responsive class guidance for already-created but unintegrated panels.",
+      "non_goals": [
+        "Do not change global tokens, typography, or matte maroon identity (#5C0025).",
+        "Do not relabel or reorder the authoritative metric registry; UI must reflect it.",
+        "Do not add imagery or decorative charts; evidence-first drillthrough remains mandatory.",
+        "Do not implement frontend; provide guidance only."
+      ],
+      "authoritative_sources": {
+        "source_guide": "/app/docs/source_guides/04_Results_60_Analyses_and_Question_Insights.pdf.txt",
+        "registry": "/app/backend/tejas/analytics_registry.json",
+        "notes": "If any existing UI copy conflicts with these sources, update copy/labels to match sources (not vice versa)."
+      }
+    },
+    "critical_metric_definition_fixes": {
+      "A41_confidence_calibration_by_bin": {
+        "correct_name": "Confidence calibration by bin",
+        "evidence_gate": {
+          "overall_min_rated_items": 20,
+          "per_bin_min_items": 10,
+          "binning": "Declared probability bins (product-defined). Only display bins that meet n>=10; still show overall n.",
+          "eligibility": "Use ONLY genuine precommit probability ratings p and binary outcomes y (full-correct=1 else 0). Exclude retrospective ratings and exclude changed-response items if product marks them as not genuine precommit."
+        },
+        "display_contract": {
+          "must_show": [
+            "mean(p) per displayed bin",
+            "mean(y) per displayed bin",
+            "n per bin",
+            "overall rated n",
+            "exclusions count (e.g., changed-response excluded)"
+          ],
+          "must_not": [
+            "Do not show calibration as a single score replacing the bin table.",
+            "Do not show bins with n<10.",
+            "Do not clamp probabilities; accept full [0,1]."
+          ]
+        },
+        "evidence_drawer_copy": {
+          "definition": "Compares what you predicted (p) vs what happened (y) inside probability bins.",
+          "calculation": "For each bin: mean(p) and mean(y).",
+          "limitations": "Self-reported probabilities are noisy; calibration is evidence, not a stable trait."
+        }
+      },
+      "A42_binary_brier_score": {
+        "correct_name": "Binary Brier score",
+        "evidence_gate": {
+          "min_rated_items": 20,
+          "eligibility": "Use genuine precommit p in [0,1] and y=1 for full correctness. Omit partial-credit items. Exclude retrospective ratings."
+        },
+        "formula": "mean((p - y)^2)",
+        "display_rules": {
+          "must_show": [
+            "value",
+            "n",
+            "eligibility notes (binary-only, excludes partial-credit)"
+          ]
+        }
+      },
+      "A43_low_confidence_penalty_exposure": {
+        "correct_name": "Low-confidence penalty exposure",
+        "evidence_gate": {
+          "min_genuinely_rated_attempts": 10,
+          "threshold": {
+            "symbol": "c",
+            "default": 0.2,
+            "note": "c=0.20 is a product proposal; UI must show it as configurable and display the active c used for the calculation."
+          },
+          "eligibility": "Use rated items with genuine precommit p in [0,1] and signed contributions s_q. Exclude retrospective ratings."
+        },
+        "formula": "sum(max(-s_q,0) where p_q < c) + rated attempt count",
+        "display_contract": {
+          "must_show": [
+            "penalty_sum",
+            "rated_count",
+            "active_threshold_c"
+          ],
+          "must_not": [
+            "Do not hide low p values; allow p near 0.00 because this metric depends on low-confidence behavior."
+          ]
+        }
+      },
+      "A45_confirmed_error_cause_distribution": {
+        "correct_name": "Confirmed error-cause distribution",
+        "evidence_gate": {
+          "min_labeled_wrong_items": 5,
+          "eligibility": "Only WRONG items that have learner-confirmed or teacher-reviewed cause labels. Keep unknown/unlabeled counts separate."
+        },
+        "formula": "count(cause) / number of labeled wrong items",
+        "ui_implication": "The distribution panel MUST filter to WRONG items only (not all incorrect+omitted, not correct). If fewer than 5 labeled wrong items, show Unavailable with requirement copy."
+      },
+      "A50_unresolved_review_backlog": {
+        "correct_name": "Unresolved review backlog",
+        "evidence_gate": {
+          "min_tasks": 1,
+          "eligibility": "Wrong OR omitted first-exposure items that have explicit review-task states."
+        },
+        "formula": "count(open review tasks)",
+        "must_include_breakdowns": [
+          "age since attempt (e.g., days)",
+          "topic breakdown (if approved topic tags exist)"
+        ],
+        "must_not": [
+          "Do NOT represent A50 as a completion percentage.",
+          "Do NOT conflate checklist completion with mastery."
+        ]
+      }
+    },
+    "player_confidence_input_correction": {
+      "required_change": "Previously the confidence UI constrained p to 0.50→1.00. This conflicts with Guide04 which requires p in [0,1]. Update guidelines so the confidence input supports full probability range 0.00–1.00 with step 0.01 (or 0.05 if using discrete toggles), and still has NO default value.",
+      "ui_behavior": {
+        "no_default": "Render an unset state until the learner explicitly sets a value.",
+        "optional": "Confidence remains optional and non-blocking.",
+        "changed_response_exclusion": "If answer changes after rating, mark as excluded from A41/A42/A43 computations (genuine precommit requirement)."
+      },
+      "component_guidance": {
+        "preferred": "Slider (shadcn) with min=0 max=1 step=0.01; show tick labels at 0, 0.2, 0.5, 0.8, 1.0.",
+        "mobile_alt": "ToggleGroup with discrete options [0.0,0.2,0.5,0.8,1.0] ONLY if slider is too fiddly; keep one method at a time.",
+        "data_testids": {
+          "slider": "player-confidence-slider",
+          "value": "player-confidence-value",
+          "save": "player-confidence-save-button",
+          "clear": "player-confidence-clear-button"
+        }
+      }
+    },
+    "responsive_integration_classes_for_existing_panels": {
+      "intent": "Existing panels were created but not integrated; provide scoped Tailwind class guidance that matches existing matte surfaces/tokens and avoids layout regressions. Use these classes when wiring panels into Player + Results.",
+      "player_confidence_panel_container": {
+        "wrapper": "mt-4 rounded-[14px] border border-border bg-card p-4 sm:p-5",
+        "collapsed_row": "flex items-center justify-between gap-3 text-sm",
+        "helper_text": "text-xs text-muted-foreground",
+        "actions_row": "mt-3 flex flex-wrap items-center gap-2",
+        "avoid": [
+          "Do not use sticky overlays inside question card.",
+          "Do not use gradients."
+        ]
+      },
+      "results_reflection_strip": {
+        "wrapper": "mt-4 rounded-[14px] border border-border bg-card p-4 sm:p-5",
+        "grid": "grid grid-cols-1 gap-3 sm:grid-cols-2",
+        "textarea": "sm:col-span-2",
+        "save_row": "mt-3 flex items-center justify-end gap-2"
+      },
+      "mistake_review_checklist_card": {
+        "wrapper": "mt-4 rounded-[14px] border border-border bg-card p-4 sm:p-5",
+        "list": "mt-3 space-y-2",
+        "item": "flex items-start gap-3",
+        "label": "text-sm leading-6",
+        "badge_row": "mt-3 flex items-center justify-between gap-2"
+      },
+      "evidence_drawer_expected_value_section": {
+        "wrapper": "mt-5 rounded-[12px] border border-border bg-muted/40 p-4",
+        "grid": "grid grid-cols-1 gap-3 sm:grid-cols-2",
+        "output": "sm:col-span-2",
+        "note": "Keep EV section collapsible; never make it the primary focus of the drawer."
+      }
+    },
+    "data_testid_enforcement_reminders": {
+      "rule": "All interactive and key informational elements MUST include data-testid (kebab-case, role-based).",
+      "specifically_for_this_addendum": [
+        "results-metric-a41-tile",
+        "results-metric-a42-tile",
+        "results-metric-a43-tile",
+        "results-metric-a45-tile",
+        "results-metric-a50-tile",
+        "results-a44-probability-input",
+        "results-a44-expected-value",
+        "results-mistake-review-card",
+        "results-mistake-review-item",
+        "player-confidence-slider",
+        "player-confidence-save-button"
+      ]
+    },
+    "instructions_to_main_agent": [
+      "Do NOT change metric IDs or rename registry entries; update UI labels/copy to match source guide + analytics_registry.json.",
+      "Fix confidence probability input to support full [0,1] with NO default; low values must be allowed because A43 depends on them.",
+      "A41: enforce evidence gates (>=20 overall, >=10 per displayed bin) and show mean(p) + mean(y) per bin; hide bins that fail n>=10.",
+      "A42: Brier score requires >=20 rated binary items; exclude partial-credit items.",
+      "A43: low-confidence penalty exposure requires >=10 genuinely rated attempts; show active threshold c (default 0.20 proposal) and penalty sum.",
+      "A45: distribution is ONLY for labeled WRONG items; require >=5 labeled wrong items; keep unknown/unlabeled separate.",
+      "A50: show COUNT of open review tasks + age/topic breakdown; never show completion % and never conflate checklist completion with mastery.",
+      "Use the provided Tailwind class scaffolds to integrate existing panels responsively without changing global styling.",
+      "All new/updated React components are .js (not .tsx) and must include data-testid on interactive + key value elements."
+    ]
+  }
 }

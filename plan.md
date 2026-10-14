@@ -2,7 +2,7 @@
 
 ## 1) Objectives
 
-Deliver a premium landing page + working practice MVP for **JEE Main** and **BITSAT** students, using the **5 provided PDFs** as the authoritative base guide, with:
+Deliver a premium landing page + working practice MVP for **JEE Main** and **BITSAT** students, using the **5 provided PDFs** as authoritative guides, with:
 
 - **World-class engineering practices**: bounded contexts, strict API boundaries, vaulting/catalog separation, explicit data ownership, durable async job boundaries for heavy work, immutable attempt snapshots.
 - **Scale target**: architect for **500,000 (5 lakh) concurrently active exam attempts** (not registered users).
@@ -27,15 +27,15 @@ Deliver a simple unified owner workflow:
 
 1) **One place** (Studio) to upload:
    - **Questions PDF + Solutions PDF**, OR
-   - **Excel (.xlsx)** import for typed questions/options/answer/solution (to avoid image-only PDFs), including:
+   - **Excel (.xlsx)** import for typed questions/options/answer/solution, including:
      - single workbook (Questions + Solutions), or
      - two workbooks / two sheets with deterministic pairing.
-2) System auto-organises into a test draft with strict, auditable pairing (no guessing).
+2) System auto-organises into a test draft with strict, auditable pairing (**no guessing**).
 3) Only after organisation is complete, prompt owner **only for attempt start date/time** (IST).
 4) Provide **manual Live / Unlive toggle**.
 5) Deliver **competitions** and **analysis** with evidence-based unavailable states.
 
-**Status:** Implemented and verified.
+**Status:** Implemented and verified for the import/schedule/live pipeline, competitions/embargo, offline recovery, reports, and **Guide04 confidence/reflection/checklist/EV**.
 
 ---
 
@@ -92,25 +92,76 @@ User authorized changing the **Content Studio owner login email** and credential
 ### Capacity/claims stance (binding)
 
 - We do **not claim** 5 lakh concurrency as proven without measured evidence.
-- We do define a qualification path (PDF-05 staged load envelopes + explicit SLOs).
+- We define a qualification path (PDF-05 staged load envelopes + explicit SLOs), but until executed it remains **UNQUALIFIED**.
 
 ---
 
 ## Execution updates and current status
 
-### What is working (verified)
+### What is working (verified on current HEAD)
 
-- Backend modularized into bounded contexts (`auth`, `content`, `attempts`, `jobs`, `imports`, `competitions`, etc.).
+- Backend modularized into bounded contexts (`auth`, `content`, `attempts`, `jobs`, `imports`, `competitions`, `reviews`, `analytics`, etc.).
 - Unified importer/organiser exists for **PDF + Excel**.
 - Immutable imported test publication exists.
 - Scheduling and Live/Unlive gating exists.
 - Competition leaderboard exists with **embargo** (no score/solutions/reports before end time).
 - Offline draft recovery + sign-out guard exists.
 - Results analytics workspace exists (guide-aligned registry + evidence-gated metrics).
+- **Guide04 learner analytics addendum is implemented and verified**:
+  - Pre-answer confidence (non-blocking, precommit semantics)
+  - Post-result reflections + mistake-review checklist (private)
+  - EV “what-if” calculator embedded in A44 evidence drawer
+  - Canonical A41/A42/A43/A45/A50 semantics enforced
 
-### NEW P0 user bug (must fix now)
+### Phase 3.3 checkpoint update (bounded security + verification) — COMPLETED
 
-> **“pdf se nahi le pa rha direct questions”** — Studio PDF upload/organiser is not producing usable extracted questions.
+**Status:** ✅ COMPLETED for the bounded Phase 3.3 checkpoint (compatible updates + security assessment)
+
+- **No claim** that frontend security is fully resolved.
+- **No claim** that 500k capacity is qualified.
+
+#### What was done
+
+- **Compatible dependency updates** (no env/script/architecture changes):
+  - `eslint` + `@eslint/js` updated to **9.39.5**
+  - `postcss` updated to **8.5.30**
+  - Frontend `yarn build` passes post-update.
+
+- **Audit improvement with evidence**:
+  - Before: **26 unique advisories / 299 dependency-path findings**
+  - After: **25 unique advisories / 49 dependency-path findings**
+  - Remaining paths: 3 low, 25 moderate, 21 high; remaining unique include 10 high.
+  - Residual advisories are still heavily coupled to **deprecated CRA/react-scripts toolchain** and remain a **release blocker**.
+
+- **Independent verification** (read-only owner Studio login + core UI after dependency updates):
+  - Studio login succeeds (`abhishek@billpe.com`, password sourced from `ADMIN_PASSWORD` without printing).
+  - Unified PDF/Excel importer UI renders.
+  - Mobile/desktop responsive checks pass.
+  - Networkidle-only harness timeouts were triaged as background/edge requests (e.g., RUM) and not blocking readiness.
+
+- **Main post-update runtime checks** (authoritative, evidence-backed):
+  - `/results/{id}` loads for the restricted QA attempt.
+  - Reflection save works post-update.
+  - A44 what-if calculator works post-update; for p=0.2 with +4/-1/0 rules returns **0 marks** (correct EV for those values).
+  - Desktop 1920×800 and mobile 390×844 screenshots show `overflow=[]`.
+  - Auth session returns HTTP 200; no runtime exceptions.
+  - Evidence: `test_reports/iteration_73_verified.json`.
+
+- **Docs & registers updated**:
+  - `docs/GUIDE04_INTEGRATION_VERIFICATION.md`
+  - `docs/FRONTEND_SECURITY_REMEDIATION.md`
+  - `memory/PRD.md` continuation checkpoint + `memory/test_credentials.md` safe handling
+  - `docs/packet1/REGRESSION_STATUS.json` updated to reflect that A01–A06 are **currently passing** in scoped test evidence; **capacity remains UNQUALIFIED**.
+
+- **Cleanup completed**:
+  - Removed restricted synthetic QA artifacts created solely for automation:
+    - exactly **2 QA attempts**, **1 review**, **1 QA test set**, **1 QA session**
+    - removed temporary scripts + browser state + downloaded QA report
+  - Owner UUID/email and the **original READY unscheduled 75Q import** were preserved.
+
+### P0 user bug — PDF import not extracting direct questions
+
+> **“pdf se nahi le pa rha direct questions”** — Studio PDF upload/organiser was not producing usable extracted questions.
 
 **Status:** ✅ COMPLETED
 
@@ -143,12 +194,11 @@ User authorized changing the **Content Studio owner login email** and credential
   - **All 75 literal keys** exactly match an **independent extraction** of the first-page key table.
   - Remains **UNSCHEDULED** and **NOT LIVE** (owner chooses the start date/time; nothing is auto-scheduled).
 - Old unscheduled diagnostic import `047ee1d9-…` is superseded/hidden.
-- Synthetic QA fixture is hidden from normal lists.
+- Synthetic QA fixture used during development is removed; nothing remains live.
 
 **Evidence:**
 - `/app/docs/PDF_IMPORT_REPAIR.md`
 - `/app/test_reports/iteration_67_verified.json`
-- Packet1 isolated suite: **257 passed** (0 failed, 0 xfail). Log: `/app/test_reports/pdf_fix_full_regression.log`
 
 **Explicit non-claim:** We do **not** claim a full student attempt/report was run on this newly uploaded, currently-unscheduled Tejas200 paper.
 
@@ -178,44 +228,54 @@ User authorized changing the **Content Studio owner login email** and credential
 - Ranking: first competition attempt per phone profile; equal-score ranks verified.
 - Embargo: scores/solutions/reports/retries locked until competition end.
 
-### Correctness defect repairs (A01–A06) — DONE + VERIFIED
+### Guide04 learner confidence + reflections/checklist + EV — DONE + VERIFIED
 
-- A01 retry alias durability.
-- A02 publish CAS with publication outbox + idempotent archival.
-- A03 concurrent edit lost-update fixed via `expected_revision` CAS.
-- A04 audience fails closed.
-- A05 queued job draining.
-- A06 legacy extraction no longer mutates academic destination; stages fenced proposal only.
+**Status:** ✅ COMPLETED end-to-end
 
-### Results analytics + offline safety + typed math — IMPLEMENTED and smoke-verified
+**Frontend:**
+- `PlayerConfidencePanel` integrated into `Player.js` (non-blocking; no attempt-flow delay).
+- `ResultsReflectionStrip` integrated into per-question expanded Results view.
+- `A44ExpectedValueCalculator` embedded inside the analytics evidence drawer.
+- Responsive CSS added using existing tokens (no theme changes). Light/dark + mobile/desktop verified without overflow.
 
-- Guide04 registry definitions generated with source hash.
-- Evidence-gated analytics: do not invent values when evidence is missing.
-- Offline drafts:
-  - Profile-scoped draft recovery panel
-  - Sign-out guard prevents accidental draft loss
-- Typed math options render with KaTeX and do not overflow mobile.
+**Backend:**
+- Analytics formulas and evidence gates aligned to canonical Guide04 + `analytics_registry.json`:
+  - **A41**: calibration-by-bin requires ≥20 rated overall AND ≥10 items per displayed bin.
+  - **A42**: binary Brier requires ≥20 rated binary items.
+  - **A43**: low-confidence negative-mark exposure requires ≥10 rated; configurable threshold `c` default 0.20.
+  - **A45**: labeled **WRONG** only ≥5; unlabeled wrong reported separately.
+  - **A50**: deliberately unavailable without verified first-exposure tasks; review progress shown separately as a workflow indicator (not mastery).
+- Review save is idempotent (`request_id`) + revision CAS (409 on conflict).
+- Two-tab conflict behavior verified: second tab gets conflict and can reload saved state without losing local draft.
 
-### Dependencies and advisories — UPDATED
+**User-visible behavior verified (real browser):**
+- Confidence: normal answer with no rating; 0% and 100% ratings; clear; offline 10% draft saved+reload; submit.
+- Results: reflection panel save+reload; offline save failure retains edits; retry works; CAS conflict shows error and “Reload saved version”.
+- EV: probability p=0/0.2/1 works; correct expected marks and break-even probability; A43 threshold updates dynamically.
+- Real PDF report download returns a true PDF (`%PDF` header) via the Results download button.
 
-- Backend: `pip-audit` now 0 advisories, 0 skipped; `pip check` passes.
-- Frontend: advisory scan still reports vulnerabilities (CRA/react-scripts toolchain); remediation/disposition remains a release blocker.
-- Fonts: Google Fonts removed; local fonts bundled to eliminate external font fetch stalls.
+**Evidence:**
+- `/app/test_reports/iteration_72.json` (Guide04 completion)
+- `/app/test_reports/iteration_73_verified.json` (post-security-update re-verification)
+- `tests/packet1`: **294 passed**
+- Full suite log: `/app/test_reports/guide04_full_packet1.log`
+- Frontend build: `/app/test_reports/frontend_security_build.log`
 
-### Testing and evidence — UPDATED
+### Guide04 metric alignment correction (design + source-of-truth)
 
-- Isolated suite: `tests/packet1` passes **257 tests**.
-- Real browser deep verification performed for:
-  - Offline draft persistence + recovery
-  - Sign-out guard keep/cancel flows
-  - Analytics drillthrough to question evidence
-  - Real PDF report download (existing test flows)
-  - Real Tejas200 import preview: Q37 source/solution images (desktop+mobile), no overlap/overflow.
-- Importer/storage/report evidence:
-  - `/app/docs/UNIFIED_IMPORTER_VERIFICATION.md`
-  - `/app/test_reports/iteration_51_verified.json`
-  - `/app/docs/PDF_IMPORT_REPAIR.md`
-  - `/app/test_reports/iteration_67_verified.json`
+A major mismatch was found between the earlier confidence/reflection addendum and the canonical **Guide04 source text + registry**.
+
+- A scoped correction addendum was produced and inserted without removing any existing guideline sections:
+  - `/app/design_guidelines.md` includes `scoped_correction_addendum_guide04_metrics_alignment`
+
+This plan treats the **Guide04 source + `backend/tejas/analytics_registry.json`** as canonical.
+
+### Dependencies and advisories — UPDATED (bounded checkpoint)
+
+- Backend: `pip-audit` 0 advisories; `pip check` passes.
+- Frontend: compatible updates applied; build passes; audit improved materially.
+  - Residual CRA/react-scripts transitive advisories remain a **release blocker**.
+- Fonts: Google Fonts removed; local fonts bundled.
 
 ---
 
@@ -245,8 +305,9 @@ User stories:
 5. Unified Studio importer/organiser (PDF + Excel) + schedule + live/unlive.
 6. Competitions and leaderboards.
 7. Evidence-based descriptive insights.
+8. Guide04 learner analytics (confidence, reflections, checklists, EV tool).
 
-**Status:** ✅ Achieved for the majority of flows; Tejas200 PDF authoring is unblocked.
+**Status:** ✅ Achieved and verified for Phase-1 MVP scope.
 
 ### Phase 3 — Comprehensive testing, hardening, and regression — UPDATED
 
@@ -254,26 +315,55 @@ User stories:
 
 (Completed; see above.)
 
-#### Step 2: NEW P0 — Fix PDF import: “direct questions not extracted” — ✅ COMPLETE
+#### Step 2: P0 — Fix PDF import: “direct questions not extracted” — ✅ COMPLETE
 
-**Goal:** PDF upload must produce a **usable organised test** from the real provided PDFs.
+(Completed; see above; do not alter the sensitive PDF numbering regex unless strictly necessary.)
 
-**Non-negotiables:**
-- Keep sandbox isolation (chroot + low UID + seccomp + resource caps).
-- No guessed answers/solutions.
-- Preserve diagram/math fidelity via source regions, but also support **text-first extraction** when reliable.
+#### Step 3: Guide04 confidence/reflection/checklist/EV implementation + canonical alignment — ✅ COMPLETE
 
-**Delivered:**
-- Real-paper reproduction + fix + browser verification, with independent key-table cross-check.
-- Layout fidelity: plain typed only when safe; otherwise PDF regions.
-- Mobile/desktop preview overlap fixed.
+- Integration complete (Player + Results + Analytics drawer)
+- Canonical semantics applied and verified
+- Offline retry + CAS conflict UX verified
+- Competition embargo enforcement verified by regression tests (403)
 
-#### Step 3: Resume deferred items AFTER PDF import is fixed
+#### Step 4: Deep testing (autonomous; both frontend + backend) — ✅ COMPLETE
 
-- **Confidence/review analytics addendum implementation** (design is done; code is paused).
-- **Frontend dependency remediation/disposition** (CRA toolchain advisories).
-- **Scale qualification work (PDF-05)** — not claimed complete.
-- **Run a full student attempt + PDF report on the newly imported Tejas200 paper** AFTER the owner schedules it (no auto schedule).
+- Backend: `tests/packet1` now **294 passed**.
+- Frontend: real-browser + responsive checks verified (desktop 1920×800; mobile 390×844; light+dark; no overflow).
+
+#### Step 5: Phase 3.3 compatible update + security assessment checkpoint — ✅ COMPLETE
+
+- Compatible updates applied (eslint/@eslint/js/postcss), builds still pass.
+- Audit improved (26/299 → 25/49), but **not clean**.
+- Post-update runtime checks for reflection save + A44 calculator confirmed.
+- Residual CRA advisories are explicitly documented with evidence.
+
+#### Step 6: Frontend security full closure (CRA toolchain) — **NOT STARTED / REQUIRED (P1 release blocker)**
+
+**Status:** NOT COMPLETE (release blocker)
+
+**Required next work (separate, controlled packet):**
+
+- Controlled migration away from deprecated CRA/react-scripts toolchain to a maintained build/dev-server tool (e.g., Vite/Rspack/Next-like static export), preserving:
+  - existing routing, env contract, asset handling, PDF/source rendering, and styling tokens.
+- Re-run:
+  - `yarn audit` (must be clean or explicitly justified with minimised remaining surface)
+  - build + full browser regression (Studio import, Player, Results, competitions, report download)
+- Document dev-only vs prod-only runtime exposure, and ensure production serves static build artifacts rather than an exposed dev server.
+
+#### Step 7: 500k qualification remains out of scope for Phase-1 “final product” claim
+
+- Maintain explicit separation:
+  - MVP correctness vs infrastructure qualification.
+  - No “supported 500k” claim without load/fault/restore campaign.
+
+**Capacity readiness assessment:** completed **as planning only** (equations/SLOs exist). The following remain **NOT IMPLEMENTED / NOT EXECUTED**:
+
+- Distributed load-test harness (k6/locust) with realistic traffic mix.
+- Dedicated staging/prod-like topology (multi-cell DB routing, quotas, queue budgets).
+- Measured SLO evidence (p95/p99, error ppm, durability and integrity oracles).
+
+**Important constraint:** Do not run high-scale stress tests against the shared preview environment.
 
 ---
 
@@ -286,23 +376,25 @@ User stories:
 
 ## 3) Next Actions
 
-### A) Immediate (P0): PDF import bug
+### A) Immediate (P1): Frontend security posture (CRA advisories) — PARTIALLY COMPLETE
 
-✅ Completed.
+Completed:
+1) Captured/attached audit evidence and build logs.
+2) Applied compatible low-risk updates; re-verified build and runtime flows.
+3) Produced explicit residual-risk disposition (`docs/FRONTEND_SECURITY_REMEDIATION.md`).
 
-### B) After P0 PDF fix (current mission)
+Remaining:
+4) Execute a **controlled CRA toolchain replacement** packet and re-audit until clean (or minimized and justified) with full regression.
 
-1) **Run end-to-end attempt + report for the real Tejas200 import AFTER scheduling**
-   - Owner sets start date/time.
-   - Verify student attempt within window.
-   - Verify post-window embargo release and report download.
+### B) Capacity qualification readiness (P1) — PLANNING ONLY
 
-2) **Frontend dependency advisories**
-   - Document dev-only vs prod-impacting.
-   - Decide and execute migration off CRA/react-scripts or apply vetted mitigations.
+Completed:
+- Readiness assessment against existing workload equations/SLO documents; status remains UNQUALIFIED.
 
-3) **Evidence-backed analytics collectors only**
-   - Add collectors only where guide requirements are met; keep unavailable states elsewhere.
+Remaining:
+1) Prepare load-test harness + reporting template (k6/locust).
+2) Stand up isolated staging topology + instrumentation.
+3) Execute staged campaign (1k→10k→50k→100k→250k→500k) with fault injection + restore as per PDF-05.
 
 ---
 
@@ -319,19 +411,22 @@ User stories:
 
 ### Final-scope completion success (not 500k certification)
 
-- Deep regression suite passes.
+- Deep regression suite passes (backend + frontend where applicable).
 - Real browser offline + report flows pass.
 - PDF import works for at least the provided Tejas200 paper pair.
-- Frontend dependency posture is documented with explicit dispositions.
+- Confidence/reflection flows work, are non-blocking, and correctly aligned to canonical Guide04 + registry (especially A41/A42/A43/A45/A50).
+- Frontend dependency posture is **improved** and residual CRA risk is **explicitly documented** with scan evidence.
 
 ---
 
 ## Explicit Release Blockers (remain blockers until qualified)
 
+- **Frontend dependency advisories** rooted in deprecated CRA/react-scripts toolchain until a controlled migration + re-audit is completed.
+- **500,000 concurrent user qualification** until staged load/fault/restore campaign is executed with evidence.
 - **PDF importer robustness** beyond the provided supported PDFs (no OCR/scans claim).
 - 20×25k home-cell fleet and routing.
 - Multi-AZ durability + failover + restore proofs.
 - Full load + chaos + restore qualification campaign.
-- Frontend dependency advisories without explicit disposition.
 - Staff credential incident closure beyond the authorized owner update (MFA/step-up, etc.).
 - Any unperformed mandatory WP/OPS-R gate (PDF-05 p65–68).
+- Any historical “verified” claim that cannot be reproduced on current HEAD with attached evidence (must be reconciled before release messaging).

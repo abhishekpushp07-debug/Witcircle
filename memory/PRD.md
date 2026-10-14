@@ -1,3 +1,18 @@
+# Current continuation checkpoint — Guide04 verified; security partially remediated
+
+This checkpoint supersedes older **current** status assertions below; older sections retain historical context.
+
+- Latest user instruction: continue autonomously, no more routine review/confirmation prompts.
+- Confidence, reflections, mistake-review workflow and A44 expected-value UI are now actually integrated and verified. Canonical metric identities/formulas corrected (A41 bins, A42 Brier, A43 low-confidence loss, A45 wrong-only labels). A50 remains evidence-gated; checklist completion is not mastery or confirmed first exposure.
+- Optional confidence supports0–100%, no default, local offline recovery, first-commit locking and permanent changed-response exclusion. Private reflection saves have explicit revision conflicts and retry without losing edits in the open page. Unsaved reflection notes do not have a reload-persistence guarantee.
+- Current test evidence:294 isolated backend tests PASS, actual Player/Results browser checks, correct-size1920x800/390x844 light/dark screenshots without overflow, real PDF download. See `docs/GUIDE04_INTEGRATION_VERIFICATION.md` and `test_reports/iteration_72.json`.
+- Frontend compatible patches applied: ESLint9.39.5, @eslint/js9.39.5, PostCSS8.5.30; frontend production build passes. Audit improved from26unique/299path findings to25unique/49path findings. **Residual deprecated CRA-chain advisories remain unresolved release blockers**; see `docs/FRONTEND_SECURITY_REMEDIATION.md`.
+- Owner identity `abhishek@billpe.com` and original ready, unscheduled75-question PDF import preserved. No new owner schedule or live status was selected.
+- **500,000-user capacity remains UNQUALIFIED**. Existing workload equations are planning only, no campaign or infrastructure proof performed. No app API mocks; synthetic restricted QA fixtures only.
+
+---
+
+
 # Current P0 checkpoint — PDF import repaired on supplied real paper
 
 The user's report “By the way pdf se nahi le pa rha direct questions. Ab” paused broader analytics work. Authoritative evidence: `/app/docs/PDF_IMPORT_REPAIR.md` and `/app/test_reports/iteration_67_verified.json`.

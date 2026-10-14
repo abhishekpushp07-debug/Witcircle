@@ -18,6 +18,7 @@ import { useAuth } from "../lib/auth";
 import { Logo, Loading, ErrorBox, Badge, Confirm } from "../components/Shared";
 import { QuestionContent, MathText } from "../components/QuestionContent";
 import { useAttempt } from "./practice/useAttempt";
+import { PlayerConfidencePanel } from '../components/player/PlayerConfidencePanel';
 
 export default function Player() {
   const { id } = useParams();
@@ -33,6 +34,8 @@ export default function Player() {
     conflict,
     load,
     edit,
+    confidencePreferences,
+    chooseConfidence,
     visit,
     discard,
     submit,
@@ -364,6 +367,17 @@ export default function Player() {
             >
               <RotateCcw size={14} /> Clear response
             </button>
+            <PlayerConfidencePanel
+              key={q.id}
+              questionId={q.id}
+              preference={confidencePreferences[q.id]}
+              observation={a.confidence_observations?.[q.id]}
+              changed={a.confidence_changed_questions?.includes(q.id)}
+              answerChosen={!!String(current.value || '').trim()}
+              disabled={locked}
+              onSave={chooseConfidence}
+              online={online}
+            />
             <div className="question-navigation">
               <button
                 className="btn btn-secondary"

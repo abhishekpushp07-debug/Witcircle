@@ -2,6 +2,34 @@
   "version": 1,
   "routes": [
     {
+      "operation_id": "save_review_api_attempts__id__reviews__qid__put",
+      "method": "PUT",
+      "path": "/api/attempts/{id}/reviews/{qid}",
+      "roles": ["authenticated_profile"],
+      "workload_tier": "normal",
+      "owner_policy": "attempt_owner_private_post_release_notes",
+      "idempotency_mode": "question_version_revision_CAS_body_receipt",
+      "body_limit_bytes": 4096,
+      "status": "IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS",
+      "gaps": ["Distributed capacity and cross-resource transaction qualification remain unverified"],
+      "current_response_models": ["200", "422"],
+      "note": "Private reflection state; released attempts only; explicit checklist actions do not change scoring."
+    },
+    {
+      "operation_id": "expected_value_api_attempts__id__expected_value_post",
+      "method": "POST",
+      "path": "/api/attempts/{id}/expected-value",
+      "roles": ["authenticated_profile"],
+      "workload_tier": "normal",
+      "owner_policy": "attempt_owner_released_rules_only",
+      "idempotency_mode": "stateless_hypothetical",
+      "body_limit_bytes": 4096,
+      "status": "IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS",
+      "gaps": ["Distributed capacity and cross-resource transaction qualification remain unverified"],
+      "current_response_models": ["200", "422"],
+      "note": "Hypothetical expected marks from the student's assumption and frozen ordinary rules; no score mutation."
+    },
+    {
       "operation_id": "health_api_health_get",
       "method": "GET",
       "path": "/api/health",

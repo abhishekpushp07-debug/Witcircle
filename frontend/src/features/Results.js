@@ -28,6 +28,7 @@ import {
 } from "../components/Shared";
 import { QuestionContent, MathText } from "../components/QuestionContent";
 import { ResultsAnalyticsWorkspace } from '../components/results/ResultsAnalyticsWorkspace';
+import { ResultsReflectionStrip } from '../components/results/ResultsReflectionStrip';
 import { ReportButton } from "../components/ReportButton";
 import { Button } from '../components/ui/button';
 export default function Results() {
@@ -46,19 +47,27 @@ export default function Results() {
   const [refresh, setRefresh] = useState(0);
   const [pending, setPending] = useState(null);
   const [focusQuestion,setFocusQuestion] = useState(null);
+  const [solutionState,setSolutionState] = useState({});
+  const [confidenceThreshold,setConfidenceThreshold] = useState(0.2);
   useEffect(()=>{
     if (!focusQuestion) return;
     const timer=setTimeout(()=>{document.getElementById('review-question-'+focusQuestion)?.scrollIntoView({block:'start',behavior:'instant'});setFocusQuestion(null)},220);
     return()=>clearTimeout(timer);
   },[focusQuestion]);
-  async function refreshAnalytics() {
-    try {const result=await api('/attempts/'+id+'/results?score_version='+encodeURIComponent(scoreVersion));if(result.analytics)setR(result);}
-    catch(e){setError(e.message)}
+  async function refreshAnalytics(threshold = confidenceThreshold) {
+    const result=await api('/attempts/'+id+'/results?score_version='+encodeURIComponent(scoreVersion)+'&confidence_threshold='+threshold);
+    if(result.analytics) { setR(result); setConfidenceThreshold(threshold); }
+    return result;
+  }
+  async function recordSolution(qid) {
+    setSolutionState(old=>({...old,[qid]:'pending'}));
+    try { await post(`/attempts/${id}/questions/${qid}/solution-open`,{}); setSolutionState(old=>({...old,[qid]:'saved'})); }
+    catch { setSolutionState(old=>({...old,[qid]:'error'})); }
   }
   function openQuestion(qid) {
     if(!r)return;
     setFilter('all');setPage(Math.ceil((r.questions.findIndex(q=>q.id===qid)+1)/10));setExpanded(old=>({...old,[qid]:true}));setFocusQuestion(qid);
-    post(`/attempts/${id}/questions/${qid}/solution-open`,{}).catch(()=>{});
+    recordSolution(qid);
   }
   useEffect(() => {
     const controller = new AbortController();
@@ -341,7 +350,7 @@ export default function Results() {
         </section>
       </div>
       {r.insights && <section className="import-card mb-8" data-testid="results-evidence-insights"><div className="import-section-label">YOUR NEXT STUDY SESSION</div><h2>Start where this attempt points.</h2><div className="insight-grid">{r.insights.priorities.length ? r.insights.priorities.map((g,i) => <article className="import-issue" data-testid={'results-priority-' + i} key={g.label}><strong>{g.label}</strong><p>{g.incorrect} incorrect · {g.skipped} skipped · {g.count} questions</p><p>Attempted accuracy: {g.accuracy === null ? 'Not available' : g.accuracy + '%'} ({g.correct}/{g.attempted})</p><p>{g.action}</p><small>{g.evidence} · Review Q{g.questions.join(', Q')}</small></article>) : <p data-testid="results-no-priorities">No incorrect or skipped eligible questions in this attempt. Use fresh questions to gather more evidence.</p>}</div><p className="import-fineprint mt-4" data-testid="results-insights-basis">{r.insights.basis}</p></section>}
-      <ResultsAnalyticsWorkspace analysis={r.analytics} questions={r.questions} userId={user.id} attemptId={id} onOpenQuestion={openQuestion} onRefresh={refreshAnalytics} />
+      <ResultsAnalyticsWorkspace key={`${id}-${scoreVersion}`} analysis={r.analytics} questions={r.questions} userId={user.id} attemptId={id} onOpenQuestion={openQuestion} onRefresh={refreshAnalytics} confidenceThreshold={confidenceThreshold} review={r.review} />
       <div className="review-heading">
         <div>
           <span className="eyebrow">UNDERSTAND THE WHY</span>
@@ -469,6 +478,11 @@ export default function Results() {
                     : "No response acknowledged"}
                   {q.review_note && <p>Reviewer note: {q.review_note}</p>}
                 </div>
+                {solutionState[q.id]==='error'&&<div className="import-error" role="alert" data-testid={'solution-record-error-'+q.number}>Your solution is visible, but the review step could not be recorded. <Button variant="outline" onClick={()=>recordSolution(q.id)} data-testid={'solution-record-retry-'+q.number}>Retry review tracking</Button></div>}
+                <ResultsReflectionStrip key={`${q.id}-${scoreVersion}`} attemptId={id} question={q} scoreVersion={scoreVersion}
+                  state={r.review?.states?.[q.id]} categories={r.review?.categories} assigned={r.review?.assigned?.includes(q.id)}
+                  confidence={r.confidence_observations?.[q.id]?.probability} excluded={r.confidence_changed_questions?.includes(q.id)}
+                  solutionPending={solutionState[q.id]!=='saved'} onSaved={refreshAnalytics}/>
                 <div className="matched-solution">
                   <div className="solution-title">
                     <FileIcon />

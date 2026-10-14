@@ -18,6 +18,8 @@ SPEC = {
     'imports.import_asset': ('staff_imports', 'normal', 'read'),
     'imports.schedule_import': ('owner_immutable_import_publication', 'control', 'insert_or_revision_CAS'),
     'imports.toggle_live': ('owner_import_admission', 'control', 'revision_CAS'),
+    'reviews.save_review': ('attempt_owner_private_post_release_notes', 'normal', 'question_version_revision_CAS_body_receipt'),
+    'reviews.expected_value': ('attempt_owner_released_rules_only', 'normal', 'stateless_hypothetical'),
     'attempts.solution_consulted': ('attempt_owner_released_solutions', 'normal', 'set_membership_idempotent'),
     'competitions.catalogue': ('authenticated_competition_metadata', 'normal', 'read'),
     'competitions.leaderboard': ('anonymous_cohort_after_close', 'normal', 'read'),

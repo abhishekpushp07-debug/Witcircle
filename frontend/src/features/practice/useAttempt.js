@@ -24,6 +24,17 @@ export function useAttempt(id, user) {
     timer = useRef(null),
     conflictRef = useRef(false);
   const storage = `tejas-draft-${user.id}-${id}`;
+  const confidenceStorage = `tejas-confidence-${user.id}-${id}`;
+  const [confidencePreferences,setConfidencePreferences]=useState({});
+  useEffect(()=>{
+    try { const value=JSON.parse(localStorage.getItem(confidenceStorage)||'{}');setConfidencePreferences(value&&typeof value==='object'&&!Array.isArray(value)?value:{}); }
+    catch { setConfidencePreferences({}); }
+  },[confidenceStorage]);
+  const chooseConfidence=(qid,value)=>{
+    if(data.current?.confidence_observations?.[qid] || String(drafts.current[qid]?.value||data.current?.answers?.[qid]?.value||'').trim())return;
+    const next={...confidencePreferences,[qid]:value};setConfidencePreferences(next);
+    try{localStorage.setItem(confidenceStorage,JSON.stringify(next));}catch{setError('Optional confidence could not be stored on this device. Answer saving is unchanged.');}
+  };
   const syncClock = (server) => {
     anchor.current = { server: server * 1000, mono: performance.now() };
   };
@@ -122,6 +133,13 @@ export function useAttempt(id, user) {
             break;
           }
           data.current.answers[qid] = res.accepted;
+          const normalized = res.accepted.normalized_value;
+          const observation = data.current.confidence_observations?.[qid];
+          if (!observation && normalized) {
+            data.current.confidence_observations = {...data.current.confidence_observations, [qid]: {probability: res.accepted.confidence ?? null, response: normalized}};
+          } else if (observation?.probability != null && observation.response !== normalized) {
+            data.current.confidence_changed_questions = [...new Set([...(data.current.confidence_changed_questions || []), qid])];
+          }
           data.current.visited = [
             ...new Set([...(data.current.visited || []), qid]),
           ];
@@ -248,7 +266,9 @@ export function useAttempt(id, user) {
     if (seconds === 0 || conflictRef.current) return;
     const old = drafts.current[qid] ||
       data.current.answers[qid] || { value: "", marked: false };
+    const probability=Object.prototype.hasOwnProperty.call(confidencePreferences,qid)?confidencePreferences[qid]:old.confidence;
     drafts.current[qid] = {
+      ...(typeof probability==='number' && Number.isFinite(probability) && probability>=0 && probability<=1 ? {confidence:probability}:{}),
       value: old.value,
       marked: old.marked,
       ...change,
@@ -295,6 +315,7 @@ export function useAttempt(id, user) {
     const receipt = await post("/attempts/" + id + "/submit");
     localStorage.removeItem(storage);
     localStorage.removeItem(storage.replace('tejas-draft-', 'tejas-draft-meta-'));
+    localStorage.removeItem(confidenceStorage);
     navigate("/results/" + receipt.id);
   };
   return {
@@ -308,6 +329,8 @@ export function useAttempt(id, user) {
     conflict,
     load,
     edit,
+    confidencePreferences,
+    chooseConfidence,
     visit,
     discard,
     submit,

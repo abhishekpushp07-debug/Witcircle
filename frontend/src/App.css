@@ -1,3 +1,23 @@
+/* Guide04 addendum: existing maroon, matte surface, and spacing tokens only. */
+.confidence-panel, .reflection-panel, .expected-value-panel { margin-top: var(--space-5); padding: var(--space-4); border: 1px solid var(--line); border-radius: var(--radius-card); background: var(--surface-alt); min-width: 0; overflow-wrap: anywhere; }
+.confidence-panel button, .reflection-panel button:not([role="checkbox"]), .expected-value-panel button { min-height: var(--touch-target); height: auto; white-space: normal; }
+.confidence-trigger { width: 100%; display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-2); text-align: left; }
+.confidence-trigger > span:last-child { display: flex; align-items: center; gap: var(--space-2); color: var(--brand-text); }
+.confidence-content { padding-top: var(--space-4); }
+.confidence-content > p { margin-bottom: var(--space-3); font-size: var(--text-sm); }
+.confidence-content input, .expected-value-panel input { margin-top: var(--space-2); min-height: var(--touch-target); }
+.confidence-actions, .reflection-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); margin-top: var(--space-4); }
+.reflection-confidence { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-bottom: var(--space-4); font-size: var(--text-sm); }
+.reflection-confidence small { flex-basis: 100%; }
+.reflection-form { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
+.reflection-form textarea { min-height: var(--space-24); }
+.mistake-checklist { margin-top: var(--space-5); padding-top: var(--space-4); border-top: 1px solid var(--line); }
+.review-check-row { display: flex; align-items: center; gap: var(--space-3); min-height: var(--touch-target); padding-block: var(--space-2); cursor: pointer; font-size: var(--text-sm); }
+.review-completed { display: flex; align-items: center; gap: var(--space-2); color: var(--brand-text); margin-top: var(--space-3); }
+.expected-value-panel [data-state="open"] > label { display: block; margin-top: var(--space-4); }
+.analytics-review-progress { margin-block: var(--space-4); padding: var(--space-4); border-left: var(--space-1) solid var(--brand-text); background: var(--surface-alt); border-radius: var(--radius-sm); }
+.confidence-threshold-controls { display: grid; gap: var(--space-3); margin-block: var(--space-4); }
+
 /* Guide04 analytics + offline safety: matte-maroon tokens, no charted guesses. */
 :root { --analytics-modal-max: 56rem; --analytics-dialog-height: 86dvh; --analytics-value-size: 2rem; }
 .analytics-workspace { margin-block: var(--space-10); min-width: 0; }

@@ -34,7 +34,7 @@ class Analysis(BaseModel):
     note:str='Descriptive practice evidence, not ability, admission readiness or official rank. Missing values are not zero. Wall-clock elapsed time is not focused study time.'
 
 
-def build_analytics(attempt,result):
+def build_analytics(attempt,result,confidence_threshold=0.2):
     rows=result['questions'];summary=result['summary']
     metrics={m['metric_id']:Metric(**m) for m in REGISTRY['metrics']}
     eligible=[q for q in rows if q['outcome'] not in ('dropped','bonus')]
@@ -104,10 +104,57 @@ def build_analytics(attempt,result):
     for n in range(31,41):missing(n,'Requires a finalized comparable first-exposure cohort of at least 100 learners plus the metric-specific sample and privacy thresholds. Unverified phone-profile standings are not that validated cohort.','unavailable')
     missing(40,'Requires at least 200 comparable first-exposure learners, 50 per rest-score group, nonconstant rest scores and documented boundary-tie weights.','unavailable')
     for n in (15,46,48,49,52,53):missing(n,'Canonical exposure state and the required approved comparable/fresh multi-attempt observations are not available.')
-    for n in (41,42,43):missing(n,'Pre-commit confidence probabilities are not collected. They cannot be inferred from speed or correctness.')
-    missing(44,'This is a hypothetical calculator, not an inferred ability metric. It needs a learner-supplied probability assumption.','unavailable')
-    missing(45,'Optional learner-confirmed error labels are not collected. Error causes are never guessed.')
-    missing(50,'No assigned review-task lifecycle is recorded; missed-question lists are not completed review tasks.')
+    import math
+    changed=set(attempt.get('confidence_changed_questions',[]))
+    rated=[]
+    for q in attempted:
+        initial=first.get(q['id'],{})
+        probability=initial.get('confidence')
+        if type(probability) in (int,float) and math.isfinite(probability) and 0<=probability<=1 and q['id'] not in changed and canonical(initial.get('value',''),q['type'])==q['normalized_response']:
+            rated.append((q,Fraction(str(probability))))
+    rated_rows=[q for q,_ in rated]
+    bins=[]
+    for lower,upper in ((0,.2),(.2,.4),(.4,.6),(.6,.8),(.8,1)):
+        members=[(q,p) for q,p in rated if Fraction(str(lower))<=p and (p<Fraction(str(upper)) or upper==1 and p==1)]
+        if len(members)>=10:
+            bins.append({'bin':f'[{lower:.1f}, {upper:.1f}{"]" if upper==1 else ")"}', 'count':len(members),
+                'mean_probability':round(float(sum((p for _,p in members),Fraction(0))/len(members)),6),
+                'observed_correctness':round(sum(q['outcome']=='correct' for q,_ in members)/len(members),6)})
+    if len(rated)>=20 and bins:
+        put(41,{'bins':bins,'rated_count':len(rated),'changed_response_excluded':sum(q['id'] in changed for q in attempted)},rated_rows,'probability',
+            'Declared bins: [0,.2), [.2,.4), [.4,.6), [.6,.8), [.8,1]. Only bins with at least 10 items are shown; at least 20 unchanged rated items overall. Not a stable personal trait.')
+    else:missing(41,f'Requires 20 rated unchanged binary items overall and 10 in a displayed bin; {len(rated)} rated items available.','insufficient_sample' if rated else 'not_collected',rated_rows)
+    if len(rated)>=20:
+        value=sum(((p-int(q['outcome']=='correct'))**2 for q,p in rated),Fraction(0))/len(rated)
+        put(42,round(float(value),6),rated_rows,'mean squared error','Mean (precommit probability − binary correctness)². Requires 20 items; changed, dropped, bonus and nonbinary outcomes excluded. Not a mastery score.')
+    else:missing(42,f'Requires 20 rated unchanged binary items; {len(rated)} available.','insufficient_sample' if rated else 'not_collected',rated_rows)
+    threshold=Fraction(str(confidence_threshold))
+    if len(rated)>=10:
+        low=[q for q,p in rated if p<threshold]
+        loss=sum((max(-Fraction(q['marks_exact']),Fraction(0)) for q in low),Fraction(0))
+        put(43,{'penalty_marks':float(loss),'rated_count':len(rated),'low_confidence_count':len(low),'threshold':float(threshold)},rated_rows,'marks',
+            f'Penalty magnitude among unchanged rated responses with p < {float(threshold):.2f}. Threshold is configurable (product default 0.20), not a guessing rule.')
+    else:missing(43,f'Requires 10 genuinely rated unchanged items; {len(rated)} available. Active threshold: {float(threshold):.2f}.','insufficient_sample' if rated else 'not_collected',rated_rows)
+    missing(44,'Open the what-if calculator and supply your probability; no probability is inferred from your score.','unavailable')
+    review=attempt.get('review_states',{})
+    labelled=[q for q in wrong if review.get(q['id'],{}).get('category')]
+    if len(labelled)>=5:
+        from .reviews import CATEGORIES
+        counts={key:sum(review[q['id']]['category']==key for q in labelled) for key in CATEGORIES}
+        put(45,{'causes':[{'label':CATEGORIES[key],'count':count,'percent':pct(count,len(labelled))} for key,count in counts.items() if count],
+            'labelled_wrong_count':len(labelled),'unlabelled_wrong_count':len(wrong)-len(labelled)},labelled,'self-reported distribution',
+            'Only learner-labelled incorrect items enter the denominator. Skipped, correct and unlabelled items never imply a cause.')
+    else:missing(45,f'Requires 5 learner-labelled incorrect items; {len(labelled)} labelled and {len(wrong)-len(labelled)} unlabelled wrong items available.','insufficient_sample' if labelled else 'not_collected',labelled)
+    first_exposure=set(attempt.get('verified_first_exposure_question_ids',[]))
+    assigned=[q for q in rows if q['outcome'] in ('incorrect','skipped') and q['id'] in first_exposure and q['id'] in review]
+    if attempt.get('review_tracking_enabled') and assigned:
+        from .db import now
+        open_tasks=[q for q in assigned if not review[q['id']].get('completed')]
+        put(50,{'open_tasks':len(open_tasks),'assigned_tasks':len(assigned),
+            'age_days':round(max(0,now()-attempt['submitted_at'])/86400,2),
+            'topic_breakdown':'Unavailable: independently approved topic provenance is not recorded.'},open_tasks,'tasks',
+            'Open explicitly tracked wrong/omitted tasks with verified first-exposure evidence. Closed checklists record actions, not mastery.')
+    else:missing(50,'Requires at least one explicit wrong/omitted review task with verified first-exposure evidence. Unknown exposure is not treated as first exposure.','unavailable',[])
     if attempt.get('solution_events_version')==1 and rows:
         opened=set(attempt.get('solution_opened',[]));put(56,pct(sum(q['id'] in opened for q in rows),len(rows)),rows,'%',f'{sum(q["id"] in opened for q in rows)}/{len(rows)} distinct authorized review expansions. Eligible review set: all released delivered questions. Opening is not proof of understanding.')
     else:missing(56,'A positive released set and explicit consultation logging are required; this attempt has no complete event history.')
