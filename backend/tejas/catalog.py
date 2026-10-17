@@ -6,6 +6,8 @@ from .db import sets
 
 PROJECT = {
     "_id": 0,
+    'chapter_book_id': 1, 'chapter_number': 1, 'chapter_subject': 1, 'solution_kind': 1,
+    'start_at': 1, 'end_at': 1, 'live_enabled': 1,
     "id": 1,
     "title": 1,
     "exam": 1,
@@ -42,7 +44,7 @@ def available(user=None, exam="", search=""):
     query = {
         "status": "published",
         "$and": [
-            {'$or': [{'import_id': {'$exists': False}}, {'live_enabled': True, 'start_at': {'$lte': datetime.now(timezone.utc).timestamp()}, 'end_at': {'$gt': datetime.now(timezone.utc).timestamp()}}]},
+            {'$or': [{'$and':[{'import_id': {'$exists': False}}, {'chapter_book_id': {'$exists': False}}]}, {'live_enabled': True, 'start_at': {'$lte': datetime.now(timezone.utc).timestamp()}, 'end_at': {'$gt': datetime.now(timezone.utc).timestamp()}}]},
             {"$or": audiences},
             {
                 "$or": [

@@ -2013,6 +2013,16 @@
               "default": "original",
               "title": "Score Version"
             }
+          },
+          {
+            "name": "confidence_threshold",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "default": 0.2,
+              "title": "Confidence Threshold"
+            }
           }
         ],
         "responses": {
@@ -3315,6 +3325,755 @@
           "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
         ]
       }
+    },
+    "/api/attempts/{id}/reviews/{qid}": {
+      "put": {
+        "tags": [
+          "Private study review"
+        ],
+        "summary": "Save Review",
+        "operationId": "save_review_api_attempts__id__reviews__qid__put",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          },
+          {
+            "name": "qid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Qid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewWrite"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewState"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "x-owner-policy": "attempt_owner_private_post_release_notes",
+        "x-role-scope": [
+          "authenticated_profile"
+        ],
+        "x-workload-tier": "normal",
+        "x-idempotency-mode": "question_version_revision_CAS_body_receipt",
+        "x-body-limit-bytes": 4096,
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
+      }
+    },
+    "/api/attempts/{id}/expected-value": {
+      "post": {
+        "tags": [
+          "Private study review"
+        ],
+        "summary": "Expected Value",
+        "operationId": "expected_value_api_attempts__id__expected_value_post",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProbabilityInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExpectedValue"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "x-owner-policy": "attempt_owner_released_rules_only",
+        "x-role-scope": [
+          "authenticated_profile"
+        ],
+        "x-workload-tier": "normal",
+        "x-idempotency-mode": "stateless_hypothetical",
+        "x-body-limit-bytes": 4096,
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
+      }
+    },
+    "/api/studio/chapter-books": {
+      "get": {
+        "tags": [
+          "Chapter exams"
+        ],
+        "summary": "List Books",
+        "operationId": "list_books_api_studio_chapter_books_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookList"
+                }
+              }
+            }
+          }
+        },
+        "x-owner-policy": "staff_chapter_metadata",
+        "x-role-scope": [
+          "owner",
+          "reviewer"
+        ],
+        "x-workload-tier": "normal",
+        "x-idempotency-mode": "read",
+        "x-body-limit-bytes": 0,
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
+      },
+      "post": {
+        "tags": [
+          "Chapter exams"
+        ],
+        "summary": "Upload Book",
+        "operationId": "upload_book_api_studio_chapter_books_post",
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookView"
+                }
+              }
+            }
+          }
+        },
+        "x-owner-policy": "owner_private_chapter_source",
+        "x-role-scope": [
+          "owner"
+        ],
+        "x-workload-tier": "batch",
+        "x-idempotency-mode": "source_hash_and_request_receipt",
+        "x-body-limit-bytes": 0,
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
+      }
+    },
+    "/api/studio/chapter-books/{id}": {
+      "get": {
+        "tags": [
+          "Chapter exams"
+        ],
+        "summary": "Read Book",
+        "operationId": "read_book_api_studio_chapter_books__id__get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "x-owner-policy": "staff_chapter_metadata",
+        "x-role-scope": [
+          "owner",
+          "reviewer"
+        ],
+        "x-workload-tier": "normal",
+        "x-idempotency-mode": "read",
+        "x-body-limit-bytes": 0,
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
+      }
+    },
+    "/api/studio/chapter-books/{id}/retry": {
+      "post": {
+        "tags": [
+          "Chapter exams"
+        ],
+        "summary": "Retry Book",
+        "operationId": "retry_book_api_studio_chapter_books__id__retry_post",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "x-owner-policy": "owner_chapter_processing",
+        "x-role-scope": [
+          "owner"
+        ],
+        "x-workload-tier": "batch",
+        "x-idempotency-mode": "lease_CAS",
+        "x-body-limit-bytes": 4096,
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmptyPayload"
+              }
+            }
+          }
+        },
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
+      }
+    },
+    "/api/studio/chapter-books/{id}/chapters/{sid}": {
+      "get": {
+        "tags": [
+          "Chapter exams"
+        ],
+        "summary": "Preview Chapter",
+        "operationId": "preview_chapter_api_studio_chapter_books__id__chapters__sid__get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          },
+          {
+            "name": "sid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Sid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChapterPreview"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "x-owner-policy": "staff_chapter_content",
+        "x-role-scope": [
+          "owner",
+          "reviewer"
+        ],
+        "x-workload-tier": "normal",
+        "x-idempotency-mode": "read",
+        "x-body-limit-bytes": 0,
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
+      }
+    },
+    "/api/studio/chapter-books/{id}/chapters/{sid}/questions/{qid}/asset/{kind}/{index}": {
+      "get": {
+        "tags": [
+          "Chapter exams"
+        ],
+        "summary": "Chapter Asset",
+        "operationId": "chapter_asset_api_studio_chapter_books__id__chapters__sid__questions__qid__asset__kind___index__get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          },
+          {
+            "name": "sid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Sid"
+            }
+          },
+          {
+            "name": "qid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Qid"
+            }
+          },
+          {
+            "name": "kind",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Kind"
+            }
+          },
+          {
+            "name": "index",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Index"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "x-owner-policy": "staff_private_chapter_source",
+        "x-role-scope": [
+          "owner",
+          "reviewer"
+        ],
+        "x-workload-tier": "normal",
+        "x-idempotency-mode": "read",
+        "x-body-limit-bytes": 0,
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
+      }
+    },
+    "/api/studio/chapter-books/{id}/publish": {
+      "post": {
+        "tags": [
+          "Chapter exams"
+        ],
+        "summary": "Publish Book",
+        "operationId": "publish_book_api_studio_chapter_books__id__publish_post",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChapterAction"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "x-owner-policy": "owner_verified_chapter_publication",
+        "x-role-scope": [
+          "owner"
+        ],
+        "x-workload-tier": "control",
+        "x-idempotency-mode": "per_set_once_same_validity",
+        "x-body-limit-bytes": 4096,
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
+      }
+    },
+    "/api/studio/chapter-books/{id}/chapters/{sid}/live": {
+      "post": {
+        "tags": [
+          "Chapter exams"
+        ],
+        "summary": "Chapter Live",
+        "operationId": "chapter_live_api_studio_chapter_books__id__chapters__sid__live_post",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          },
+          {
+            "name": "sid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Sid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChapterLive"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "x-owner-policy": "owner_chapter_admission",
+        "x-role-scope": [
+          "owner"
+        ],
+        "x-workload-tier": "control",
+        "x-idempotency-mode": "revision_CAS",
+        "x-body-limit-bytes": 4096,
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
+      }
+    },
+    "/api/chapter-exams": {
+      "get": {
+        "tags": [
+          "Chapter exams"
+        ],
+        "summary": "Public Exams",
+        "operationId": "public_exams_api_chapter_exams_get",
+        "parameters": [
+          {
+            "name": "subject",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Subject"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Q"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1,
+              "title": "Page"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExamList"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "x-owner-policy": "public_chapter_metadata",
+        "x-role-scope": [
+          "public_or_handler_checked"
+        ],
+        "x-workload-tier": "normal",
+        "x-idempotency-mode": "read",
+        "x-body-limit-bytes": 0,
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
+      }
+    },
+    "/api/my/chapter-exams": {
+      "get": {
+        "tags": [
+          "Chapter exams"
+        ],
+        "summary": "My Exams",
+        "operationId": "my_exams_api_my_chapter_exams_get",
+        "parameters": [
+          {
+            "name": "subject",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Subject"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Q"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1,
+              "title": "Page"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExamList"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "x-owner-policy": "current_profile_chapter_metadata",
+        "x-role-scope": [
+          "authenticated_profile"
+        ],
+        "x-workload-tier": "normal",
+        "x-idempotency-mode": "read",
+        "x-body-limit-bytes": 0,
+        "x-contract-stage": "pilot_ingress_not_qualified_live_cell",
+        "x-known-gaps": [
+          "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+        ]
+      }
     }
   },
   "components": {
@@ -3331,6 +4090,19 @@
             "type": "boolean",
             "title": "Marked",
             "default": false
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence"
           },
           "revision": {
             "type": "integer",
@@ -3444,6 +4216,19 @@
             "title": "Marked",
             "default": false
           },
+          "confidence": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence"
+          },
           "revision": {
             "type": "integer",
             "maximum": 10001.0,
@@ -3483,6 +4268,88 @@
           "file"
         ],
         "title": "Body_upload_api_studio_sets__id__files_post"
+      },
+      "BookList": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/BookView"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "BookList"
+      },
+      "BookView": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "subject": {
+            "type": "string",
+            "title": "Subject",
+            "default": ""
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": ""
+          },
+          "revision": {
+            "type": "integer",
+            "title": "Revision",
+            "default": 0
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count",
+            "default": 0
+          },
+          "pages": {
+            "type": "integer",
+            "title": "Pages",
+            "default": 0
+          },
+          "chapters": {
+            "items": {
+              "$ref": "#/components/schemas/ChapterView"
+            },
+            "type": "array",
+            "title": "Chapters",
+            "default": []
+          },
+          "source_sha256": {
+            "type": "string",
+            "title": "Source Sha256",
+            "default": ""
+          },
+          "server_now": {
+            "type": "number",
+            "title": "Server Now"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "status",
+          "server_now"
+        ],
+        "title": "BookView"
       },
       "CapabilityState": {
         "properties": {
@@ -3578,6 +4445,165 @@
           "warnings"
         ],
         "title": "CapacityProfile"
+      },
+      "ChapterAction": {
+        "additionalProperties": false,
+        "properties": {
+          "revision": {
+            "minimum": 0,
+            "title": "Revision",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "revision"
+        ],
+        "title": "ChapterAction",
+        "type": "object"
+      },
+      "ChapterLive": {
+        "additionalProperties": false,
+        "properties": {
+          "revision": {
+            "minimum": 0,
+            "title": "Revision",
+            "type": "integer"
+          },
+          "live": {
+            "title": "Live",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "revision",
+          "live"
+        ],
+        "title": "ChapterLive",
+        "type": "object"
+      },
+      "ChapterPreview": {
+        "properties": {
+          "chapter": {
+            "$ref": "#/components/schemas/ChapterView"
+          },
+          "questions": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Questions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "chapter",
+          "questions"
+        ],
+        "title": "ChapterPreview"
+      },
+      "ChapterView": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "chapter_number": {
+            "type": "integer",
+            "title": "Chapter Number"
+          },
+          "subject": {
+            "type": "string",
+            "title": "Subject"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "start_page": {
+            "type": "integer",
+            "title": "Start Page"
+          },
+          "end_page": {
+            "type": "integer",
+            "title": "End Page"
+          },
+          "key_page": {
+            "type": "integer",
+            "title": "Key Page"
+          },
+          "verification": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Verification"
+          },
+          "independent_check": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Independent Check"
+          },
+          "revision": {
+            "type": "integer",
+            "title": "Revision"
+          },
+          "start_at": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start At"
+          },
+          "end_at": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End At"
+          },
+          "live_enabled": {
+            "type": "boolean",
+            "title": "Live Enabled",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "chapter_number",
+          "subject",
+          "count",
+          "status",
+          "start_page",
+          "end_page",
+          "key_page",
+          "verification",
+          "revision"
+        ],
+        "title": "ChapterView"
       },
       "Competition": {
         "properties": {
@@ -3680,7 +4706,7 @@
           "password": {
             "type": "string",
             "maxLength": 64,
-            "minLength": 10,
+            "minLength": 8,
             "title": "Password"
           },
           "name": {
@@ -3737,6 +4763,97 @@
           "display"
         ],
         "title": "ExactQuantity"
+      },
+      "ExamList": {
+        "properties": {
+          "items": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "pages": {
+            "type": "integer",
+            "title": "Pages"
+          },
+          "subject_counts": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Subject Counts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "page",
+          "pages",
+          "subject_counts"
+        ],
+        "title": "ExamList"
+      },
+      "ExpectedValue": {
+        "properties": {
+          "probability": {
+            "type": "number",
+            "title": "Probability"
+          },
+          "correct_marks": {
+            "type": "number",
+            "title": "Correct Marks"
+          },
+          "wrong_marks": {
+            "type": "number",
+            "title": "Wrong Marks"
+          },
+          "skipped_marks": {
+            "type": "number",
+            "title": "Skipped Marks"
+          },
+          "expected_marks": {
+            "type": "number",
+            "title": "Expected Marks"
+          },
+          "expected_exact": {
+            "type": "string",
+            "title": "Expected Exact"
+          },
+          "break_even_probability": {
+            "type": "number",
+            "title": "Break Even Probability"
+          },
+          "hypothetical": {
+            "type": "boolean",
+            "title": "Hypothetical",
+            "default": true
+          },
+          "note": {
+            "type": "string",
+            "title": "Note",
+            "default": "Uses your probability assumption and this attempt’s frozen ordinary marking rule. Not a prediction, admission estimate, or instruction to attempt a question."
+          }
+        },
+        "type": "object",
+        "required": [
+          "probability",
+          "correct_marks",
+          "wrong_marks",
+          "skipped_marks",
+          "expected_marks",
+          "expected_exact",
+          "break_even_probability"
+        ],
+        "title": "ExpectedValue"
       },
       "HTTPValidationError": {
         "properties": {
@@ -3977,6 +5094,11 @@
             "type": "string",
             "title": "Render Mode"
           },
+          "render_reason": {
+            "type": "string",
+            "title": "Render Reason",
+            "default": ""
+          },
           "q_refs": {
             "items": {
               "additionalProperties": true,
@@ -4129,6 +5251,22 @@
         ],
         "title": "PhoneInput"
       },
+      "ProbabilityInput": {
+        "additionalProperties": false,
+        "properties": {
+          "probability": {
+            "maximum": 1,
+            "minimum": 0,
+            "title": "Probability",
+            "type": "number"
+          }
+        },
+        "required": [
+          "probability"
+        ],
+        "title": "ProbabilityInput",
+        "type": "object"
+      },
       "Ranking": {
         "properties": {
           "rank": {
@@ -4167,6 +5305,161 @@
           "score"
         ],
         "title": "Ranking"
+      },
+      "ReviewState": {
+        "properties": {
+          "question_id": {
+            "type": "string",
+            "title": "Question Id"
+          },
+          "score_version": {
+            "type": "string",
+            "title": "Score Version",
+            "default": "original"
+          },
+          "revision": {
+            "type": "integer",
+            "title": "Revision"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "concept_gap",
+                  "calculation",
+                  "silly_mistake",
+                  "time_pressure",
+                  "misread",
+                  "guess",
+                  "other"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "note": {
+            "type": "string",
+            "title": "Note",
+            "default": ""
+          },
+          "identified_error": {
+            "type": "boolean",
+            "title": "Identified Error",
+            "default": false
+          },
+          "wrote_note": {
+            "type": "boolean",
+            "title": "Wrote Note",
+            "default": false
+          },
+          "reviewed_solution": {
+            "type": "boolean",
+            "title": "Reviewed Solution",
+            "default": false
+          },
+          "retry_planned": {
+            "type": "boolean",
+            "title": "Retry Planned",
+            "default": false
+          },
+          "completed": {
+            "type": "boolean",
+            "title": "Completed",
+            "default": false
+          },
+          "updated_at": {
+            "type": "number",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "question_id",
+          "revision",
+          "updated_at"
+        ],
+        "title": "ReviewState"
+      },
+      "ReviewWrite": {
+        "additionalProperties": false,
+        "properties": {
+          "request_id": {
+            "maxLength": 100,
+            "minLength": 8,
+            "title": "Request Id",
+            "type": "string"
+          },
+          "revision": {
+            "maximum": 65,
+            "minimum": 1,
+            "title": "Revision",
+            "type": "integer"
+          },
+          "score_version": {
+            "default": "original",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Score Version",
+            "type": "string"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "enum": [
+                  "concept_gap",
+                  "calculation",
+                  "silly_mistake",
+                  "time_pressure",
+                  "misread",
+                  "guess",
+                  "other"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Category"
+          },
+          "note": {
+            "default": "",
+            "maxLength": 500,
+            "title": "Note",
+            "type": "string"
+          },
+          "identified_error": {
+            "default": false,
+            "title": "Identified Error",
+            "type": "boolean"
+          },
+          "wrote_note": {
+            "default": false,
+            "title": "Wrote Note",
+            "type": "boolean"
+          },
+          "reviewed_solution": {
+            "default": false,
+            "title": "Reviewed Solution",
+            "type": "boolean"
+          },
+          "retry_planned": {
+            "default": false,
+            "title": "Retry Planned",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "request_id",
+          "revision"
+        ],
+        "title": "ReviewWrite",
+        "type": "object"
       },
       "SafetyStatus": {
         "properties": {
@@ -4664,7 +5957,7 @@
           },
           "password": {
             "maxLength": 64,
-            "minLength": 10,
+            "minLength": 8,
             "title": "Password",
             "type": "string"
           },
@@ -5190,6 +6483,20 @@
       "AnswerPayload": {
         "additionalProperties": false,
         "properties": {
+          "confidence": {
+            "anyOf": [
+              {
+                "maximum": 1,
+                "minimum": 0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Confidence"
+          },
           "value": {
             "maxLength": 128,
             "title": "Value",

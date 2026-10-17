@@ -205,7 +205,10 @@ from .import_models import ScheduleInput, LiveInput
 
 from .reviews import ReviewWrite, ProbabilityInput
 
+from .chapter_books import ChapterAction, ChapterLive
+
 MODELS = {
+    'chapter_books.publish_book': ChapterAction, 'chapter_books.chapter_live': ChapterLive,
     'reviews.save_review': ReviewWrite, 'reviews.expected_value': ProbabilityInput,
     'attempts.solution_consulted': EmptyPayload,
     'imports.schedule_import': ScheduleInput, 'imports.toggle_live': LiveInput,

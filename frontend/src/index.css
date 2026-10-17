@@ -41,6 +41,15 @@
     --text-xl: 1.5rem;
     --text-2xl: 2rem;
     --text-title: clamp(1.75rem, 3vw, 2.5rem);
+    --text-3xl: 2.5rem;
+    --text-4xl: 3.25rem;
+    --leading-tight: 1.08;
+    --tracking-tight: -0.035em;
+    --measure: 42rem;
+    --chapter-preview-width: 56rem;
+    --dialog-max-height: 90dvh;
+    --opacity-muted: 0.8;
+    --source-pan-height: clamp(12rem, 43dvh, 28rem);
     --space-1: 0.25rem;
     --space-2: 0.5rem;
     --space-3: 0.75rem;

@@ -12,6 +12,7 @@ import { api, post, downloadFile } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { ErrorBox, Confirm } from '../components/Shared';
 import { MathText, QuestionContent } from '../components/QuestionContent';
+import { ChapterBookUploader } from './ChapterBookStudio';
 import { toast } from 'sonner';
 
 const ist = (value) => value ? new Date(value * 1000).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' }) + ' IST' : 'Not scheduled';
@@ -40,7 +41,7 @@ const SourcePicker = ({ role, title, format, file, onChange, disabled }) => {
 };
 
 export const StudioImportHub = () => {
-  const [format, setFormat] = useState('pdf');
+  const [format, setFormat] = useState('chapter');
   const [layout, setLayout] = useState('one');
   const [questions, setQuestions] = useState(null);
   const [solutions, setSolutions] = useState(null);
@@ -65,13 +66,14 @@ export const StudioImportHub = () => {
     catch (e) { setError(e.message); }
     finally { setBusy(false); }
   }
+  if (format === 'chapter') return <div data-testid="studio-import-hub"><Tabs value={format} onValueChange={mode} className="chapter-import-modes"><TabsList><TabsTrigger value="chapter" data-testid="studio-create-test-import-mode-chapter">Chapter book · 1 PDF</TabsTrigger><TabsTrigger value="pdf" data-testid="studio-create-test-import-mode-pdf">PDF question + solution files</TabsTrigger><TabsTrigger value="xlsx" data-testid="studio-create-test-import-mode-excel">Excel · direct text</TabsTrigger></TabsList></Tabs><ChapterBookUploader/></div>;
   const download = variant => downloadFile('/studio/imports/template?variant=' + variant, `Tejas_${variant}_template.xlsx`).catch(e => toast.error(e.message));
   return <div className="import-hub" data-testid="studio-import-hub">
     <section className="import-card">
       <div className="import-section-label"><Upload size={16} /> FROM YOUR CONTENT TO THEIR NEXT ATTEMPT</div>
       <h2 data-testid="studio-import-heading">Your files. A ready-to-attempt test.</h2>
       <p className="import-muted" data-testid="studio-import-description">Upload once. We organise the questions and match the solutions. You choose when students start.</p>
-      <Tabs value={format} onValueChange={mode} className="mt-6" data-testid="studio-create-test-import-mode-tabs"><TabsList><TabsTrigger disabled={busy} value="pdf" data-testid="studio-create-test-import-mode-pdf"><FileText size={16} /> PDF files</TabsTrigger><TabsTrigger disabled={busy} value="xlsx" data-testid="studio-create-test-import-mode-excel"><FileSpreadsheet size={16} /> Excel · direct text</TabsTrigger></TabsList></Tabs>
+      <Tabs value={format} onValueChange={mode} className="mt-6" data-testid="studio-create-test-import-mode-tabs"><TabsList><TabsTrigger disabled={busy} value="chapter" data-testid="studio-create-test-import-mode-chapter">Chapter book · 1 PDF</TabsTrigger><TabsTrigger disabled={busy} value="pdf" data-testid="studio-create-test-import-mode-pdf"><FileText size={16} /> PDF files</TabsTrigger><TabsTrigger disabled={busy} value="xlsx" data-testid="studio-create-test-import-mode-excel"><FileSpreadsheet size={16} /> Excel · direct text</TabsTrigger></TabsList></Tabs>
       {format === 'xlsx' && <div className="import-excel-help" data-testid="studio-excel-help"><strong>Questions, options, answers and solutions—as text.</strong><p>Use the template headers. One workbook can contain a combined Questions sheet or separate Questions and Solutions sheets.</p>
         <div className="import-template-actions"><Button variant="outline" data-testid="studio-create-test-excel-template-download-button" onClick={() => download('combined')}><Download size={16} /> Combined template</Button><Button variant="ghost" data-testid="import-template-sheets" onClick={() => download('sheets')}>Two-sheet template</Button></div>
         <Tabs value={layout} onValueChange={v => { setLayout(v); setSolutions(null); key.current = null; }}><TabsList><TabsTrigger disabled={busy} value="one" data-testid="excel-layout-one">One workbook</TabsTrigger><TabsTrigger disabled={busy} value="two" data-testid="excel-layout-two">Two files</TabsTrigger></TabsList></Tabs>

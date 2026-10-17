@@ -231,6 +231,7 @@ def public_question(q):
             "options",
             "topic",
             "render_mode",
+            "solution_kind",
             "accessible_text",
             "q_refs",
         ]

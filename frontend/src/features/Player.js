@@ -425,7 +425,7 @@ export default function Player() {
         onConfirm={doSubmit}
       >
         <p>
-          Submission is final. Your result and matched solutions are released
+          Submission is final. Your result and {a.questions.every(q=>q.solution_kind==='answer_key_only')?'supplied answer keys (no worked solutions)':'matched solutions'} are released
           afterward.
         </p>
         <div className="submission-stats">

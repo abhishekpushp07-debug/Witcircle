@@ -21,6 +21,7 @@ from tejas import (
     imports,
     competitions,
     reviews,
+    chapter_books,
 )
 from tejas.db import indexes, client
 from tejas.contracts import EnvelopeResponse, error_response, request_id
@@ -143,6 +144,7 @@ for module in [
     imports,
     competitions,
     reviews,
+    chapter_books,
 ]:
     app.include_router(module.router)
 

@@ -9,6 +9,16 @@ from .request_contracts import MODELS, EmptyPayload
 
 # owner boundary, workload tier, current idempotency behavior
 SPEC = {
+    'chapter_books.list_books': ('staff_chapter_metadata', 'normal', 'read'),
+    'chapter_books.upload_book': ('owner_private_chapter_source', 'batch', 'source_hash_and_request_receipt'),
+    'chapter_books.read_book': ('staff_chapter_metadata', 'normal', 'read'),
+    'chapter_books.retry_book': ('owner_chapter_processing', 'batch', 'lease_CAS'),
+    'chapter_books.preview_chapter': ('staff_chapter_content', 'normal', 'read'),
+    'chapter_books.chapter_asset': ('staff_private_chapter_source', 'normal', 'read'),
+    'chapter_books.publish_book': ('owner_verified_chapter_publication', 'control', 'per_set_once_same_validity'),
+    'chapter_books.chapter_live': ('owner_chapter_admission', 'control', 'revision_CAS'),
+    'chapter_books.public_exams': ('public_chapter_metadata', 'normal', 'read'),
+    'chapter_books.my_exams': ('current_profile_chapter_metadata', 'normal', 'read'),
     'imports.template': ('staff_template', 'normal', 'read'),
     'imports.list_imports': ('staff_imports', 'normal', 'read'),
     'imports.create_import': ('owner_private_sources', 'batch', 'request_uuid_fingerprint'),
@@ -117,7 +127,7 @@ def install_contracts(app):
             raise RuntimeError('API route lacks an explicit local contract: ' + key)
         owner, tier, idem = SPEC[key]
         writes = bool(route.methods & {'POST', 'PUT', 'PATCH', 'DELETE'})
-        upload = key in ('content.upload', 'imports.create_import')
+        upload = key in ('content.upload', 'imports.create_import', 'chapter_books.upload_book')
         model = (MODELS.get(key, EmptyPayload) if writes and not upload else None)
         if writes and not upload and route.body_field and key not in MODELS:
             raise RuntimeError('Body-bearing route lacks an explicit input model: ' + key)

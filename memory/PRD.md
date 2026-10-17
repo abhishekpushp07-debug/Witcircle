@@ -1,3 +1,19 @@
+# Latest release — supplied chapter books LIVE (17 October 2026)
+
+- Latest user approval: publish supplied Physics/Chemistry/Mathematics chapter PDFs immediately for one year; each chapter50questions,60minutes,+3correct/−1wrong/0unanswered; independent recheck per test and source images wherever formulas are unsafe.
+- **94 live tests /4,700questions**: Physics30, Chemistry32, Mathematics32. Exact expiry17October2027 per-bookUTCtimestamp. Evidence: `test_reports/chapter50_publication.json`.
+- Real single-PDF chapter upload, private processing, strict chapter/key checks, owner preview of all50questions, verified publication and per-testLive/Unlive. Existing pairedPDF/Excel modes preserved.
+- Student `/exams` now defaults to chapter practice with subject counts/search/pagination/start/resume/results. Personal60-minute timers and immediate results are independent of one-year availability.
+- All supplied questions use original source regions. Added real100–500%zoom/pan for mobile formulas. Source answer keys are private until submission; **no worked solutions were supplied or fabricated**.
+- Independent testing-agent rechecked every chapter:94PASS, all4,700source keys matched; hashes bind reports to originals. This verifies source fidelity, not academic correctness of each publisher-supplied answer.
+- **396automated tests PASS**, frontend build passes, actual student phone-login/preflight/offline/resume/submit/PDF and owner duplicate-upload/Q1/Q50preview verified at1920×800and390×844. Known2-answer scenario correctly returns2/150; real downloaded51-pagePDF includes all50questions and key-only labels.
+- New/unrecognised source books remain private until independent recheck; unsupported/scanned/ambiguous structures fail closed. Runtime does not pretend an AI academic review occurred.
+- Preserve all94publishedtests and3private source books. Original75-questionready/unscheduledimport and owner identity are untouched.
+- Full evidence and scope: `docs/CHAPTER50_RELEASE.md`, `test_reports/chapter50_final_verified.json`. Previously open500kcapacity/CRAsecurity gates remain separate; no blanket production certification.
+
+---
+
+
 # Current continuation checkpoint — Guide04 verified; security partially remediated
 
 This checkpoint supersedes older **current** status assertions below; older sections retain historical context.

@@ -4,7 +4,8 @@ import { api, post, downloadFile } from '../lib/api';
 import { toast } from 'sonner';
 import { Button } from './ui/button';
 
-export const ReportButton = ({ id, compact = false, scoreVersion = 'original' }) => {
+export const ReportButton = ({ id, compact = false, scoreVersion = 'original', answerKeyOnly = false }) => {
+  const filename = answerKeyOnly ? 'Tejas-results-and-answer-keys.pdf' : 'Tejas-results-and-solutions.pdf';
   const [job, setJob] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -26,7 +27,7 @@ export const ReportButton = ({ id, compact = false, scoreVersion = 'original' })
         if (stopped || !mounted.current) return;
         if (next.status === 'done') {
           if (!downloaded.current) {
-            await downloadFile('/jobs/' + next.id + '/download', 'Tejas-results-and-solutions.pdf');
+            await downloadFile('/jobs/' + next.id + '/download', filename);
             downloaded.current = true;
           }
           if (!stopped && mounted.current) { setJob(next); setError(''); setBusy(false); }
@@ -55,7 +56,7 @@ export const ReportButton = ({ id, compact = false, scoreVersion = 'original' })
     };
     timer = setTimeout(poll, 1600 + Math.random() * 600);
     return () => { stopped = true; clearTimeout(timer); };
-  }, [jobId, status, cycle]);
+  }, [jobId, status, cycle, filename]);
 
   const start = async () => {
     setBusy(true); setError(''); downloaded.current = false;
@@ -67,7 +68,7 @@ export const ReportButton = ({ id, compact = false, scoreVersion = 'original' })
       setJob(next); setCycle(v => v + 1);
       if (next.status === 'done') {
         downloaded.current = true;
-        await downloadFile('/jobs/' + next.id + '/download', 'Tejas-results-and-solutions.pdf');
+        await downloadFile('/jobs/' + next.id + '/download', filename);
         if (mounted.current) setBusy(false);
       }
     } catch (e) {
@@ -78,7 +79,7 @@ export const ReportButton = ({ id, compact = false, scoreVersion = 'original' })
   return <div className="report-button-wrap">
     <Button variant={compact ? 'ghost' : 'default'} className={'btn ' + (compact ? 'btn-quiet' : 'btn-primary')} data-testid="results-download-report-button" disabled={busy} onClick={start}>
       {busy ? <Loader2 size={18} className="spin" /> : error ? <RefreshCw size={18} /> : <Download size={18} />}
-      {busy ? `Preparing report${job ? ' · ' + job.progress + '%' : ''}` : error ? 'Retry PDF download' : compact ? 'Download PDF' : 'Download results & solutions PDF'}
+      {busy ? `Preparing report${job ? ' · ' + job.progress + '%' : ''}` : error ? 'Retry PDF download' : compact ? 'Download PDF' : answerKeyOnly ? 'Download results & answer keys PDF' : 'Download results & solutions PDF'}
     </Button>
     {error && <small className="error-text" role="alert" data-testid="report-download-error">{error}</small>}
     {busy && <div className="report-progress" role="progressbar" data-testid="report-download-progress" aria-label="Report generation" aria-valuenow={job?.progress || 5} aria-valuemin={0} aria-valuemax={100}><span style={{ width: (job?.progress || 5) + '%' }} /></div>}

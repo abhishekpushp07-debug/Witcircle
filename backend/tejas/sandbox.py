@@ -12,7 +12,7 @@ MAX_PDF=50*1024*1024
 MAX_OUTPUT=48*1024*1024
 
 
-async def organise_pdfs(questions_path,solutions_path=None,format='pdf'):
+async def organise_pdfs(questions_path,solutions_path=None,format='pdf',chapter_book=False):
     BASE.mkdir(mode=0o700,parents=True,exist_ok=True)
     os.chmod(BASE,0o700)
     directory=Path(tempfile.mkdtemp(prefix='organise-',dir=BASE))
@@ -24,7 +24,7 @@ async def organise_pdfs(questions_path,solutions_path=None,format='pdf'):
             shutil.copyfile(source,directory/name)
         env={'PATH':os.environ.get('PATH','/usr/bin:/bin'),'LANG':'C.UTF-8','PYTHONIOENCODING':'utf-8',
              'OPENBLAS_NUM_THREADS':'1','OMP_NUM_THREADS':'1','PYTHONDONTWRITEBYTECODE':'1'}
-        script=Path(__file__).with_name('excel_organiser_worker.py' if format=='xlsx' else 'pdf_organiser_worker.py')
+        script=Path(__file__).with_name('chapter_book_organiser_worker.py' if chapter_book else 'excel_organiser_worker.py' if format=='xlsx' else 'pdf_organiser_worker.py')
         process=await asyncio.create_subprocess_exec(sys.executable,str(script),str(directory),
             stdout=asyncio.subprocess.PIPE,stderr=asyncio.subprocess.DEVNULL,
             env=env,close_fds=True,start_new_session=True)

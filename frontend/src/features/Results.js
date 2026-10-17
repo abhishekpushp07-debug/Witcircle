@@ -108,7 +108,7 @@ export default function Results() {
   if (pending) return <div className="container page" data-testid="results-grading-pending">
     <PageTitle eyebrow="SUBMISSION RECEIVED" title="Your answers are safely submitted." description="Your sealed answers are being graded in the background. You can leave this page and return from My practice." />
     <div className="card">
-      <p data-testid="grading-status" role="status">{pending.grading_status === 'failed' ? 'Grading needs another try. Your submitted answers have not changed.' : 'Preparing your results and matched solutions…'}</p>
+      <p data-testid="grading-status" role="status">{pending.grading_status === 'failed' ? 'Grading needs another try. Your submitted answers have not changed.' : 'Preparing your results and review…'}</p>
       <p data-testid="submission-receipt">Receipt: {pending.receipt}</p>
       <ErrorBox error={error} />
       <div className="form-actions">
@@ -291,11 +291,10 @@ export default function Results() {
         <div>
           <h3>Your full attempt, yours to keep.</h3>
           <p>
-            The PDF includes every question and solution—even if you filter the
-            review below.
+            {r.questions.every(q=>q.solution_kind==='answer_key_only')?'The PDF includes every original question, your response and its supplied answer key. No worked solutions were provided.':'The PDF includes every question and solution—even if you filter the review below.'}
           </p>
         </div>
-        <ReportButton key={`${id}-${scoreVersion}`} id={id} scoreVersion={scoreVersion} />
+        <ReportButton key={`${id}-${scoreVersion}`} id={id} scoreVersion={scoreVersion} answerKeyOnly={r.questions.every(q=>q.solution_kind==='answer_key_only')} />
       </div>
       <p className="report-privacy">
         <ShieldCheck size={14} /> A downloaded copy is outside Tejas access
@@ -486,7 +485,8 @@ export default function Results() {
                 <div className="matched-solution">
                   <div className="solution-title">
                     <FileIcon />
-                    <h3>Matched solution · Q{q.solution_number}</h3>
+                    <h3>{q.solution_kind==='answer_key_only'?'Supplied answer key':'Matched solution'} · Q{q.solution_number}</h3>
+                    {q.solution_kind==='answer_key_only'&&<p className="import-fineprint" data-testid={'no-worked-solution-'+q.number}>The source provides this key only. No worked solution was supplied or generated.</p>}
                     <Badge>Matched to this frozen version</Badge>
                   </div>
                   <QuestionContent

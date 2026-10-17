@@ -21,6 +21,7 @@ const Results = lazy(() => import("./features/Results"));
 const Studio = lazy(() => import("./features/Studio"));
 const Competitions = lazy(() => import('./features/Competitions'));
 const StudioImport = lazy(() => import('./features/StudioImport'));
+const ChapterBookStudio = lazy(() => import('./features/ChapterBookStudio'));
 const StudioEditor = lazy(() => import("./features/StudioEditor"));
 const Info = lazy(() => import("./features/Info"));
 function Protected({ children, staff = false }) {
@@ -126,6 +127,7 @@ function Shell() {
             />
             <Route path="/competitions" element={<Protected><Competitions /></Protected>} />
             <Route path="/competitions/:id" element={<Protected><Competitions /></Protected>} />
+            <Route path="/studio/chapter-books/:id" element={<Protected staff><ChapterBookStudio /></Protected>} />
             <Route path="/studio/imports/:id" element={<Protected staff><StudioImport /></Protected>} />
             <Route
               path="/studio/:id"

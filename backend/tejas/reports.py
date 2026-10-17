@@ -45,7 +45,8 @@ def validate_typed_math(q):
 
 
 class Report:
-    def __init__(self):
+    def __init__(self, answer_key_only=False):
+        self.header = 'TEJAS / RESULTS & ANSWER KEYS' if answer_key_only else 'TEJAS / RESULTS & SOLUTIONS'
         self.doc = fitz.open()
         self.page = None
         self.y = 0
@@ -62,7 +63,7 @@ class Report:
         )
         self.page.insert_text(
             (40, 36),
-            "TEJAS / RESULTS & SOLUTIONS",
+            self.header,
             fontsize=10,
             color=(0.059, 0.463, 0.431),
         )
@@ -123,11 +124,13 @@ def render_report(a, loader):
     result = score_attempt(a)
     s = result["summary"]
     r = a["rules"]
-    report = Report()
+    answer_key_only = bool(result['questions']) and all(q.get('solution_kind')=='answer_key_only' for q in result['questions'])
+    review_notice = 'Skipped questions and supplied answer keys are included. No worked solutions were supplied.' if answer_key_only else 'Skipped questions and correctly matched solutions are included.'
+    report = Report(answer_key_only)
     report.page_for(a["title"])
     percent = s.get("percentage")
     percentage = "Not applicable" if percent is None else str(percent) + "%"
-    summary = f"{a['exam']} · Nonofficial practice\nAttempt: {a['id']}\nStarted: {datetime.fromtimestamp(a['started_at'],timezone.utc).isoformat()}\nContent version: {a.get('version',1)} · Key version: {a.get('key_version',a.get('version',1))}\nScore version: {a.get('score_version','original')}\n\nScore: {s['score']} / {s['maximum']} · Percentage: {percentage} (not a percentile)\nCorrect: {s['correct']} · Incorrect: {s['incorrect']} · Skipped: {s['skipped']}\nDropped: {s.get('dropped',0)} · Bonus-to-all: {s.get('bonus',0)}\nAttempt rate: {s['attempt_rate']}% · Accuracy: {str(s['accuracy'])+'%' if s['accuracy'] is not None else 'Not applicable (no attempts)'}\nAccuracy = correct / attempted; dropped and bonus items excluded.\nPenalty marks: {s['penalties']} · Elapsed: {s['total_seconds']} seconds\nRules: +{r['correct']} correct, {r['wrong']} wrong, {r['skipped']} unanswered\nNumerical: {r['numeric_rule']}\n\nComplete record: all {len(result['questions'])} questions in original delivery order.\nSkipped questions and correctly matched solutions are included.\nDownloaded copies are outside Tejas access controls.\nAttribution: {a.get('attribution','Owner-supplied content')}"
+    summary = f"{a['exam']} · Nonofficial practice\nAttempt: {a['id']}\nStarted: {datetime.fromtimestamp(a['started_at'],timezone.utc).isoformat()}\nContent version: {a.get('version',1)} · Key version: {a.get('key_version',a.get('version',1))}\nScore version: {a.get('score_version','original')}\n\nScore: {s['score']} / {s['maximum']} · Percentage: {percentage} (not a percentile)\nCorrect: {s['correct']} · Incorrect: {s['incorrect']} · Skipped: {s['skipped']}\nDropped: {s.get('dropped',0)} · Bonus-to-all: {s.get('bonus',0)}\nAttempt rate: {s['attempt_rate']}% · Accuracy: {str(s['accuracy'])+'%' if s['accuracy'] is not None else 'Not applicable (no attempts)'}\nAccuracy = correct / attempted; dropped and bonus items excluded.\nPenalty marks: {s['penalties']} · Elapsed: {s['total_seconds']} seconds\nRules: +{r['correct']} correct, {r['wrong']} wrong, {r['skipped']} unanswered\nNumerical: {r['numeric_rule']}\n\nComplete record: all {len(result['questions'])} questions in original delivery order.\n{review_notice}\nDownloaded copies are outside Tejas access controls.\nAttribution: {a.get('attribution','Owner-supplied content')}"
     if a.get("mode") == "preview":
         report.text(
             "UNAPPROVED PRIVATE REVIEW PROOF — author keys and solutions still require human verification.",
@@ -151,7 +154,7 @@ def render_report(a, loader):
             report.text("Review note: " + q["review_note"], 9)
         for label, key, plain in [
             ("Question", "q_refs", q["text"]),
-            ("Matched solution", "s_refs", q["solution"]),
+            ("Supplied answer key (no worked solution)" if q.get('solution_kind')=='answer_key_only' else "Matched solution", "s_refs", q["solution"]),
         ]:
             report.context = f"Question {q['number']} · {label}"
             report.ensure(70)

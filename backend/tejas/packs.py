@@ -32,6 +32,7 @@ async def seal(questions):
                 "id",
                 "number",
                 "solution_number",
+                "solution_kind",
                 "section",
                 "subject",
                 "type",
@@ -99,6 +100,12 @@ async def unpack(key):
 async def hydrate(a):
     if a and "questions" not in a and a.get("pack_id"):
         a["questions"] = await unpack(a["pack_id"])
+    # Compatibility metadata derived only from the immutable source's explicit disclosure.
+    # No stored pack, answer, rule, score or content hash is changed.
+    for q in (a or {}).get('questions', []):
+        text=q.get('solution','')
+        if 'solution_kind' not in q and text.startswith('Supplied answer key: ') and text.endswith('This book does not contain a worked solution.'):
+            q['solution_kind']='answer_key_only'
     return a
 
 

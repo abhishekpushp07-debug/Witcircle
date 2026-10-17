@@ -73,6 +73,9 @@ async def audit(actor, action, resource, detail=""):
 
 
 async def indexes():
+    await db.tejas_chapter_books.create_index('id', unique=True)
+    await db.tejas_chapter_uploads.create_index('id', unique=True)
+    await sets.create_index([('chapter_book_id',1),('chapter_number',1)])
     await db.tejas_reviews.create_index('id', unique=True)
     await db.tejas_reviews.create_index([('user_id',1),('attempt_id',1),('score_version',1)])
     await db.tejas_imports.create_index('id', unique=True)

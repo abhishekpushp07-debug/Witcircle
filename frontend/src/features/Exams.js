@@ -1,219 +1,48 @@
-import React, { useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
-import {
-  ArrowUpRight,
-  Search,
-  Clock3,
-  FileCheck2,
-  SlidersHorizontal,
-} from "lucide-react";
-import { api } from "../lib/api";
-import { useAuth } from "../lib/auth";
-import {
-  PageTitle,
-  Badge,
-  Loading,
-  Empty,
-  ErrorBox,
-} from "../components/Shared";
-export function SetCard({ s }) {
-  return (
-    <article className="card set-card" data-testid="exams-set-card">
-      <div className="row-between">
-        <Badge>{s.exam}</Badge>
-        <small>Practice · v{s.version}</small>
-      </div>
-      <h3>{s.title}</h3>
-      <p>{s.source || "Owner-supplied, reviewed practice content."}</p>
-      <div className="set-facts">
-        <span>
-          <FileCheck2 size={16} />
-          {s.count} questions
-        </span>
-        <span>
-          <Clock3 size={16} />
-          {s.rules.minutes ? s.rules.minutes + " min" : "Untimed"}
-        </span>
-        <span>{s.maximum} marks</span>
-      </div>
-      <div className="subject-tags">
-        {s.subjects.map((t) => (
-          <span key={t}>{t}</span>
-        ))}
-      </div>
-      <Link
-        className="btn btn-primary"
-        to={"/sets/" + s.id}
-        data-testid="exams-set-open-button"
-      >
-        View rules & start <ArrowUpRight size={17} />
-      </Link>
-    </article>
-  );
-}
-export default function Exams() {
-  const { user, setUser } = useAuth();
-  const [params, setParams] = useSearchParams();
-  const exam = params.get("exam") || user?.exam || "JEE Main";
-  const [query, setQuery] = useState("");
-  const [page, setPage] = useState(1);
-  const [data, setData] = useState(null);
-  const [error, setError] = useState("");
-  useEffect(() => {
-    let valid = true;
-    setData(null);
-    setError("");
-    const timer = setTimeout(
-      () =>
-        api(
-          user
-            ? `/my/sets?exam=${encodeURIComponent(exam)}&q=${encodeURIComponent(query)}&page=${page}`
-            : `/sets?exam=${encodeURIComponent(exam)}&q=${encodeURIComponent(query)}&page=${page}`,
-        )
-          .then((d) => {
-            if (valid)
-              setData(
-                d.items.filter(
-                  (s) =>
-                    s.exam === exam &&
-                    s.title.toLowerCase().includes(query.toLowerCase()),
-                ),
-              );
-          })
-          .catch((e) => valid && setError(e.message)),
-      200,
-    );
-    return () => {
-      valid = false;
-      clearTimeout(timer);
-    };
-  }, [exam, query, user, page]);
-  return (
-    <div className="container page">
-      <PageTitle
-        eyebrow="A PLACE TO PUT LEARNING INTO PRACTICE"
-        title="Find your next practice."
-        description="Clear rules, reviewed content, and a solution for every question."
-      />
-      <div className="catalog-toolbar">
-        <div className="segmented" aria-label="Exam selection">
-          {["JEE Main", "BITSAT"].map((e) => (
-            <button
-              key={e}
-              data-testid={"exam-tab-" + e}
-              className={e === exam ? "active" : ""}
-              onClick={() => {
-                setPage(1);
-                setParams({ exam: e });
-                if (user)
-                  api("/auth/preferences", {
-                    method: "PATCH",
-                    body: JSON.stringify({ exam: e }),
-                  }).then(()=>setUser({...user,exam:e})).catch((err) => setError(err.message));
-              }}
-            >
-              {e}
-            </button>
-          ))}
-        </div>
-        <label className="search-field">
-          <Search size={18} />
-          <input
-            data-testid="exams-search-input"
-            value={query}
-            onChange={(e) => {
-              setPage(1);
-              setQuery(e.target.value);
-            }}
-            placeholder="Search practice sets"
-            aria-label="Search practice sets"
-          />
-        </label>
-      </div>
-      <div className="catalog-note">
-        <ShieldNote />{" "}
-        <span>
-          These are practice sets—not official examinations or guaranteed
-          predictions.
-        </span>
-      </div>
-      <ErrorBox error={error} retry={() => window.location.reload()} />
-      {!data && !error ? (
-        <Loading text="Checking published practice sets…" />
-      ) : data?.length ? (
-        <div className="set-grid">
-          {data.map((s) => (
-            <SetCard key={s.id} s={s} />
-          ))}
-        </div>
-      ) : (
-        !error && (
-          <Empty
-            title={
-              query
-                ? "No sets match your search."
-                : exam === "BITSAT"
-                  ? "Good practice starts with good content."
-                  : "Careful review comes before practice."
-            }
-          >
-            {query
-              ? "Try another title or clear your search."
-              : exam === "BITSAT"
-                ? "No BITSAT papers are published yet. Owner-supplied questions and solutions will appear here after content and rights review."
-                : "No JEE Main sets are published yet. Supplied papers remain private while questions, answers, diagrams, solution pairings and content rights are reviewed."}
-            {query && (
-              <button
-                className="text-button"
-                data-testid="clear-search"
-                onClick={() => setQuery("")}
-              >
-                Clear search
-              </button>
-            )}
-          </Empty>
-        )
-      )}
-      {(page > 1 || data?.length === 20) && (
-        <div className="button-row">
-          <button
-            className="btn btn-secondary"
-            disabled={page === 1}
-            data-testid="catalog-prev"
-            onClick={() => setPage(page - 1)}
-          >
-            Previous
-          </button>
-          <span>Page {page}</span>
-          <button
-            className="btn btn-secondary"
-            disabled={!data?.length || data.length < 20}
-            data-testid="catalog-next"
-            onClick={() => setPage(page + 1)}
-          >
-            Next
-          </button>
-        </div>
-      )}
-      <div className="catalog-bottom">
-        <div>
-          <h3>What happens after a practice set?</h3>
-          <p>
-            Get a transparent score, review correctly matched solutions, and
-            download your complete personal study report.
-          </p>
-        </div>
-        <Link
-          to="/#how-it-works"
-          className="text-link"
-          data-testid="catalog-how"
-        >
-          See the learning loop <ArrowUpRight size={17} />
-        </Link>
-      </div>
-    </div>
-  );
-}
-function ShieldNote() {
-  return <SlidersHorizontal size={17} />;
+import React,{useEffect,useState} from 'react';
+import {Link,useSearchParams} from 'react-router-dom';
+import {ArrowUpRight,BookOpen,Clock3,FileCheck2,Search,ShieldCheck,ArrowRight} from 'lucide-react';
+import {api} from '../lib/api';
+import {useAuth} from '../lib/auth';
+import {Badge,ErrorBox,Empty} from '../components/Shared';
+import {Button} from '../components/ui/button';
+import {Input} from '../components/ui/input';
+import {Tabs,TabsList,TabsTrigger} from '../components/ui/tabs';
+import {Skeleton} from '../components/ui/skeleton';
+
+export const SetCard=({s})=>{
+ const chapter=!!s.chapter_book_id,active=s.attempt?.status==='active',done=s.attempt?.status==='completed';
+ return <article className="card set-card chapter-test-card" data-testid={'exams-set-card-'+s.id}>
+  <div className="row-between"><Badge>{chapter?s.chapter_subject:s.exam}</Badge><small data-testid={'exam-state-'+s.id}>{active?'In progress':done?'Completed':chapter?'Live':'Practice'}</small></div>
+  {chapter&&<span className="eyebrow" data-testid={'exam-chapter-number-'+s.id}>CHAPTER {String(s.chapter_number).padStart(2,'0')}</span>}
+  <h3 data-testid={'exam-title-'+s.id}>{s.title}</h3>
+  <div className="set-facts" data-testid={'exam-facts-'+s.id}><span><FileCheck2 size={16}/>{s.count} questions</span><span><Clock3 size={16}/>{s.rules.minutes?s.rules.minutes+' min':'Untimed'}</span></div>
+  <div className="chapter-card-marks" data-testid={'exam-marks-'+s.id}><strong>+{s.rules.correct}</strong> correct <span>·</span> <strong>{s.rules.wrong}</strong> wrong <span>·</span> {s.maximum} marks</div>
+  {chapter?<p className="import-fineprint" data-testid={'exam-expiry-'+s.id}>Available until {new Date(s.end_at*1000).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}</p>:<p>{s.source}</p>}
+  <div className="chapter-card-actions"><Button asChild className="btn btn-primary"><Link to={active?'/attempts/'+s.attempt.id:'/sets/'+s.id} data-testid={(active?'exam-resume-':'exam-start-')+s.id}>{active?'Resume test':done?'Attempt again':chapter?'View rules & start':'Open practice'}<ArrowUpRight size={17}/></Link></Button>
+  {done&&<Button asChild variant="outline"><Link to={'/results/'+s.attempt.id} data-testid={'exam-results-'+s.id}>View results</Link></Button>}</div>
+ </article>;
+};
+
+export default function Exams(){
+ const {user}=useAuth();const [params,setParams]=useSearchParams();
+ const [mode,setMode]=useState(params.get('exam')==='JEE Main'?'all':'chapters');
+ const [subject,setSubject]=useState('');const [exam,setExam]=useState(params.get('exam')||'BITSAT');
+ const [query,setQuery]=useState('');const [page,setPage]=useState(1);const [data,setData]=useState(null);const [error,setError]=useState('');const [reload,setReload]=useState(0);
+ useEffect(()=>{let live=true;const controller=new AbortController();setData(null);setError('');const timer=setTimeout(()=>{
+  const url=mode==='chapters'?`${user?'/my':''}/chapter-exams?subject=${encodeURIComponent(subject)}&q=${encodeURIComponent(query)}&page=${page}`:`${user?'/my':''}/sets?exam=${encodeURIComponent(exam)}&q=${encodeURIComponent(query)}&page=${page}`;
+  api(url,{signal:controller.signal}).then(d=>{if(live)setData(d)}).catch(e=>{if(live&&!controller.signal.aborted)setError(e.message)});
+ },180);return()=>{live=false;clearTimeout(timer);controller.abort()}},[mode,subject,exam,query,page,user?.id,reload]);
+ function switchMode(v){setMode(v);setPage(1);setQuery('');setParams(v==='chapters'?{exam:'BITSAT'}:{exam})}
+ return <div className="container page chapter-exams" data-testid="chapter-exams-page">
+  <div className="chapter-exams-heading"><div><span className="eyebrow">YOUR NEXT FOCUSED SESSION</span><h1 data-testid="exams-title">One chapter.<br/>One focused hour.</h1><p data-testid="exams-description">Choose a chapter, check the rules, and give it your best. Your answers save as you go.</p></div><div className="chapter-rules-panel" data-testid="chapter-exam-rules"><BookOpen size={24}/><strong>50 questions · 60 minutes</strong><span>+3 correct · −1 incorrect · 0 unanswered</span><small>Your personal timer begins only when you start.</small></div></div>
+  <Tabs value={mode} onValueChange={switchMode} data-testid="exam-catalog-modes"><TabsList><TabsTrigger value="chapters" data-testid="exam-mode-chapters">Chapter tests</TabsTrigger><TabsTrigger value="all" data-testid="exam-mode-all">All practice sets</TabsTrigger></TabsList></Tabs>
+  <div className="chapter-catalog-toolbar">
+   {mode==='chapters'?<Tabs value={subject||'all'} onValueChange={v=>{setSubject(v==='all'?'':v);setPage(1)}} data-testid="exam-subject-tabs"><TabsList>{[['all','All subjects'],['Physics','Physics'],['Chemistry','Chemistry'],['Mathematics','Mathematics']].map(([v,label])=><TabsTrigger value={v} key={v} data-testid={'exam-subject-'+v}>{label}{data?.subject_counts&&<span>{v==='all'?Object.values(data.subject_counts).reduce((a,b)=>a+b,0):data.subject_counts[v]||0}</span>}</TabsTrigger>)}</TabsList></Tabs>:<Tabs value={exam} onValueChange={v=>{setExam(v);setParams({exam:v});setPage(1)}}><TabsList>{['JEE Main','BITSAT'].map(v=><TabsTrigger value={v} key={v} data-testid={'exam-tab-'+v}>{v}</TabsTrigger>)}</TabsList></Tabs>}
+   <div className="chapter-search"><Search size={18}/><Input value={query} onChange={e=>{setQuery(e.target.value);setPage(1)}} placeholder={mode==='chapters'?'Find a chapter…':'Search practice sets…'} aria-label="Search chapters or practice sets" data-testid="exams-search-input"/></div>
+  </div>
+  {mode==='chapters'&&<div className="chapter-source-note" data-testid="answer-keys-only-disclosure"><ShieldCheck size={20}/><p><strong>Original questions. Original notation.</strong> Formula-safe PDF images with zoom. Supplied answer keys unlock after submission; these books do not include worked solutions. Custom practice, not official BITSAT papers.</p></div>}
+  <ErrorBox error={error} retry={()=>setReload(v=>v+1)}/>
+  {!data&&!error?<div className="set-grid" data-testid="exam-catalog-loading">{[1,2,3].map(n=><Skeleton key={n} className="h-64"/>)}</div>:data?.items.length?<><p className="import-fineprint chapter-result-count" data-testid="exam-result-count">{mode==='chapters'?`${data.total} chapter tests${subject?' · '+subject:''}`:'Published practice sets'}</p><div className="set-grid" data-testid="exam-catalog-list">{data.items.map(s=><SetCard key={s.id} s={s}/>)}</div></>:!error&&<Empty title="No matching tests yet." action={<Button variant="outline" onClick={()=>{setQuery('');setSubject('');setPage(1)}} data-testid="exam-reset-filters">Reset filters</Button>}>Try another chapter or subject. Only live, unexpired tests are shown.</Empty>}
+  {data&&(page>1||(mode==='chapters'?data.pages>1:data.items.length===20))&&<div className="chapter-pagination"><Button variant="outline" onClick={()=>setPage(p=>p-1)} disabled={page===1} data-testid="catalog-prev">Previous</Button><span data-testid="catalog-page">Page {page}{mode==='chapters'?' of '+data.pages:''}</span><Button variant="outline" onClick={()=>setPage(p=>p+1)} disabled={mode==='chapters'?page>=data.pages:data.items.length<20} data-testid="catalog-next">Next<ArrowRight size={16}/></Button></div>}
+ </div>;
 }

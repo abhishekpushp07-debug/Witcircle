@@ -45,7 +45,7 @@ export const ResultsReflectionStrip = ({attemptId,question,scoreVersion,state,ca
     </div>
     {assigned&&<div className="mistake-checklist" data-testid={'results-mistake-review-card-'+n}>
       <h4>Mistake review</h4><p className="import-fineprint">Four explicit steps—not a mastery score. Select a category and write a note before confirming those steps.</p>
-      {steps.map(([key,label])=><label key={key} htmlFor={`${key}-${n}`} className="review-check-row"><Checkbox id={`${key}-${n}`} data-testid={`results-mistake-${n}-${key}`} checked={draft[key]} disabled={busy||(key==='reviewed_solution'&&solutionPending)||(key==='identified_error'&&!draft.category&&!draft[key])||(key==='wrote_note'&&!draft.note.trim()&&!draft[key])} onCheckedChange={v=>edit(key,v===true)}/><span>{label}</span></label>)}
+      {steps.map(([key,label])=><label key={key} htmlFor={`${key}-${n}`} className="review-check-row"><Checkbox id={`${key}-${n}`} data-testid={`results-mistake-${n}-${key}`} checked={draft[key]} disabled={busy||(key==='reviewed_solution'&&solutionPending)||(key==='identified_error'&&!draft.category&&!draft[key])||(key==='wrote_note'&&!draft.note.trim()&&!draft[key])} onCheckedChange={v=>edit(key,v===true)}/><span>{key==='reviewed_solution'&&question.solution_kind==='answer_key_only'?'I reviewed the supplied answer key':label}</span></label>)}
       {accepted?.completed&&!dirty&&<p className="review-completed" data-testid={'results-mistake-review-complete-'+n}><CheckCircle2 size={16}/> Saved checklist completed</p>}
     </div>}
     {error&&<p role="alert" className="import-error" data-testid={'reflection-save-error-'+n}>{error} Your edits are still here.</p>}

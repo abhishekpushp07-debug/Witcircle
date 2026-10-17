@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { SourceDetailViewer } from './SourceDetailViewer';
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   ArrowUpRight,
@@ -367,14 +368,9 @@ export function SourceImage({ path, alt = "Source region", onError, onLoad }) {
         <DialogContent className="image-dialog">
           <DialogTitle>Source detail</DialogTitle>
           <DialogDescription>
-            Pinch or use your browser zoom to inspect the original notation.
+            Zoom in and drag to read the original notation. No formula transcription is substituted.
           </DialogDescription>
-          <div className="zoom-scroll">
-            <img
-              src={API + path + (path.includes("?") ? "&" : "?") + "v=" + v}
-              alt={alt}
-            />
-          </div>
+          <SourceDetailViewer src={API + path + (path.includes('?') ? '&' : '?') + 'v=' + v} alt={alt} />
         </DialogContent>
       </Dialog>
     </div>

@@ -80,7 +80,7 @@ export default function SetDetail() {
             <li>One correct option per question, or an integer entry where stated. Mark for review and return to any question.</li>
             <li>{s.rules.numeric_rule}</li>
             <li>{minutes ? 'The timer keeps running during a disconnect. Only answers received before the deadline are scored.' : 'This is untimed practice. Come back to your saved attempt whenever you need.'}</li>
-            <li>Submitting is final. Your result, matched solutions and full PDF report become available afterward.</li>
+            <li>{s.solution_kind==='answer_key_only'?'Submitting is final. Your score, supplied answer keys and PDF report become available immediately. This book has no worked solutions.':'Submitting is final. Your result, matched solutions and full PDF report become available afterward.'}</li>
           </ul>
           <div className="notice preflight-recovery" data-testid="preflight-offline-recovery-notice"><Save size={19} /><span><strong>Your drafts stay on this device.</strong> Offline edits remain pending until the server acknowledges them. Check the save status before submitting.</span></div>
           <details className="profile-details"><summary data-testid="practice-profile-details">About this practice profile</summary><p>Free navigation · Original question order · Exact integers · Solutions after submission. This custom profile is not an official-year exam simulation. Your PDF includes every question, regardless of review filters.</p></details>
@@ -106,7 +106,7 @@ export default function SetDetail() {
           <small data-testid="preflight-profile-notice"><ShieldCheck size={14} /> Saved to this number’s practice profile.</small>
         </Card>
       </div>
-      <div className="preflight-report-note" data-testid="preflight-report-note"><FileDown size={17} /> One complete PDF. Every question, your response and its matched solution.</div>
+      <div className="preflight-report-note" data-testid="preflight-report-note"><FileDown size={17} /> {s.solution_kind==='answer_key_only'?'One complete PDF. Every question, your response and the supplied answer key.':'One complete PDF. Every question, your response and its matched solution.'}</div>
     </div>
   );
 }

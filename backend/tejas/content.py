@@ -84,7 +84,7 @@ def valid_rules(r):
 
 
 def permitted(s, u=None):
-    if s.get('import_id') and (not s.get('live_enabled') or now() < s.get('start_at', float('inf')) or now() >= s.get('end_at', 0)):
+    if (s.get('import_id') or s.get('chapter_book_id')) and (not s.get('live_enabled') or now() < s.get('start_at', float('inf')) or now() >= s.get('end_at', 0)):
         return False
     if (
         s.get("expires")
@@ -118,6 +118,7 @@ def summary(s):
                 "source",
                 "attribution",
                 "created_at",
+                "chapter_book_id", "chapter_number", "chapter_subject", "solution_kind", "start_at", "end_at", "live_enabled",
             ]
         },
         "count": len(qs),
@@ -156,7 +157,7 @@ async def set_detail(id: str):
 async def studio_sets(u=Depends(staff)):
     from .catalog import page
 
-    return [summary(s) for s in await page({"qa_only": {"$ne": True}, 'import_id': {'$exists': False}}, size=100)]
+    return [summary(s) for s in await page({"qa_only": {"$ne": True}, 'import_id': {'$exists': False}, 'chapter_book_id': {'$exists': False}}, size=100)]
 
 
 @router.post("/studio/sets")
