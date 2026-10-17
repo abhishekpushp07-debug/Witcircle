@@ -82,8 +82,16 @@ def chapter_view(s):
         start_at=s.get('start_at'),end_at=s.get('end_at'),live_enabled=s.get('live_enabled',False))
 
 
+# Metadata-only read: polling must not deserialize every question, key and crop.
+BOOK_CHAPTER_PROJECT = {key: 1 for key in (
+    'id', 'title', 'chapter_number', 'chapter_subject', 'questions.number',
+    'start_page', 'end_page', 'key_page', 'verification', 'independent_check',
+    'revision', 'start_at', 'end_at', 'live_enabled',
+)}
+BOOK_CHAPTER_PROJECT['_id'] = 0
+
 async def book_view(r):
-    children=await sets.find({'chapter_book_id':r['id']},{'_id':0}).sort('chapter_number',1).limit(60).to_list(60)
+    children=await sets.find({'chapter_book_id':r['id']},BOOK_CHAPTER_PROJECT).sort('chapter_number',1).limit(60).to_list(60)
     status=r['status']
     if status=='organising' and r.get('lease_until',0)<now():status='interrupted'
     return BookView(id=r['id'],title=r['title'],subject=r.get('subject',''),status=status,message=r.get('message',''),
@@ -249,8 +257,14 @@ async def exam_catalogue(subject,q,page,user=None):
     grouped=await sets.aggregate([{'$match':totals_query},{'$group':{'_id':'$chapter_subject','count':{'$sum':1}}}]).to_list(3)
     latest={}
     if user and rows:
-        history=await attempts.find({'user_id':user['id'],'set_id':{'$in':[s['id'] for s in rows]},'mode':'practice'},
-            {'_id':0,'id':1,'set_id':1,'status':1,'deadline':1}).sort('started_at',-1).limit(200).to_list(200)
+        # One newest attempt for EACH visible chapter. A flat 200-row cap could
+        # hide another chapter's active attempt behind repeated retries of one set.
+        history=await attempts.aggregate([
+            {'$match': {'user_id': user['id'], 'set_id': {'$in': [s['id'] for s in rows]}, 'mode': 'practice'}},
+            {'$sort': {'set_id': 1, 'started_at': -1, 'id': -1}},
+            {'$group': {'_id': '$set_id', 'attempt': {'$first': {'id': '$id', 'set_id': '$set_id', 'status': '$status', 'deadline': '$deadline'}}}},
+            {'$replaceRoot': {'newRoot': '$attempt'}},
+        ]).to_list(12)
         for a in history:
             if a.get('deadline') and a['deadline']<=now():a['status']='completed'
             latest.setdefault(a['set_id'],a)

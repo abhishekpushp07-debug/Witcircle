@@ -324,7 +324,7 @@ export function Confirm({
     </Dialog>
   );
 }
-export function SourceImage({ path, alt = "Source region", onError, onLoad }) {
+export function SourceImage({ path, alt = "Source region", onError, onLoad, readable = false, testId = 'source' }) {
   const [failed, setFailed] = useState(false);
   const [v, setV] = useState(0);
   const [zoom, setZoom] = useState(false);
@@ -341,17 +341,17 @@ export function SourceImage({ path, alt = "Source region", onError, onLoad }) {
             setV(v + 1);
           }}
         />
-      ) : (
+      ) : readable ? <SourceDetailViewer key={path} inline testId={testId} src={API + path + (path.includes('?') ? '&' : '?') + 'v=' + v} alt={alt} onExpand={()=>setZoom(true)} onLoad={()=>onLoad?.()} onError={async()=>{onError?.();if(!refreshed){setRefreshed(true);try{await post('/auth/refresh');setV(n=>n+1);return;}catch{}}setFailed(true)}}/> : (
         <Button
           className="image-button"
-          data-testid="source-image-zoom"
+          data-testid={testId+'-zoom'}
           aria-label="Enlarge source image"
           onClick={() => setZoom(true)}
         >
           <img
             src={API + path + (path.includes("?") ? "&" : "?") + "v=" + v}
             alt={alt}
-            loading="lazy"
+            loading={readable ? 'eager' : 'lazy'}
             onLoad={onLoad}
             onError={async () => {
               onError?.();

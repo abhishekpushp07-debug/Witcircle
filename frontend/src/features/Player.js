@@ -19,6 +19,8 @@ import { Logo, Loading, ErrorBox, Badge, Confirm } from "../components/Shared";
 import { QuestionContent, MathText } from "../components/QuestionContent";
 import { useAttempt } from "./practice/useAttempt";
 import { PlayerConfidencePanel } from '../components/player/PlayerConfidencePanel';
+import {Button} from '../components/ui/button';
+import {Input} from '../components/ui/input';
 
 export default function Player() {
   const { id } = useParams();
@@ -50,6 +52,24 @@ export default function Player() {
   useEffect(() => {
     if (questionId) visit(questionId);
   }, [questionId, visit, online]);
+  useEffect(() => {
+    if (!a || !q) return;
+    function shortcut(e) {
+      if (e.repeat || e.altKey || e.ctrlKey || e.metaKey || e.isComposing || confirm || navOpen || document.querySelector('[role="dialog"]')) return;
+      if (e.target.closest('input, textarea, select, button, a, canvas, [contenteditable="true"], [role="slider"], [role="radio"], [role="tab"]')) return;
+      const key=e.key.toUpperCase();
+      if (key==='ARROWRIGHT' || key==='ARROWLEFT') {
+        e.preventDefault();setIndex(i=>Math.max(0,Math.min(a.questions.length-1,i+(key==='ARROWRIGHT'?1:-1))));return;
+      }
+      if (seconds===0 || conflict || Object.keys(blocked).some(k=>k.startsWith(q.id+':'))) return;
+      const response=pending[q.id]||a.answers[q.id]||{};
+      if (q.type==='mcq' && Object.hasOwn(q.options||{},key)) {e.preventDefault();edit(q.id,{value:key});}
+      if (key==='M') {e.preventDefault();edit(q.id,{marked:!response.marked});}
+    }
+    document.addEventListener('keydown',shortcut);
+    return()=>document.removeEventListener('keydown',shortcut);
+  },[a,q,pending,seconds,conflict,blocked,confirm,navOpen,edit]);
+
   async function doSubmit() {
     setSubmitting(true);
     try {
@@ -157,7 +177,7 @@ export default function Player() {
       </p>
       <div className="player-body">
         <aside className={"question-navigator " + (navOpen ? "open" : "")}>
-          <button
+          <Button variant="ghost"
             className="navigator-heading"
             data-testid="player-navigator-toggle"
             onClick={() => setNavOpen(!navOpen)}
@@ -165,7 +185,7 @@ export default function Player() {
           >
             <strong>Question navigator</strong>
             <ChevronDown size={18} />
-          </button>
+          </Button>
           <div className="navigator-content">
             {Array.from(new Set(a.questions.map((x) => x.subject))).map(
               (subject) => (
@@ -174,7 +194,7 @@ export default function Player() {
                   <div className="number-grid">
                     {a.questions.map((x, i) =>
                       x.subject !== subject ? null : (
-                        <button
+                        <Button variant="ghost"
                           key={x.id}
                           data-testid={"player-question-nav-" + x.number}
                           className={
@@ -197,7 +217,7 @@ export default function Player() {
                           ) : all[x.id]?.value?.trim() ? (
                             <Check size={9} />
                           ) : null}
-                        </button>
+                        </Button>
                       ),
                     )}
                   </div>
@@ -227,14 +247,14 @@ export default function Player() {
                 Pending save
               </span>
             </div>
-            <button
+            <Button variant="ghost"
               className="btn btn-primary full-width"
               data-testid="player-submit-button"
               onClick={() => setConfirm(true)}
               disabled={seconds === 0 || !online}
             >
               <Send size={17} /> Review & submit
-            </button>
+            </Button>
             <p className="navigator-note">
               Free navigation · Original order preserved. Skipped questions
               receive 0 marks.
@@ -249,13 +269,13 @@ export default function Player() {
                 Another saved version exists. Local drafts are retained until
                 you choose to discard them.
               </span>
-              <button
+              <Button variant="ghost"
                 className="btn btn-secondary"
                 data-testid="discard-conflicting-drafts"
                 onClick={discard}
               >
                 Use server-saved answers
-              </button>
+              </Button>
             </div>
           )}
           {seconds === 0 && (
@@ -273,8 +293,8 @@ export default function Player() {
               </span>
             </div>
             <div className="question-heading">
-              <h2>Question {q.number}</h2>
-              <button
+              <h2 data-testid="player-question-heading">Question {q.number}</h2>
+              <Button variant="ghost"
                 className={
                   "btn btn-quiet " + (current.marked ? "review-active" : "")
                 }
@@ -285,11 +305,12 @@ export default function Player() {
               >
                 <Flag size={17} />
                 {current.marked ? "Marked for review" : "Mark for review"}
-              </button>
+              </Button>
             </div>
             <div data-testid="player-question-stem">
               <QuestionContent
                 question={q}
+                readable
                 base={`/attempts/${id}/questions/${q.id}`}
                 onAssetError={(i) => assetState(i, true)}
                 onAssetLoad={(i) => assetState(i, false)}
@@ -301,6 +322,7 @@ export default function Player() {
                 answering; do not guess missing content.
               </div>
             )}
+            {q.type==='mcq'&&q.render_mode==='source'&&<p className="source-options-hint" data-testid="player-source-options-hint">Read options A–D in the original image above, then select the matching letter.</p>}
             <fieldset disabled={locked} className="answer-fieldset">
               <legend>
                 {q.type === "mcq"
@@ -308,7 +330,7 @@ export default function Player() {
                   : "Enter your integer answer"}
               </legend>
               {q.type === "mcq" ? (
-                <div className="answer-options">
+                <div className={'answer-options ' + (q.render_mode==='source'?'answer-options-source':'')}>
                   {Object.entries(q.options || {}).map(([key, value]) => (
                     <label
                       key={key}
@@ -341,7 +363,7 @@ export default function Player() {
                 </div>
               ) : (
                 <>
-                  <input
+                  <Input
                     className="numerical-input"
                     type="text"
                     inputMode="text"
@@ -359,14 +381,14 @@ export default function Player() {
                 </>
               )}
             </fieldset>
-            <button
+            <Button variant="ghost"
               className="text-button clear-answer"
               data-testid="player-clear-response-button"
               disabled={!current.value || locked}
               onClick={() => edit(q.id, { value: "" })}
             >
               <RotateCcw size={14} /> Clear response
-            </button>
+            </Button>
             <PlayerConfidencePanel
               key={q.id}
               questionId={q.id}
@@ -379,36 +401,37 @@ export default function Player() {
               online={online}
             />
             <div className="question-navigation">
-              <button
+              <Button variant="ghost"
                 className="btn btn-secondary"
                 data-testid="player-previous"
                 disabled={index === 0}
                 onClick={() => setIndex(index - 1)}
               >
                 <ArrowLeft size={17} /> Previous
-              </button>
+              </Button>
               <span>
                 {index + 1} of {a.count}
               </span>
               {index < a.count - 1 ? (
-                <button
+                <Button variant="ghost"
                   className="btn btn-primary"
                   data-testid="player-next"
                   onClick={() => setIndex(index + 1)}
                 >
                   Next question <ArrowRight size={17} />
-                </button>
+                </Button>
               ) : (
-                <button
+                <Button variant="ghost"
                   className="btn btn-primary"
                   data-testid="player-finish"
                   disabled={seconds === 0 || !online}
                   onClick={() => setConfirm(true)}
                 >
                   Review & submit <Send size={17} />
-                </button>
+                </Button>
               )}
             </div>
+            <div className="player-shortcuts" data-testid="player-shortcuts-help"><span><kbd>←</kbd> <kbd>→</kbd> Navigate</span><span><kbd>A–D</kbd> Answer</span><span><kbd>M</kbd> Mark for review</span><span>Shortcuts pause while a control has focus.</span></div>
           </article>
           <p className="practice-note">
             Focus on the question. This is home practice, not a proctored

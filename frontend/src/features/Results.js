@@ -218,6 +218,8 @@ export default function Results() {
           </div>
         </section>
       )}
+      <div className="results-review-shortcuts" data-testid="results-review-shortcuts"><p data-testid="results-attempt-immutable-notice"><ShieldCheck size={16}/> Your submitted answers are sealed. Review notes won’t change your score.</p><Button variant="outline" data-testid="results-jump-review" onClick={()=>document.getElementById('results-review-heading')?.scrollIntoView({behavior:'instant'})}>Review answers <ArrowUpRight size={16}/></Button></div>
+      {r.questions.every(q=>q.solution_kind==='answer_key_only')&&<p className="results-key-notice" data-testid="results-answer-keys-only-disclosure">Answer keys only. Original questions and supplied keys are available below; worked solutions were not provided.</p>}
       <div className="results-summary" data-testid="results-summary-tiles">
         <div className="score-card">
           <span>Your score</span>
@@ -319,8 +321,7 @@ export default function Results() {
         <section className="card">
           <h3>A clearer next step.</h3>
           <p>
-            Review the explanation beside each missed question. Then try a
-            separate, untimed revision attempt.
+            {r.questions.every(q=>q.solution_kind==='answer_key_only')?'Compare each missed question with the supplied key; this book has no worked explanations.':'Review the explanation beside each missed question.'} Then try a separate, untimed revision attempt.
           </p>
           <button
             className="btn btn-secondary"
@@ -350,7 +351,7 @@ export default function Results() {
       </div>
       {r.insights && <section className="import-card mb-8" data-testid="results-evidence-insights"><div className="import-section-label">YOUR NEXT STUDY SESSION</div><h2>Start where this attempt points.</h2><div className="insight-grid">{r.insights.priorities.length ? r.insights.priorities.map((g,i) => <article className="import-issue" data-testid={'results-priority-' + i} key={g.label}><strong>{g.label}</strong><p>{g.incorrect} incorrect · {g.skipped} skipped · {g.count} questions</p><p>Attempted accuracy: {g.accuracy === null ? 'Not available' : g.accuracy + '%'} ({g.correct}/{g.attempted})</p><p>{g.action}</p><small>{g.evidence} · Review Q{g.questions.join(', Q')}</small></article>) : <p data-testid="results-no-priorities">No incorrect or skipped eligible questions in this attempt. Use fresh questions to gather more evidence.</p>}</div><p className="import-fineprint mt-4" data-testid="results-insights-basis">{r.insights.basis}</p></section>}
       <ResultsAnalyticsWorkspace key={`${id}-${scoreVersion}`} analysis={r.analytics} questions={r.questions} userId={user.id} attemptId={id} onOpenQuestion={openQuestion} onRefresh={refreshAnalytics} confidenceThreshold={confidenceThreshold} review={r.review} />
-      <div className="review-heading">
+      <div className="review-heading" id="results-review-heading">
         <div>
           <span className="eyebrow">UNDERSTAND THE WHY</span>
           <h2>Your question-by-question review.</h2>

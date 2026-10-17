@@ -1597,5 +1597,153 @@
       "Use the provided Tailwind class scaffolds to integrate existing panels responsively without changing global styling.",
       "All new/updated React components are .js (not .tsx) and must include data-testid on interactive + key value elements."
     ]
+  },
+  "premium_exam_refinement_addendum": {
+    "scope": {
+      "goal": "Premium exam refinement addendum: tighten hierarchy and density for chapter-wise tests (94 items), improve source readability in Player without changing protected assets, and calibrate trust copy (no overclaims). Incremental only.",
+      "constraints": [
+        "Preserve matte maroon #5C0025 and existing tokens (index.css/App.css)",
+        "Preserve Figtree/Roboto Mono and light/dark",
+        "No photos/new palette",
+        "No re-architecture; no scoring/safety changes",
+        "React components are .js (not .tsx)",
+        "All interactive + key informational elements must include data-testid"
+      ]
+    },
+    "priority_changes_P0_P2": {
+      "P0_trust_copy": [
+        {
+          "where": "/sets/:id preflight",
+          "change": "Replace absolute ‘verified’ language with scoped ‘check passed’ language.",
+          "copy": "Connection check passed. Saving is enabled on this device. You can zoom source images during the attempt.",
+          "add": "If any source image fails to load during the attempt, answering will pause until it loads.",
+          "data_testids": {
+            "success": "preflight-device-check-success",
+            "disclosure": "preflight-source-image-disclosure"
+          }
+        }
+      ],
+      "P1_catalog_density": [
+        {
+          "where": "/exams",
+          "change": "Default to compact rows (not large cards) + sticky filter/search bar on mobile.",
+          "acceptance": [
+            "On 390×844, first row title visible within ~400px scroll.",
+            "Open a specific chapter via: 1 subject tap + 1 search + 1 tap (no pagination hunting)."
+          ],
+          "data_testids": {
+            "search": "exams-catalog-search-input",
+            "subject_tabs": "exams-catalog-subject-tabs",
+            "row": "exams-catalog-row",
+            "start": "exams-catalog-start-button"
+          }
+        }
+      ],
+      "P1_source_readability": [
+        {
+          "where": "/attempts/:id",
+          "change": "Avoid tiny shrink-to-fit source images. Provide an inline Source Viewport with Fit/Readable controls and full-screen fallback.",
+          "controls": [
+            "Fit",
+            "Readable",
+            "Zoom -/+",
+            "Pan drag",
+            "Full-screen"
+          ],
+          "rule": "Default to Readable on phones when possible; otherwise Fit with one-tap switch.",
+          "data_testids": {
+            "viewport": "player-source-viewport",
+            "fit": "player-source-fit-toggle",
+            "readable": "player-source-readable-toggle",
+            "zoom_in": "player-source-zoom-in-button",
+            "zoom_out": "player-source-zoom-out-button",
+            "fullscreen": "player-source-fullscreen-button"
+          }
+        }
+      ],
+      "P1_source_options_one_zoom": [
+        {
+          "where": "Player when render_mode === 'source'",
+          "policy": "One-zoom rule: student can view all options with one zoom action maximum.",
+          "allowed": [
+            "Options strip image anchored below stem (single zoom target)",
+            "Option-region thumbnails ONLY if backed by real source refs (no guessed crops)"
+          ],
+          "data_testids": {
+            "options_strip": "player-options-strip-image",
+            "options_strip_open": "player-options-strip-open-button"
+          }
+        }
+      ],
+      "P2_touch_targets": [
+        {
+          "where": "Header actions + brand link",
+          "rule": "Enforce min-height: var(--touch-target) for tappable header items; avoid 40–42px targets.",
+          "data_testids": {
+            "brand": "header-brand-link",
+            "login": "header-login-link"
+          }
+        }
+      ]
+    },
+    "component_usage": {
+      "shadcn_primary": [
+        "/app/frontend/src/components/ui/tabs.jsx",
+        "/app/frontend/src/components/ui/input.jsx",
+        "/app/frontend/src/components/ui/select.jsx",
+        "/app/frontend/src/components/ui/card.jsx",
+        "/app/frontend/src/components/ui/badge.jsx",
+        "/app/frontend/src/components/ui/scroll-area.jsx",
+        "/app/frontend/src/components/ui/skeleton.jsx",
+        "/app/frontend/src/components/ui/button.jsx",
+        "/app/frontend/src/components/ui/dialog.jsx",
+        "/app/frontend/src/components/ui/drawer.jsx",
+        "/app/frontend/src/components/ui/toggle-group.jsx",
+        "/app/frontend/src/components/ui/separator.jsx"
+      ],
+      "notes": [
+        "Do not use raw HTML dropdown/calendar/toast; use shadcn components.",
+        "All new components must be .js and use named exports; pages default export."
+      ]
+    },
+    "layout_specs_mobile_first": {
+      "catalog_header": {
+        "rule": "Compact header: title + subtitle + always-visible ‘Answer keys only’ disclosure; move long rules into details.",
+        "max_height_mobile": "~220px target",
+        "data_testid": "answer-keys-only-disclosure"
+      },
+      "sticky_filter_bar": {
+        "rule": "Sticky filter/search below site header; keep search always reachable.",
+        "avoid": "Double-sticky stacking that consumes vertical space.",
+        "data_testids": {
+          "bar": "exams-catalog-sticky-filterbar",
+          "clear": "exams-catalog-clear-filters-button"
+        }
+      },
+      "row_density": {
+        "row_height": "Aim ~72–88px per row on mobile; CTA remains 44px+.",
+        "meta": "Use mono chips for 50Q/60m/+3/-1; keep to one line with wrap."
+      }
+    },
+    "results_refinement": {
+      "immutability_notice": {
+        "copy": "Attempts are saved and cannot be edited.",
+        "placement": "Near results header/summary and near review list.",
+        "data_testid": "results-attempt-immutable-notice"
+      },
+      "key_only_disclosure": {
+        "copy": "Answer keys only. Worked solutions are not provided.",
+        "placement": "Near any answer reveal/solution area.",
+        "data_testid": "results-answer-keys-only-disclosure"
+      }
+    },
+    "instructions_to_main_agent": [
+      "Implement /exams compaction + default compact rows; keep existing tokens and matte maroon.",
+      "Replace preflight ‘verified’ copy with scoped language.",
+      "Player: implement inline Source Viewport with Fit/Readable controls; avoid tiny shrink-to-fit.",
+      "Enforce one-zoom rule for source-rendered options via options strip or real source-backed thumbnails.",
+      "Ensure touch targets >= var(--touch-target) in header actions.",
+      "All interactive + key informational elements must include data-testid (kebab-case)."
+    ]
   }
 }

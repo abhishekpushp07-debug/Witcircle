@@ -36,6 +36,7 @@ export function QuestionContent({
   onAssetError,
   onAssetLoad,
   gradeVersion = "original",
+  readable = false,
 }) {
   const count = solution
     ? (q.solution_asset_count ?? q.s_refs?.length)
@@ -49,6 +50,8 @@ export function QuestionContent({
         {Array.from({ length: count }, (_, i) => (
           <SourceImage
             key={base + i}
+            readable={readable && !solution}
+            testId={'source-' + q.id + '-' + (solution ? 'solution' : 'question') + '-' + i}
             path={`${base}/asset/${solution ? "solution" : "question"}/${i}${gradeVersion !== "original" ? "?score_version=" + encodeURIComponent(gradeVersion) : ""}`}
             alt={
               alt ||

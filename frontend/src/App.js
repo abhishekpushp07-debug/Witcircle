@@ -12,6 +12,7 @@ import { AuthProvider, useAuth } from "./lib/auth";
 import { Header, Footer, Loading, Empty } from "./components/Shared";
 import Landing from "./features/Landing";
 import "./App.css";
+import "./exam-refinement.css";
 const Auth = lazy(() => import("./features/Auth"));
 const Exams = lazy(() => import("./features/Exams"));
 const Home = lazy(() => import("./features/Home"));

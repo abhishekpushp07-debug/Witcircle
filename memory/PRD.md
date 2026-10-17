@@ -1,3 +1,24 @@
+# Latest checkpoint — exam refinement and bounded performance work (17 October 2026)
+
+User explicitly approved autonomous implementation and deep testing after a plan checkpoint. No routine review requests. This section supersedes older current-status/test-count claims, without deleting history.
+
+- Preserved original 94 live owner chapters / 4,700 questions, 60 minutes, +3/-1 and original one-year windows; no owner source content was rewritten.
+- Implemented compact catalogue rows/sticky filters, honest preflight, original-pixel readable source canvas in Player and owner preview, A-D option strip, safe shortcuts, results key-only/sealed-answer notices, and owner publication diagnostics.
+- Fixed null-chapter asset URL on owner preview close; real browser Q1/Q50, actual Close, zero null requests verified. Offline answer/reconnect/reload and source503 -> answer lock -> retry unlock verified.
+- Database-transfer optimization: chapter Studio metadata projection 97.1% fewer BSON bytes over94chapters. Correct per-set latest-attempt aggregation/index removes200-row history truncation. Preflight deduplicates exact refs per request without cross-user cache.
+- Current safe isolated suite: **342 passed**,0failed,200deprecation warnings (`test_reports/refinement-full-regression.log`). Older396-test run is historical and not repeated as the same scope. Production frontend build passes (`test_reports/refinement-final-build.log`).
+- Main real UI submission/results/PDF verified: QA87 two incorrect=-2/150,48skipped, actual1,510,413-bytePDF; QA85 server timeout60minutes produced one correct=3/150,49skipped. Independent report83's2/150submission/PDF claim was rejected when main found its stated attempt stillactive; do not repeat it. Main canvas source/offline/failure tests and actual results notices/reviewjump verified. 1920x800 and390x844 screenshots with no overflow; catalogue light/dark checked.
+- Safe HTTP smoke:40/40public catalogue requests, max4workers/global5rps, latestp95=107.89ms,p99=229.38ms. **NOT student concurrency or500kqualification.** Raw samples and repeatable guarded harness in `tests/load/`.
+- Read-only infra:2CPUquota,8GiBcap,colocatedservices,standaloneMongo(no replica set). Not suitable as sole500kproduction topology; capacity remainsUNQUALIFIED. No infrastructure/env changes.
+- Security remainsBLOCKED:49dependency paths/25uniqueCRA-chain advisories including21highpaths; no unsafe major overrides or unsupported clean-security claim. Controlled tooling migration unfinished.
+- Owner upload diagnostics improved, but independent verification for unrecognised new books still requires external source-check evidence; autonomous review not implemented or mocked.
+- Test artifact incident: tooling logged staff credential; offending overwritten script restored/removed and report redacted. Recommend authorized owner password rotation/session revocation before wider release; not performed because access-impacting. Never reproduce the password.
+- Test-data incident: one synthetic Test Book appeared in preview; exact synthetic fingerprint quarantined (qa_only,notlive,draft), original94 untouched. Safe suite isolation remains enforced; ad-hoc live fixture writes forbidden. RCA did not establish insertion mechanism; do not rename DB based on its label.
+- Canonical evidence/boundaries: `docs/EXAM_REFINEMENT_RELEASE.md`, `docs/strategy/INFRASTRUCTURE_CAPACITY_VERDICT.md`. This is a verified incremental delivery, **not100%final/world-best/production certification**.
+
+---
+
+
 # Latest release — supplied chapter books LIVE (17 October 2026)
 
 - Latest user approval: publish supplied Physics/Chemistry/Mathematics chapter PDFs immediately for one year; each chapter50questions,60minutes,+3correct/−1wrong/0unanswered; independent recheck per test and source images wherever formulas are unsafe.

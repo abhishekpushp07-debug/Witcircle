@@ -146,8 +146,19 @@ async def preflight(id: str, data: dict, u=Depends(current)):
     if not s["questions"]:
         raise HTTPException(400, "This set has no questions yet.")
     source_map = {}
-    for q in s["questions"]:
-        await validate_refs(s, q, source_map)
+    # The same supplied key crop may be referenced by all 50 questions. Validate
+    # each exact source region once per request, never cache across users/releases.
+    unique_refs = []
+    seen_refs = set()
+    import json
+    for q in s['questions']:
+        for kind in ('q_refs', 's_refs'):
+            for ref in q.get(kind, []):
+                identity = json.dumps(ref, sort_keys=True, separators=(',', ':'))
+                if identity not in seen_refs:
+                    seen_refs.add(identity)
+                    unique_refs.append(ref)
+    await validate_refs(s, {'q_refs': unique_refs, 's_refs': []}, source_map)
     await db.tejas_preflight.update_one(
         {"user_id": u["id"], "set_id": id},
         {

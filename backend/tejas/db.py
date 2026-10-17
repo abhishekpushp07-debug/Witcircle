@@ -100,6 +100,7 @@ async def indexes():
     await sessions.create_index("expires_at", expireAfterSeconds=0)
     await sets.create_index([("status", 1), ("exam", 1)])
     await attempts.create_index([("user_id", 1), ("started_at", -1)])
+    await attempts.create_index([('user_id', 1), ('mode', 1), ('set_id', 1), ('started_at', -1), ('id', -1)], name='chapter_attempt_latest')
     await attempts.create_index([("user_id", 1), ("start_key", 1)], unique=True)
     await attempts.create_index([("user_id", 1), ("start_request_keys", 1)], unique=True, partialFilterExpression={"start_request_keys": {"$exists": True}})
     await attempts.create_index(
