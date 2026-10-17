@@ -24,4 +24,8 @@ LANE_LIMITS = {
     'report': budget('TEJAS_REPORT_CONCURRENCY', 1, 1, 4),
     'extract': budget('TEJAS_EXTRACT_CONCURRENCY', 1, 1, 2),
     'regrade': budget('TEJAS_REGRADE_CONCURRENCY', 1, 1, 2),
+    'ai_solution': budget('TEJAS_AI_SOLUTION_CONCURRENCY', 1, 1, 2),
+    'smart_prepare': budget('TEJAS_SMART_PREPARE_CONCURRENCY', 1, 1, 1),
+    'smart_page': budget('TEJAS_SMART_PAGE_CONCURRENCY', 1, 1, 1),
+    'cohort': budget('TEJAS_COHORT_CONCURRENCY', 1, 1, 2),
 }

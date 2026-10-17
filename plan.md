@@ -106,8 +106,11 @@ These supersede earlier assumptions that **every** new upload must become a 50Q/
    - Switching questions (Next/Previous/jump) must **not carry forward** “Readable” as the default.
    - Readable/Zoom remains an optional per-question action; safe controls retained.
 
-**Open gating (not yet implemented):**
-- AI provider/model is now chosen as **OpenAI Astra**, with exact model **`gpt-6-astra`**; application runtime support is **UNVERIFIED** (no silent model substitution).
+**Open gating (updated):**
+- AI provider/model is chosen as **OpenAI Astra** with exact model **`gpt-6-astra`**.
+- **Runtime support is now VERIFIED**:
+  - Managed canaries succeeded for **text + JSON** and **image + structured JSON**.
+  - `reported_model` returned **`gpt-6-astra`** (no silent substitution).
 - Use of real “2026 JEE Mains” prediction requires explicit data source selection and calibration plan.
 
 ---
@@ -204,12 +207,22 @@ This bounded phase is complete. It **does not** mark AI publishing, deep cohort 
 
 - **Backend isolated regression**: `/app/test_reports/navigation-final-regression.log`
   - **368 passed**, 0 failed, 232 warnings.
-  - (This includes contract-evidence maintenance: operation catalogue updated to 75 routes after adding the two new endpoints.)
 - **Frontend production build**: `/app/test_reports/navigation-build.log` (compiled successfully).
 - **UI real-browser suites**: `/app/test_reports/navigation-ui-verified/`
   - 10/10 passed, 22 screenshots, 0 overflow offenders, 1 real 51-page branded PDF.
   - Verified: **32 Chemistry tests** pagination (12+12+8), Fit reset behavior across multiple transitions, history filters, BITSAT-only scoping.
 - **Owner invariants re-verified**: `/app/test_reports/navigation-owner-invariants.json`
+
+### New verified enablers — UPDATED
+
+- **OpenAI Astra** runtime support is now **verified** in this environment:
+  - Text+JSON canary accepted and returned valid JSON.
+  - Vision+JSON canary accepted, returned valid JSON, and `reported_model == gpt-6-astra`.
+  - Evidence: `/app/test_reports/astra_canary_diagnostic.json`, `/app/test_reports/astra_vision_canary.json`.
+- **Document ingestion for Word/Excel conversions** is now feasible:
+  - `python-docx` installed.
+  - LibreOffice Writer/Calc installed (for deterministic `.doc/.docx/.xls/.xlsx → pdf` conversion).
+  - **Security constraint:** conversions must run in a constrained worker boundary with strict time/memory limits and no network access assumptions.
 
 ### Results/PDF truth discipline (critical)
 
@@ -294,15 +307,15 @@ Delivered and verified (with disclaimers and “in development” disclosures).
 
 **Key change:** stop forcing default 50Q/60min/+3/-1/1-year on all uploads.
 
-**Pipeline design:**
+**Pipeline design (revised with verified Word support enablers):**
 1. **Source ingestion**
    - Support: PDF, Excel, Word.
-   - Store source, compute SHA, create immutable “source record”.
+   - Store source in private object storage, compute SHA, create immutable “source record”.
 
 2. **Rule inference engine**
    - Parse instructions pages/headers (e.g., “Time: 180 minutes”, “+4/-1”).
    - Detect sections (Physics/Chem/Math, etc.), question numbering patterns.
-   - Produce an inference report with confidence + evidence anchors.
+   - Produce an inference report with confidence + evidence anchors (page refs / cell refs).
 
 3. **Clarification prompt (only if ambiguous)**
    - Minimal Studio form only for missing fields: duration, correct/wrong, question count policy, section weights.
@@ -317,38 +330,45 @@ Delivered and verified (with disclaimers and “in development” disclosures).
    - Only sets with: complete question structure + valid rules + (supplied keys OR AI-generated keys flagged) + safe source refs become eligible.
    - Partial failures: only affected sets stay private; the rest can go Live.
 
+6. **Word conversion boundary**
+   - `.doc/.docx` conversion uses LibreOffice in a worker boundary.
+   - **Must** enforce strict timeouts, size limits, and post-conversion sanitization.
+   - No network calls are required for conversion; do not assume OS-level sandboxing is present (user namespaces are not supported).
+
 **Non-negotiables:**
 - Never guess missing keys as “supplied”.
 - Never publish a set with unverified ambiguous key pairing.
 - Preserve existing 94 published tests unchanged.
 
-### 4.2 P0/P1: AI-generated answers + stepwise solutions (OpenAI Astra) (NOT STARTED)
+### 4.2 P0/P1: AI-generated answers + stepwise solutions (OpenAI Astra) — UPDATED (canary verified, implementation NOT STARTED)
 
 **User decision (locked):** **OpenAI Astra**
 
 **Exact chosen model:** `gpt-6-astra`
 
-**Critical constraint:** App runtime access to Astra via managed integration is **UNVERIFIED**.
+**Runtime status:** VERIFIED canaries succeeded (text+JSON and image+JSON). No silent substitution.
 
 **Implementation plan (bounded, safe):**
-1. **Provider canary**
-   - Add a minimal backend canary job that calls the existing integrations path and asserts the exact model `gpt-6-astra` is being used.
-   - Fail closed if the model is unavailable; do not silently substitute.
+1. **Provider canary (DONE)**
+   - Verified exact model `gpt-6-astra` and vision support.
 
 2. **Data model + provenance**
-   - `solution_provider` per question: `supplied_key`, `supplied_solution`, `ai_generated`, `none`.
-   - `solution_version` + `generated_at` stored per published set version.
+   - Per question: `solution_provider` (`supplied_key`, `supplied_solution`, `ai_generated`, `none`).
+   - `solution_version` + `generated_at` + `model` + `prompt_hash` stored per published set version.
    - Never rewrite sealed attempt grades.
 
 3. **Generation jobs**
-   - Durable async jobs: rule-extract, question-solve, independent recheck (same model with blind prompt), deterministic validation.
+   - Durable async jobs: rule-extract, question-solve, blind second-pass recheck, deterministic validation.
    - If uncertain/disagree: mark `needs_review` and keep the set private.
 
-4. **UX truth labels**
-   - UI labels AI-generated solutions and status: `verified`, `needs_review`.
+4. **Execution boundaries**
+   - `emergentintegrations` async API is internally synchronous; enforce per-job timeouts and bounded concurrency (threadpool/executor or job queue).
 
-5. **No bulk backfill**
-   - Start with small canary batches only; no automatic 4,700-question backfill.
+5. **UX truth labels**
+   - UI labels AI-generated solutions and status: `generated`, `cross-checked (agreement only)`, `needs review`.
+
+6. **No bulk backfill**
+   - Start with opt-in canary batches; do not automatically generate 4,700 stepwise solutions for the existing BITSAT key-only corpus.
 
 ### 4.3 P0: Deep results analysis with cohort rank/percentile + graphs (NOT STARTED)
 
@@ -358,26 +378,29 @@ Deliver:
 - Per-question analytics:
   - correct/wrong/skipped %
   - option distribution (A/B/C/D)
-  - time spent buckets (if available)
 - Subject/topic breakdown and score distribution graphs.
 
 **Data model:**
 - Aggregations keyed by `{set_id, version, window}`.
 - Store per-question response counts in an analytics collection with periodic backfill.
+- Privacy threshold **>= 20** attempts before showing distributions.
 
 **Performance:**
 - Updates must be incremental and cheap. Avoid full rescans per result view.
 
-### 4.4 P1/P2: Predicted rank “as per 2026 JEE Mains” (NOT STARTED)
+### 4.4 P1/P2: Predicted rank “as per 2026 JEE Mains” — UPDATED (official source verified, feature NOT STARTED)
 
 **Reality constraint:** cannot be done honestly without verified datasets.
 
+**Verified official reference:**
+- Official NTA notice PDF (20 Apr 2026) states: **“Total Number of Unique Candidates Appeared in both Sessions (January/April) … 15,38,468”** (Page 3).
+- Evidence: extracted from `https://cdnbbsr.s3waas.gov.in/.../20260420809492136.pdf`.
+
 **Plan:**
-- Add Prediction panel only after:
-  - dataset ingestion,
-  - calibration,
-  - error bounds,
-  - explicit disclaimers.
+- Only ship an AIR estimate module when:
+  - a verified percentile→AIR reference table for 2026 is ingested, AND
+  - the UI clearly labels it as **estimate only**, NOT official.
+- Until then, allow a limited “scenario” view based on user-entered official NTA percentile **only if** a verified reference table exists; otherwise show **Unavailable**.
 
 ---
 
@@ -397,11 +420,11 @@ Deliver:
 - Build rule inference report + evidence anchors.
 - Build single-shot clarification form.
 - Build safe auto-Live gating.
-- Add Word ingestion.
+- Add Word ingestion with deterministic conversion boundary.
 
 ### C) P0/P1: OpenAI Astra solutions (bounded canary first)
 
-- Verify runtime support for `gpt-6-astra` (no silent model substitution).
+- Canary is verified.
 - Build durable generation + blind recheck + deterministic validation.
 - Implement UI labeling and versioning; never rewrite sealed grades.
 
@@ -449,7 +472,6 @@ Deliver:
 - **CRA/react-scripts dependency advisories** until controlled migration + re-audit.
 - **500,000 concurrent user qualification** until staged load/fault/restore campaign is executed with evidence.
 - **Preview-infra is not representative**: 2 CPU quota / 8GiB cap / colocated services / standalone MongoDB do not prove fleet readiness.
-- **OpenAI Astra runtime availability** must be verified via a minimal canary; no silent model substitution.
 - **AI-generated solutions** cannot be treated as “supplied keys”; must remain provenance-labeled with uncertainty and review gates.
 - **Predicted 2026 JEE Mains rank** cannot be shown as authoritative without verified datasets + calibration + error bounds.
 - Any unperformed mandatory WP/OPS-R gate (as referenced in strategy docs).

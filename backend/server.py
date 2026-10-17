@@ -22,6 +22,9 @@ from tejas import (
     competitions,
     reviews,
     chapter_books,
+    ai_solutions,
+    cohorts,
+    smart_imports,
     exam_navigation,
 )
 from tejas.db import indexes, client
@@ -146,6 +149,9 @@ for module in [
     competitions,
     reviews,
     chapter_books,
+    ai_solutions,
+    cohorts,
+    smart_imports,
     exam_navigation,
 ]:
     app.include_router(module.router)

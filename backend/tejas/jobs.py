@@ -44,7 +44,7 @@ async def enqueue(kind, user_id, set_id, payload):
         await jobs.insert_one(j)
     except DuplicateKeyError:
         existing = await get(jobs, j['id'])
-        if existing['user_id'] != user_id and kind not in ('extract', 'regrade'):
+        if existing['user_id'] != user_id and kind not in ('extract', 'regrade', 'cohort'):
             raise HTTPException(404, 'Job not found.')
         return public_job(existing)
     return public_job(j)
@@ -81,7 +81,16 @@ async def run_job(id, drain=True):
             return
         try:
             output = {}
-            if kind == 'grade':
+            if kind == 'ai_solution':
+                from .ai_solutions import process
+                message = await process(j)
+            elif kind in ('smart_prepare','smart_page'):
+                from .smart_imports import prepare,extract_page
+                message = await (prepare(j) if kind=='smart_prepare' else extract_page(j))
+            elif kind == 'cohort':
+                from .cohorts import refresh
+                message = await refresh(j)
+            elif kind == 'grade':
                 from .corrections import freeze_ledger
                 a = await get(attempts, j['payload']['attempt_id'])
                 if a['status'] != 'completed':
@@ -90,6 +99,11 @@ async def run_job(id, drain=True):
                 ledger = a.get('ledger') or await freeze_ledger(a)
                 await require_lease(j)
                 await attempts.update_one({'id': a['id'], 'status': 'completed'}, {'$set': {'summary': ledger['summary'], 'grading_status': 'ready'}})
+                from .cohorts import record
+                try:
+                    await record(a,ledger)
+                except Exception:
+                    logging.getLogger(__name__).warning('Derived cohort indexing deferred; frozen grade is intact.')
                 message = 'Your sealed answers have been graded.'
             elif kind == 'extract':
                 qf = await get(files, j['payload']['qfile'])

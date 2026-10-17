@@ -88,3 +88,5 @@ sources/
 archive/
 test_reports/*.pdf
 test_reports/*.png
+
+backend/.office_runtime/

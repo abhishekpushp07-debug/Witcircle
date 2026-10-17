@@ -1,1 +1,26 @@
-[]
+[
+  {
+    "content": "Implement exact Astra adapter, durable verified solutions and original-source provenance",
+    "status": "in_progress"
+  },
+  {
+    "content": "Fix confined LibreOffice initialization without exposing network or application secrets",
+    "status": "pending"
+  },
+  {
+    "content": "Build real cohort rank, percentile, question statistics, graphs and sourced AIR scenarios",
+    "status": "pending"
+  },
+  {
+    "content": "Build secure PDF/Excel/Word ingestion with inferred rules, clarification and safe auto-publication",
+    "status": "pending"
+  },
+  {
+    "content": "Complete owner and student interfaces, reports and failure/recovery flows",
+    "status": "pending"
+  },
+  {
+    "content": "Address remaining feasible security issues and independently test all new flows and invariants",
+    "status": "pending"
+  }
+]
