@@ -78,7 +78,7 @@ async def listing(u=Depends(owner)):
 async def set_daily_budget(body:DailyBudget,u=Depends(owner)):
     if not body.approve_usage:raise HTTPException(400,'Confirm the AI usage budget before changing it.')
     await db.tejas_ai_settings.update_one({'id':'owner-budget'},{'$set':{'daily_call_limit':body.daily_call_limit,'updated_by':u['id'],'updated_at':now()}},upsert=True)
-    await audit(u['id'],'AI daily request budget changed',detail=str(body.daily_call_limit))
+    await audit(u['id'],'AI daily request budget changed','owner-budget',detail=str(body.daily_call_limit))
     return await quota_status()
 
 @router.post('',response_model=ImportView)
@@ -294,7 +294,7 @@ async def extract_page(job):
         path=await run_in_threadpool(put_object,f"jeemains/smart/{record['id']}/questions/{fid}.png",crop['image_bytes'],'image/png')
         await files.update_one({'id':fid},{'$setOnInsert':{'id':fid,'owner_id':record['owner_id'],'filename':f'question-{detected["number"]}-page-{page}.png','kind':'rendered_png',
             'path':path,'sha256':hashlib.sha256(crop['image_bytes']).hexdigest(),'pages':1,'source_import_id':record['id'],'original_page':page,'original_rect':detected['rect'],'created_at':now()}},upsert=True)
-        ref={'file_id':fid,'page':1,'rect':[0,0,100,100]}
+        ref={'file_id':fid,'page':1,'rect':[0,0,crop['width'],crop['height']], 'prerendered':True}
         q={'id':qid,'number':detected['number'],'solution_number':detected['number'],'subject':detected['subject'],'section':detected['section'],
             'type':detected['type'],'text':detected['text'],'options':detected['options'],'answer':detected['supplied_answer'],
             'solution':'','topic':detected['topic'],'difficulty':'','render_mode':'source','q_refs':[ref],'s_refs':[],
@@ -371,10 +371,9 @@ async def reconcile(id):
     await db.tejas_smart_imports.update_one({'id':id},{'$set':{'state':status,'message':message}})
 
 async def finalize_paper(record,paper):
-    from .content import valid_rules,publish
-    from tejas_core import question_issues
+    from .content import valid_rules, publish_validated, question_issues
     rules=paper['rules'];rows=await db.tejas_smart_questions.find({'paper_id':paper['id']},{'_id':0}).sort([('source_page',1),('original_number',1)]).to_list(601)
-    base={'minutes':rules['duration_minutes'],'correct':rules['correct'],'wrong':rules['wrong'],'skipped':rules['skipped']};valid_rules(base)
+    base=valid_rules({'minutes':rules['duration_minutes'],'correct':rules['correct'],'wrong':rules['wrong'],'skipped':rules['skipped']})
     questions=[]
     for number,row in enumerate(rows,1):
         solution=await db.tejas_ai_solutions.find_one({'id':row.get('solution_id'),'state':'verified'},{'_id':0})
@@ -395,7 +394,7 @@ async def finalize_paper(record,paper):
     data={'id':identifier,'title':rules['title'],'exam':rules['exam'],'test_kind':rules['test_kind'],'chapter_subject':rules.get('subject'),
         'rules':base,'section_rules':rules.get('sections',[]),'profile_mode':'practice','questions':questions,'file_ids':file_ids,
         'status':'draft','version':0,'revision':1,'source':'Owner-uploaded '+record['filename'],'attribution':'Owner-uploaded source; rights declared by the owner.',
-        'rights_upload':True,'rights_publish':True,'rights_report':True,'expires':None,'audience':'all','allowed_emails':[], 'allowed_phones':[],
+        'rights_upload':True,'rights_publish':True,'rights_report':True,'expires':'','audience':'all','allowed_emails':[], 'allowed_phones':[],
         'competition':False,'live_enabled':record['publish_when_ready'],'start_at':now(),'created_at':now(),'created_by':record['owner_id'],
         'auto_import_id':record['id'],'source_type':rules.get('source_type','unknown'),'source_year':rules.get('source_year'),
         'ai_verification':{'model':MODEL,'questions_checked':len(questions),'check':'separate_solution_and_blind_verification','not_a_guarantee':True}}
@@ -404,6 +403,6 @@ async def finalize_paper(record,paper):
     if record['publish_when_ready'] and existing['status']!='published':
         actor=await users.find_one({'id':record['owner_id'],'role':'owner'},{'_id':0})
         if not actor:raise ValueError('Publication requires the initiating owner to retain permission.')
-        await publish(identifier,{'confirm':True},actor)
+        await publish_validated(identifier,{'confirm':True},actor)
     await db.tejas_smart_papers.update_one({'id':paper['id']},{'$set':{'set_id':identifier,'state':'live' if record['publish_when_ready'] else 'ready_private','published_at':now() if record['publish_when_ready'] else None,'rule_issues':[]}})
     await audit(record['owner_id'],'Automatic source-checked test finalized',identifier,'Astra agreement is not an academic correctness guarantee; original provenance retained.')

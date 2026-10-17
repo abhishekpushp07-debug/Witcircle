@@ -2,7 +2,7 @@
 import hashlib, os, re, shutil, subprocess, sys, tempfile, threading, zipfile, io
 from pathlib import Path
 ROOT=Path(__file__).resolve().parent.parent
-_RUNTIME=ROOT/'.office_runtime'
+_RUNTIME=Path(os.environ.get('TEJAS_OFFICE_RUNTIME_DIR', '/var/cache/jeemains/office-runtime'))
 _LOCK=threading.Lock()
 
 

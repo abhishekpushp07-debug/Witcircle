@@ -18,6 +18,7 @@ class StrictModel(BaseModel):
 
 class SolutionStep(StrictModel):
     title: str = Field(min_length=1, max_length=160)
+    explanation: str = Field(min_length=1, max_length=3000)
 
 async def quota_status():
     from .db import db
@@ -37,8 +38,6 @@ async def reserve_call():
     accepted=await db.tejas_ai_daily.find_one_and_update({'id':q['day'],'used':{'$lt':q['limit']}},{'$inc':{'used':1}},return_document=ReturnDocument.AFTER)
     if not accepted:
         raise AstraUnavailable('The owner-approved daily AI processing budget is paused. Existing tests and scores remain available; the owner can raise the budget or resume tomorrow (UTC).')
-
-    explanation: str = Field(min_length=1, max_length=3000)
 
 async def student_budget(user_id):
     from .db import db, now

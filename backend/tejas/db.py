@@ -73,6 +73,22 @@ async def audit(actor, action, resource, detail=""):
 
 
 async def indexes():
+    for name in ('tejas_smart_imports', 'tejas_smart_papers', 'tejas_smart_questions',
+                 'tejas_smart_keys', 'tejas_ai_solutions', 'tejas_ai_settings',
+                 'tejas_ai_daily', 'tejas_ai_limits', 'tejas_cohorts', 'tejas_cohort_snapshots',
+                 'tejas_cohort_entries'):
+        await db[name].create_index('id', unique=True)
+    await db.tejas_smart_imports.create_index('request_key', unique=True)
+    await db.tejas_smart_imports.create_index([('owner_id', 1), ('created_at', -1)])
+    await db.tejas_smart_papers.create_index([('import_id', 1), ('created_at', 1)])
+    await db.tejas_smart_questions.create_index([('paper_id', 1), ('source_page', 1), ('original_number', 1)])
+    await db.tejas_smart_questions.create_index([('import_id', 1), ('source_page', -1)])
+    await db.tejas_ai_solutions.create_index([('auto_import_id', 1), ('state', 1)])
+    await db.tejas_ai_limits.create_index('expires_at', expireAfterSeconds=0)
+    await db.tejas_ai_daily.create_index('expires_at', expireAfterSeconds=0)
+    await db.tejas_cohort_entries.create_index([('cohort_id', 1), ('user_id', 1)], unique=True)
+    await db.tejas_cohort_entries.create_index([('cohort_id', 1), ('score', -1)])
+    await attempts.create_index([('set_id', 1), ('version', 1), ('status', 1), ('mode', 1), ('cohort_indexed', 1), ('submitted_at', 1), ('id', 1)])
     await db.tejas_chapter_books.create_index('id', unique=True)
     await db.tejas_chapter_uploads.create_index('id', unique=True)
     await sets.create_index([('chapter_book_id',1),('chapter_number',1)])

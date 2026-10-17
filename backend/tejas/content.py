@@ -126,8 +126,7 @@ def summary(s):
         "approved_count": sum(q.get("approved", False) for q in qs),
         "subjects": list(dict.fromkeys(q["subject"] for q in qs if q.get("subject"))),
         "types": {t: sum(q["type"] == t for q in qs) for t in ["mcq", "integer"]},
-        "maximum": sum(q.get("disposition", "standard") != "dropped" for q in qs)
-        * s["rules"]["correct"],
+        "maximum": sum((q.get('scoring') or s['rules'])['correct'] for q in qs if q.get('disposition', 'standard') != 'dropped'),
     }
 
 
@@ -396,7 +395,8 @@ def question_issues(q, exam):
     ):
         issues.append("At least two complete options are required")
     if q.get("render_mode") == "source":
-        if not q.get("q_refs") or not q.get("s_refs"):
+        generated = q.get('solution_kind') == 'ai_generated' and bool(q.get('ai_solution_id')) and bool(q.get('ai_provenance'))
+        if not q.get("q_refs") or (not q.get("s_refs") and not generated):
             issues.append("Question and solution source regions are required")
         if (
             not q.get("accessible_text", "").strip()
@@ -586,6 +586,11 @@ async def approve_question(id: str, qid: str, u=Depends(staff)):
 @router.post("/studio/sets/{id}/publish")
 async def publish(id: str, data: dict, u=Depends(owner)):
     require_capability(Capability.PUBLICATION)
+    return await publish_validated(id, data, u)
+
+
+async def publish_validated(id, data, u):
+    """Internal publication primitive; HTTP legacy gate remains unchanged."""
     s = await get(sets, id)
     if s.get('publication_pending'):
         await archive_publication(s)

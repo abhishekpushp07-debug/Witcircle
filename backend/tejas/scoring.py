@@ -27,12 +27,13 @@ def fraction(f):
 
 def score(attempt):
     rules = attempt["rules"]
-    positive = Fraction(str(rules["correct"]))
-    negative = Fraction(str(rules["wrong"]))
     rows = []
     net = Fraction(0)
     maximum = Fraction(0)
     for q in attempt["questions"]:
+        scoring = q.get('scoring') or rules
+        positive = Fraction(str(scoring['correct']))
+        negative = Fraction(str(scoring['wrong']))
         response = attempt.get("answers", {}).get(q["id"], {})
         raw = response.get("value", "")
         normalized = canonical(raw, q["type"])
@@ -66,7 +67,7 @@ def score(attempt):
             maximum += positive
         elif disposition in ["standard", "multiple_accepted"]:
             marks = (
-                Fraction(str(rules["skipped"]))
+                Fraction(str(scoring["skipped"]))
                 if not normalized
                 else positive if is_correct else negative
             )

@@ -143,11 +143,11 @@ def install_contracts(app):
             raise RuntimeError('API route lacks an explicit local contract: ' + key)
         owner, tier, idem = SPEC[key]
         writes = bool(route.methods & {'POST', 'PUT', 'PATCH', 'DELETE'})
-        upload = key in ('content.upload', 'imports.create_import', 'chapter_books.upload_book')
+        upload = key in ('content.upload', 'imports.create_import', 'chapter_books.upload_book', 'smart_imports.upload')
         model = (MODELS.get(key, EmptyPayload) if writes and not upload else None)
         if writes and not upload and route.body_field and key not in MODELS:
             raise RuntimeError('Body-bearing route lacks an explicit input model: ' + key)
-        limit = 256 * 1024 if key == 'content.edit_question' else 64 * 1024 if key in ('content.create_set', 'content.update_set', 'content.subset') else 4096
+        limit = 64 * 1024 if key in ('smart_imports.repair', 'smart_imports.clarify') else 256 * 1024 if key == 'content.edit_question' else 64 * 1024 if key in ('content.create_set', 'content.update_set', 'content.subset') else 4096
         if not writes or upload:
             limit = 0
         registry.append(RouteContract(route, key, owner, tier, idem, roles(route.dependant), limit, model, writes and not upload))

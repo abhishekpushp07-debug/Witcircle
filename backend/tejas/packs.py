@@ -33,6 +33,7 @@ async def seal(questions):
                 "number",
                 "solution_number",
                 "solution_kind",
+                "ai_steps", "ai_solution_id", "ai_provenance", "scoring", "original_number",
                 "section",
                 "subject",
                 "type",

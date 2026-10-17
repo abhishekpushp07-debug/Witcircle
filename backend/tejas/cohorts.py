@@ -10,7 +10,7 @@ from .auth import current
 from .attempts import owned
 
 router=APIRouter(prefix='/api/attempts',tags=['Peer comparison'])
-MIN_SAMPLE=20
+MIN_SAMPLE=100
 NTA_REFERENCE={'year':2026,'exam':'JEE Main Paper 1','unique_appeared':1538468,
  'notice_date':'2026-04-20','page':3,
  'url':'https://cdnbbsr.s3waas.gov.in/s3f8e59f4b2fe7c5705bf878bbd494ccdf/uploads/2026/04/20260420809492136.pdf',

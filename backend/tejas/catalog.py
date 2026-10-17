@@ -26,6 +26,8 @@ PROJECT = {
     "questions.type": 1,
     "questions.subject": 1,
     "questions.approved": 1,
+    'questions.scoring': 1,
+    'test_kind': 1, 'full_length': 1,
     "questions.disposition": 1,
 }
 

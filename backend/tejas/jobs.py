@@ -160,6 +160,18 @@ async def run_job(id, drain=True):
         lane.discard(id)
         if drain:
             await drain_lane(kind)
+        # Event-driven stage handoff; never wait for an owner to poll progress.
+        if kind == 'smart_prepare':
+            await drain_lane('smart_page')
+        elif kind == 'smart_page':
+            await drain_lane('ai_solution')
+
+
+async def drain_for(set_id):
+    """Dispatch persisted import work; bounded lane ownership prevents poll fan-out."""
+    if not INLINE_JOBS:
+        return
+    await asyncio.gather(*(drain_lane(kind) for kind in ('smart_prepare', 'smart_page', 'ai_solution')))
 
 
 _draining = set()
@@ -171,7 +183,7 @@ async def drain_lane(kind):
         return
     _draining.add(kind)
     try:
-        for _ in range(32):
+        for _ in range(4096):
             if len(_active[kind]) >= LANE_LIMITS[kind]:
                 break
             next_job = await jobs.find_one({'kind': kind, 'status': 'queued',

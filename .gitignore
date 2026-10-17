@@ -90,3 +90,8 @@ test_reports/*.pdf
 test_reports/*.png
 
 backend/.office_runtime/
+.env
+.env.*
+credentials.json
+*.key
+.credentials

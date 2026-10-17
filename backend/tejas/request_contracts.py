@@ -207,7 +207,22 @@ from .reviews import ReviewWrite, ProbabilityInput
 
 from .chapter_books import ChapterAction, ChapterLive
 
+class CronEnvelope(BaseModel):
+    model_config = ConfigDict(extra='allow')
+    event: Literal['schedule.triggered']
+    run_id: str = Field(min_length=1, max_length=200)
+
+
+from .cohorts import RankScenario
+from .smart_models import Clarification, QuestionRepair, WorkBudget, DailyBudget
+
 MODELS = {
+    'jobs.cron': CronEnvelope,
+    'cohorts.air_scenario': RankScenario,
+    'smart_imports.set_daily_budget': DailyBudget,
+    'smart_imports.clarify': Clarification,
+    'smart_imports.repair': QuestionRepair,
+    'smart_imports.budget': WorkBudget,
     'chapter_books.publish_book': ChapterAction, 'chapter_books.chapter_live': ChapterLive,
     'reviews.save_review': ReviewWrite, 'reviews.expected_value': ProbabilityInput,
     'attempts.solution_consulted': EmptyPayload,

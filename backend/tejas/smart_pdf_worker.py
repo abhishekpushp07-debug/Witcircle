@@ -1,11 +1,16 @@
 """One-shot sealed PDF inspection/rendering for the smart upload pipeline."""
-import base64,json,sys,os
+import base64,json,sys,os,codecs,unicodedata
 from pathlib import Path
 from pdf_organiser_worker import seal,open_pdf
 import fitz
 
 def main():
     directory=Path(sys.argv[1]);raw=(directory/'input.pdf').read_bytes();request=json.loads((directory/'request.json').read_text())
+    # Warm encoders before sealing filesystem
+    json.dumps({'text':'हिन्दी'},ensure_ascii=False).encode('utf-8')
+    unicodedata.normalize('NFC','test')
+    codecs.lookup('raw_unicode_escape')
+    codecs.lookup('unicode_escape')
     seal(str(directory));doc=open_pdf(raw)
     action=request['action']
     result={'sandbox':'chroot_low_uid_seccomp_resource_limits'}
