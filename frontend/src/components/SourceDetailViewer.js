@@ -7,7 +7,8 @@ import {Skeleton} from './ui/skeleton';
 export const SourceDetailViewer=({src,alt,inline=false,testId='source',onExpand,onLoad,onError})=>{
  const callbacks=useRef({onLoad,onError});callbacks.current={onLoad,onError};
  const canvas=useRef(null),frame=useRef(null),drag=useRef(null),metrics=useRef(null);
- const [image,setImage]=useState(null),[mode,setMode]=useState(inline?'readable':'fit'),[zoom,setZoom]=useState(1),[pan,setPan]=useState({x:0,y:0}),[size,setSize]=useState({w:1,h:1}),[error,setError]=useState(false),[reload,setReload]=useState(0);
+ const [image,setImage]=useState(null),[mode,setMode]=useState('fit'),[zoom,setZoom]=useState(1),[pan,setPan]=useState({x:0,y:0}),[size,setSize]=useState({w:1,h:1}),[error,setError]=useState(false),[reload,setReload]=useState(0);
+ useEffect(()=>{setMode('fit');setZoom(1);setPan({x:0,y:0});drag.current=null;},[src]);
  useEffect(()=>{let active=true;setImage(null);setError(false);setPan({x:0,y:0});const img=new Image();img.onload=()=>{if(active){setImage(img);callbacks.current.onLoad?.()}};img.onerror=()=>{if(active){setError(true);callbacks.current.onError?.()}};img.src=src;return()=>{active=false}},[src,reload]);
  useEffect(()=>{const observer=new ResizeObserver(entries=>{const r=entries[0].contentRect;setSize({w:r.width,h:r.height})});if(frame.current)observer.observe(frame.current);return()=>observer.disconnect()},[]);
  useEffect(()=>{
@@ -35,7 +36,7 @@ export const SourceDetailViewer=({src,alt,inline=false,testId='source',onExpand,
    {!inline&&<span role="status" data-testid="source-zoom-level">{Math.round(zoom*100)}% {mode==='readable'?'readable':''}</span>}
    {onExpand&&<Button variant="outline" size="icon" onClick={onExpand} aria-label="Open full-screen source detail" data-testid={id('fullscreen')}><Maximize2 size={18}/></Button>}
   </div>
-  <div ref={frame} className="source-canvas-frame" style={inline&&image?{'--source-ratio':image.naturalHeight/image.naturalWidth}:undefined}>
+  <div ref={frame} className="source-canvas-frame" data-view-mode={mode} style={inline&&image?{'--source-ratio':image.naturalHeight/image.naturalWidth,'--source-fit-width':size.w+'px'}:undefined}>
    {!image&&!error&&<Skeleton className="source-canvas-loading" data-testid={id('loading')}/>}
    <canvas ref={canvas} className="source-pan-canvas" tabIndex={0} role="img" aria-label={alt+' Drag or use arrow keys to read across the original. Plus and minus zoom.'} data-testid={inline?id('canvas'):'source-zoom-canvas'} onKeyDown={keys}
     onPointerDown={e=>{drag.current={x:e.clientX,y:e.clientY};e.currentTarget.setPointerCapture(e.pointerId)}}

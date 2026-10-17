@@ -1,3 +1,9 @@
+# Current navigation/brand override — jeemains.ai (17 October 2026)
+
+Read `/app/design_simple_navigation.md` for the complete approved current-phase addendum. Preserve all historical guidelines below. Latest user requirement overrides earlier readable-default advice: **FIT is the default and resets on every question change; do not persist Readable mode across questions**. Home has JEE Main, BITSAT and COMEDK cards; each exam has Mock Tests, Chapter-wise Tests and Results. Primary matte maroon remains #5C0025, Figtree/Roboto Mono, existing light/dark surfaces. 100% free student access may be prominent; future 60/75 and120+ concept overlap are labelled aspirational targets, never guaranteed predictions or measured outcomes. Actual AI/PYQ generation remains unfinished and must not be advertised as delivered.
+
+---
+
 {
   "product_flow_addendum": {
     "scope": {

@@ -76,7 +76,7 @@ export function useAttempt(id, user) {
         if (!stored || typeof stored !== 'object' || Array.isArray(stored) || Object.values(stored).some(v=>!v || typeof v.value !== 'string' || typeof v.request_id !== 'string' || !Number.isInteger(v.revision))) throw new Error('Invalid draft');
       } catch {
         conflictRef.current = true; setConflict(true);
-        setError('The local draft could not be read safely and has been preserved. Open My practice to inspect or explicitly discard it; it has not been scored.');
+        setError('The local draft could not be read safely and has been preserved. Open Saved drafts from your account menu to inspect or explicitly discard it; it has not been scored.');
         return;
       }
       for (const [qid, v] of Object.entries(stored)) {

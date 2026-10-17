@@ -1,4 +1,7 @@
 /* Premium exam addendum: existing #5C0025 primary + semantic surfaces. */
+:root { --source-fit-min-height:4rem; --source-fit-max-height:22rem; }
+.source-inline-viewer .source-canvas-frame[data-view-mode='fit'] { height:clamp(var(--source-fit-min-height),calc(var(--source-ratio,.2) * var(--source-fit-width,var(--source-readable-size))),var(--source-fit-max-height)); }
+
 .player-layout .number-grid { grid-template-columns:repeat(5,minmax(0,1fr)); }
 .player-layout .number-grid button { min-width:0; width:100%; padding:0; }
 

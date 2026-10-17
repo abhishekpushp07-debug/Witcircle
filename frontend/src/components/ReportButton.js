@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { Button } from './ui/button';
 
 export const ReportButton = ({ id, compact = false, scoreVersion = 'original', answerKeyOnly = false }) => {
-  const filename = answerKeyOnly ? 'Tejas-results-and-answer-keys.pdf' : 'Tejas-results-and-solutions.pdf';
+  const filename = answerKeyOnly ? 'jeemains-ai-results-and-answer-keys.pdf' : 'jeemains-ai-results-and-solutions.pdf';
   const [job, setJob] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');

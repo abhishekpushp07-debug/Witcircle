@@ -1,3 +1,21 @@
+# Latest checkpoint — jeemains.ai simple navigation and free campaign (17 October 2026)
+
+User selected OpenAI Astra for later AI work, corrected source display to FIT by default on every question change, requested simple exam-first navigation, confirmed COMEDK as the third Home card, renamed the brand jeemains.ai, and requested100%free public posters. Implemented this navigation/branding phase; do not confuse it with completing AI generation or deep cohort analytics.
+
+- Student login -> Home with exactly JEE Main/BITSAT/COMEDK -> each hub has Mock Tests/Chapter-wise Tests/Results. No My Practice header. Subject/chapter lists, per-exam owned history, actual mock/chapter filters/date range/resume/detail links; staff/draft recovery preserved in account menu.
+- Source originals default FIT, reset on Next/Previous/jump/reload. Optional Readable/zoom/pan retained. Compact Fit canvas height preserves original pixels and exposes mobile answer choices without the previous blank canvas area.
+- Public free-focused hero/student-pass and separate posters, jeemains.ai logo/title/new PDF/download branding, light/dark. Requested60/75 and120+future2027concept matches are aspirational targets with prominent same-poster disclaimers, NOT guarantees or observed results. AI/PYQ work honestly marked in development.
+-2protectedmetadata routes under/api/exam-navigation, private ownership/server-side filters before pagination, explicit test-kind handling, attempt classification snapshots, model/contracts/indexes. Runtime/schema/evidence catalogue matches75routes. New report-template version prevents stale pre-rebrand cached PDF reuse.
+- ActualcurrentnonQAcontent:94BITSATchapters/4700questions; no livefullmocks orJEE/COMEDKchapters. Empty states are deliberate, no cross-exam duplicates. Originalpaper50/+3-1/60min/365days/independentchecks unchanged; this does NOT impose those rules on future generaluploads.
+- Tests:368passed0failed232deprecationwarnings (`test_reports/navigation-final-regression.log`); successfulfrontendbuild (`navigation-build.log`);10/10actualUI suites with32Chemistrychapters paginated12+12+8, all5Fitresets, savesubmitreview/PDF, actualhistoryfilters, emptycatalogues, lightdark and exactdesktop/mobile screens (`navigation-ui-verified/final_test_output.log`, `test_results.json`). Main additionally verified390pxhistory/chapterlist/compactFit and1920pxFit with empty overflow lists. Real51pagePDF brandJEEMAINS.AIandANSWERKEYSverified.
+- Iterations87–89 had irrelevant/misleadingtestclaims; reject them where contradicted by rawcode/logs. Iteration90remainingempty-statefailure was testselector punctuation, notmissingUI; main corrected andreranentirebrowsersuite successfully. Canonicaldeliveryevidence `docs/SIMPLE_NAVIGATION_RELEASE.md`. No production-readiness claim; no appAPI mocks.
+- No domain/DNS/deploymentchange. Internaltejasnamesandoriginalsourcebookattributionintentionallypreserved. Historicalownercredentialrotationrecommendationstillapplies; no unauthorizedrotationperformed.
+
+UNFINISHED/nextapprovedphases: dynamicPDF/Excel/Wordruleinference andauto-publication; OpenAIAstramissing-answer+stepwisegenerationwithindependentchecks (managedruntime support notcanary-verified; no bulk4700backfill); cohortrank/percentile/question%/graphs; sourced2026AIRestimation. No inventedmodelintegration, solutions, ranktables or2027predictionevidence. PriorCRAsecurity and500kqualificationblockersremain.
+
+---
+
+
 # Latest checkpoint — exam refinement and bounded performance work (17 October 2026)
 
 User explicitly approved autonomous implementation and deep testing after a plan checkpoint. No routine review requests. This section supersedes older current-status/test-count claims, without deleting history.

@@ -118,6 +118,7 @@ def summary(s):
                 "source",
                 "attribution",
                 "created_at",
+                "test_kind", "full_length",
                 "chapter_book_id", "chapter_number", "chapter_subject", "solution_kind", "start_at", "end_at", "live_enabled",
             ]
         },

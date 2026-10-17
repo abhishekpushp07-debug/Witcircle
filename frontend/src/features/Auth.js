@@ -1,3 +1,5 @@
+import {Button} from '../components/ui/button';
+import {Input} from '../components/ui/input';
 import React, { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
@@ -37,11 +39,12 @@ export default function Auth({ staff = false }) {
       setUser(u);
       const next = params.get("next");
       nav(
-        next?.startsWith("/") && !next.startsWith("//")
+        staff && next?.startsWith("/") && !next.startsWith("//")
           ? next
           : staff
             ? "/studio"
             : "/home",
+        {replace:true},
       );
     } catch (e) {
       setError(e.message);
@@ -52,7 +55,7 @@ export default function Auth({ staff = false }) {
   return (
     <div className="container auth-layout">
       <div className="auth-story">
-        <span className="eyebrow">LESS FRICTION. MORE LEARNING.</span>
+        <span className="free-label" data-testid="auth-free-label">100% FREE FOR ALL STUDENTS</span>
         <h1>
           Your next step.
           <br />
@@ -66,7 +69,7 @@ export default function Auth({ staff = false }) {
         </p>
         {[
           [BookOpen, "One number. Straight into practice."],
-          [FileCheck2, "Every question, its own explanation."],
+          [FileCheck2, "Original questions. Clear answer review."],
           [RotateCcw, "Come back and pick up where you left off."],
         ].map(([Icon, t]) => (
           <div className="auth-point" key={t}>
@@ -121,7 +124,8 @@ export default function Auth({ staff = false }) {
                   {!phone.trim().startsWith("+") && (
                     <span className="country-prefix">+91</span>
                   )}
-                  <input
+                  <Input
+                    className="border-0 rounded-none shadow-none"
                     id="student-login-phone-input"
                     data-testid="student-login-phone-input"
                     type="tel"
@@ -149,7 +153,8 @@ export default function Auth({ staff = false }) {
               </p>
             </>
           )}
-          <button
+          <Button
+            type="submit"
             className="btn btn-primary full-width"
             disabled={busy}
             data-testid={
@@ -163,7 +168,7 @@ export default function Auth({ staff = false }) {
                 ? "Open Content Studio"
                 : "Continue"}
             <ArrowRight size={18} />
-          </button>
+          </Button>
         </form>
         {staff ? (
           <p className="auth-switch">

@@ -46,7 +46,7 @@ def validate_typed_math(q):
 
 class Report:
     def __init__(self, answer_key_only=False):
-        self.header = 'TEJAS / RESULTS & ANSWER KEYS' if answer_key_only else 'TEJAS / RESULTS & SOLUTIONS'
+        self.header = 'JEEMAINS.AI / RESULTS & ANSWER KEYS' if answer_key_only else 'JEEMAINS.AI / RESULTS & SOLUTIONS'
         self.doc = fitz.open()
         self.page = None
         self.y = 0
@@ -130,7 +130,7 @@ def render_report(a, loader):
     report.page_for(a["title"])
     percent = s.get("percentage")
     percentage = "Not applicable" if percent is None else str(percent) + "%"
-    summary = f"{a['exam']} · Nonofficial practice\nAttempt: {a['id']}\nStarted: {datetime.fromtimestamp(a['started_at'],timezone.utc).isoformat()}\nContent version: {a.get('version',1)} · Key version: {a.get('key_version',a.get('version',1))}\nScore version: {a.get('score_version','original')}\n\nScore: {s['score']} / {s['maximum']} · Percentage: {percentage} (not a percentile)\nCorrect: {s['correct']} · Incorrect: {s['incorrect']} · Skipped: {s['skipped']}\nDropped: {s.get('dropped',0)} · Bonus-to-all: {s.get('bonus',0)}\nAttempt rate: {s['attempt_rate']}% · Accuracy: {str(s['accuracy'])+'%' if s['accuracy'] is not None else 'Not applicable (no attempts)'}\nAccuracy = correct / attempted; dropped and bonus items excluded.\nPenalty marks: {s['penalties']} · Elapsed: {s['total_seconds']} seconds\nRules: +{r['correct']} correct, {r['wrong']} wrong, {r['skipped']} unanswered\nNumerical: {r['numeric_rule']}\n\nComplete record: all {len(result['questions'])} questions in original delivery order.\n{review_notice}\nDownloaded copies are outside Tejas access controls.\nAttribution: {a.get('attribution','Owner-supplied content')}"
+    summary = f"{a['exam']} · Nonofficial practice\nAttempt: {a['id']}\nStarted: {datetime.fromtimestamp(a['started_at'],timezone.utc).isoformat()}\nContent version: {a.get('version',1)} · Key version: {a.get('key_version',a.get('version',1))}\nScore version: {a.get('score_version','original')}\n\nScore: {s['score']} / {s['maximum']} · Percentage: {percentage} (not a percentile)\nCorrect: {s['correct']} · Incorrect: {s['incorrect']} · Skipped: {s['skipped']}\nDropped: {s.get('dropped',0)} · Bonus-to-all: {s.get('bonus',0)}\nAttempt rate: {s['attempt_rate']}% · Accuracy: {str(s['accuracy'])+'%' if s['accuracy'] is not None else 'Not applicable (no attempts)'}\nAccuracy = correct / attempted; dropped and bonus items excluded.\nPenalty marks: {s['penalties']} · Elapsed: {s['total_seconds']} seconds\nRules: +{r['correct']} correct, {r['wrong']} wrong, {r['skipped']} unanswered\nNumerical: {r['numeric_rule']}\n\nComplete record: all {len(result['questions'])} questions in original delivery order.\n{review_notice}\nDownloaded copies are outside jeemains.ai access controls.\nAttribution: {a.get('attribution','Owner-supplied content')}"
     if a.get("mode") == "preview":
         report.text(
             "UNAPPROVED PRIVATE REVIEW PROOF — author keys and solutions still require human verification.",

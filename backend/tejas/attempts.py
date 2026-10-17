@@ -108,6 +108,7 @@ def attempt_view(a):
         "summary",
         "profile",
         "visited",
+        "test_kind",
     ]
     return {
         **{k: a.get(k) for k in fields},
@@ -220,7 +221,9 @@ async def start(id: str, data: Start, u=Depends(current)):
         )
     if not s["questions"]:
         raise HTTPException(400, "No questions are available.")
+    from .exam_navigation import classify_set
     a = {
+        "test_kind": classify_set(s),
         "id": competition_id or uid(),
         "user_id": u["id"],
         "set_id": id,
@@ -594,7 +597,7 @@ async def report(id: str, bg: BackgroundTasks, data: dict, u=Depends(current)):
     from .jobs import enqueue, run_job
 
     j = await enqueue(
-        "report", u["id"], a["set_id"], {"attempt_id": id, "score_version": version}
+        "report", u["id"], a["set_id"], {"attempt_id": id, "score_version": version, "template_version": "jeemains-ai-v1"}
     )
     bg.add_task(run_job, j["id"])
     return j

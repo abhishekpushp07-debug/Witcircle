@@ -1543,6 +1543,48 @@
         "422"
       ],
       "note": "Copied from mounted route contracts. Auth roles derive from actual dependencies; ownership and transaction correctness require independent tests."
+    },
+    {
+      "operation_id": "catalogue_api_exam_navigation__slug__catalogue_get",
+      "method": "GET",
+      "path": "/api/exam-navigation/{slug}/catalogue",
+      "roles": [
+        "authenticated_profile"
+      ],
+      "workload_tier": "normal",
+      "owner_policy": "current_profile_exam_metadata",
+      "idempotency_mode": "read",
+      "body_limit_bytes": 0,
+      "status": "IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS",
+      "gaps": [
+        "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+      ],
+      "current_response_models": [
+        "200",
+        "422"
+      ],
+      "note": "Copied from mounted route contracts. Exam/type filters and ownership tested in isolated fixtures; this does not establish 500k capacity or cross-resource transaction proof."
+    },
+    {
+      "operation_id": "history_api_exam_navigation__slug__history_get",
+      "method": "GET",
+      "path": "/api/exam-navigation/{slug}/history",
+      "roles": [
+        "authenticated_profile"
+      ],
+      "workload_tier": "normal",
+      "owner_policy": "attempt_owner_exam_history",
+      "idempotency_mode": "read_with_expiry_side_effect",
+      "body_limit_bytes": 0,
+      "status": "IMPLEMENTED_PILOT_INGRESS_WITH_LIVE_CELL_GAPS",
+      "gaps": [
+        "Target SQL authority, field-level response DTOs and cross-resource transaction proof are separate qualification requirements"
+      ],
+      "current_response_models": [
+        "200",
+        "422"
+      ],
+      "note": "Copied from mounted route contracts. Exam/type filters and ownership tested in isolated fixtures; this does not establish 500k capacity or cross-resource transaction proof."
     }
   ],
   "complete_target_contract": false

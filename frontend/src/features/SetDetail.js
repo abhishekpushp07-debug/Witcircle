@@ -1,3 +1,4 @@
+import { examPath } from '../lib/exams';
 import React, { useEffect, useState, useRef } from 'react';
 import { Link, useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, CheckCircle2, Wifi, Clock3, ShieldCheck, Loader2, FileQuestion, Flag, Save, FileDown } from 'lucide-react';
@@ -61,7 +62,7 @@ export default function SetDetail() {
   const minutes = s.rules.minutes;
   return (
     <div className="container page set-detail" data-testid="set-detail-page">
-      <Link className="breadcrumb" data-testid="set-back" to={preview ? '/studio/' + id : '/exams'}><ArrowLeft size={15} /> {preview ? 'Back to Content Studio' : 'Back to practice sets'}</Link>
+      <Link className="breadcrumb" data-testid="set-back" to={preview ? '/studio/' + id : examPath(s.exam)+(s.chapter_book_id||s.test_kind==='chapter'?'/chapters'+(s.chapter_subject?'?subject='+encodeURIComponent(s.chapter_subject):''):'/mocks')}><ArrowLeft size={15} /> {preview ? 'Back to Content Studio' : 'Back to '+s.exam+' tests'}</Link>
       <PageTitle eyebrow={preview ? 'PRIVATE REVIEW · NOT APPROVED CONTENT' : `${s.exam.toUpperCase()} · INDEPENDENT PRACTICE`} title={s.title} description={s.source} />
       {preview && <div className="notice amber" data-testid="private-preview-notice">Private draft preview. Questions and solutions still require review. Starting does not approve or publish this paper.</div>}
       <div className="preflight-grid">

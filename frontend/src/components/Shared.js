@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { SourceDetailViewer } from './SourceDetailViewer';
-import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowUpRight,
   ArrowRight,
-  Menu,
-  X,
+  GraduationCap,
+  UserRound,
+  ChevronDown,
   Loader2,
   BookOpen,
   LogOut,
@@ -33,175 +34,20 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Skeleton } from './ui/skeleton';
 import { ThemeToggle } from './ThemeToggle';
-import { Sheet, SheetContent, SheetTitle, SheetDescription } from "./ui/sheet";
-export const Logo = () => (
-  <Link to="/" className="logo" data-testid="brand-home">
-    <span className="logo-mark">
-      <svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
-        <path
-          d="M6 9h21M16 10v16M8 16h7M22 5l-4 5"
-          stroke="currentColor"
-          strokeWidth="3.5"
-          strokeLinecap="round"
-        />
-      </svg>
-    </span>
-    <span>
-      tejas<span className="logo-sub">EXAM PLATFORM</span>
-    </span>
-  </Link>
-);
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuItem, DropdownMenuSeparator } from './ui/dropdown-menu';
+export const Logo = ({testId='brand-home'}) => {
+  const {user}=useAuth();
+  return <Link to={user?'/home':'/'} className="logo simple-brand" data-testid={testId}><GraduationCap className="brand-cap" size={30} strokeWidth={1.7}/><span>jeemains<span className="brand-ai">.ai</span></span></Link>;
+};
 export function Header() {
-  const { user, logout } = useAuth();
-  const [open, setOpen] = useState(false);
-  const loc = useLocation();
-  const nav = useNavigate();
-  useEffect(() => setOpen(false), [loc]);
-  return (
-    <header className="site-header">
-      <div className="container header-inner">
-        <Logo />
-        <nav
-          className="desktop-nav"
-          aria-label="Main navigation"
-          data-testid="site-header-nav"
-        >
-          {user && (
-            <NavLink
-              to={
-                ["owner", "reviewer"].includes(user.role) ? "/studio" : "/home"
-              }
-              data-testid={
-                ["owner", "reviewer"].includes(user.role)
-                  ? "nav-studio"
-                  : "nav-home"
-              }
-            >
-              {["owner", "reviewer"].includes(user.role)
-                ? "Content Studio"
-                : "My practice"}
-            </NavLink>
-          )}
-          <NavLink to="/competitions" data-testid="nav-competitions">Competitions</NavLink>
-          <NavLink to="/exams" data-testid="nav-exams">
-            Explore exams
-          </NavLink>
-          {!user && loc.pathname === "/" && (
-            <a href="/#how-it-works" data-testid="nav-how">
-              How it works
-            </a>
-          )}
-        </nav>
-        <div className="header-actions">
-          <ThemeToggle />
-          {user ? (
-            <Button
-              className="btn btn-quiet"
-              data-testid="logout"
-              onClick={async () => {
-                try {
-                  if (await logout()) nav("/");
-                } catch (e) {
-                  toast.error(e.message);
-                }
-              }}
-            >
-              <LogOut size={17} />
-              <span>Sign out</span>
-            </Button>
-          ) : (
-            <>
-              <Link className="login-link" to="/login" data-testid="nav-login">
-                Log in
-              </Link>
-              <Link
-                className="btn btn-primary nav-start"
-                to="/exams"
-                data-testid="nav-start"
-              >
-                Start practicing <ArrowUpRight size={17} />
-              </Link>
-            </>
-          )}
-          <Button
-            className="menu-button"
-            aria-label={open ? "Close navigation" : "Open navigation"}
-            aria-expanded={open}
-            data-testid="mobile-menu"
-            onClick={() => setOpen(!open)}
-          >
-            {open ? <X /> : <Menu />}
-          </Button>
-          <Sheet open={open} onOpenChange={setOpen}>
-            <SheetContent className="mobile-sheet">
-              <SheetTitle>Find your next step.</SheetTitle>
-              <SheetDescription>Simple, focused navigation.</SheetDescription>
-              <nav className="mobile-links" aria-label="Mobile navigation">
-                {user && (
-                  <NavLink data-testid="mobile-home" to="/home">
-                    My practice
-                  </NavLink>
-                )}
-                {["owner", "reviewer"].includes(user?.role) && (
-                  <NavLink data-testid="mobile-studio" to="/studio">
-                    Content Studio
-                  </NavLink>
-                )}
-                <NavLink to="/competitions" data-testid="mobile-competitions">Competitions</NavLink>
-                <NavLink to="/exams" data-testid="mobile-exams">
-                  Explore exams
-                </NavLink>
-                {!user && (
-                  <NavLink to="/login" data-testid="mobile-login">
-                    Log in
-                  </NavLink>
-                )}
-                <NavLink to="/accessibility" data-testid="mobile-accessibility">
-                  Accessibility
-                </NavLink>
-              </nav>
-            </SheetContent>
-          </Sheet>
-        </div>
-      </div>
-    </header>
-  );
+  const {user,logout}=useAuth();const nav=useNavigate();
+  async function signOut(){try{if(await logout())nav('/')}catch(e){toast.error(e.message)}}
+  return <header className="site-header simple-header" data-testid="simple-header"><div className="container header-inner"><Logo testId={user?'app-header-logo':'public-header-logo'}/><div className="header-actions simple-header-actions"><span className="header-free-label" data-testid="header-free-label">100% free</span><ThemeToggle/>{user?<DropdownMenu><DropdownMenuTrigger asChild><Button variant="outline" className="account-trigger" aria-label="Open account menu" data-testid="app-header-profile-menu"><UserRound size={19}/><ChevronDown size={14}/></Button></DropdownMenuTrigger><DropdownMenuContent align="end" className="account-menu" data-testid="account-menu"><DropdownMenuLabel data-testid="account-menu-label">Your space</DropdownMenuLabel><DropdownMenuItem asChild><Link to="/home" data-testid="nav-home">Home</Link></DropdownMenuItem><DropdownMenuItem asChild><Link to="/saved-drafts" data-testid="nav-saved-drafts">Saved drafts</Link></DropdownMenuItem><DropdownMenuItem asChild><Link to="/competitions" data-testid="nav-competitions">Competitions</Link></DropdownMenuItem>{['owner','reviewer'].includes(user.role)&&<DropdownMenuItem asChild><Link to="/studio" data-testid="nav-studio">Content Studio</Link></DropdownMenuItem>}<DropdownMenuSeparator/><DropdownMenuItem data-testid="logout" onSelect={signOut}><LogOut size={16}/>Sign out</DropdownMenuItem></DropdownMenuContent></DropdownMenu>:<><Button asChild variant="ghost" className="public-login-link"><Link to="/login" data-testid="public-header-login-link">Log in</Link></Button><Button asChild className="btn btn-primary"><Link to="/login" data-testid="public-header-start-free-button">Start free<ArrowUpRight size={16}/></Link></Button></>}</div></div></header>;
 }
-export const Footer = () => (
-  <footer className="footer">
-    <div className="container">
-      <div className="footer-top">
-        <div>
-          <Logo />
-          <p>
-            A little more understanding.
-            <br />A better way to practice.
-          </p>
-        </div>
-        <div className="footer-links">
-          <Link to="/exams" data-testid="footer-exams">
-            Explore exams
-          </Link>
-          <Link to="/privacy" data-testid="footer-privacy">
-            Privacy & content rights
-          </Link>
-          <Link to="/accessibility" data-testid="footer-accessibility">
-            Accessibility
-          </Link>
-          <Link to="/studio" data-testid="footer-studio">
-            Content Studio <ArrowUpRight size={14} />
-          </Link>
-        </div>
-      </div>
-      <div className="footer-bottom">
-        <span>© {new Date().getFullYear()} Tejas Exam Platform</span>
-        <span>
-          Independent practice. Not affiliated with NTA, JEE or BITS Pilani.
-        </span>
-      </div>
-    </div>
-  </footer>
-);
+export const Footer = () => {
+ const {user}=useAuth();
+ return <footer className={'simple-footer '+(!user?'simple-footer-public':'')} data-testid="site-footer"><div className="container">{!user&&<div className="simple-footer-top"><Logo testId="footer-brand-home"/><p data-testid="footer-free-description">Big ambitions. Zero fees.<br/>100% free for all students.</p><Button asChild variant="ghost"><Link to="/owner-login" data-testid="footer-studio">Content Studio<ArrowUpRight size={15}/></Link></Button></div>}<div className="simple-footer-bottom"><span data-testid="footer-copyright">© {new Date().getFullYear()} jeemains.ai</span><nav aria-label="Legal information"><Link to="/privacy" data-testid="footer-privacy">Privacy</Link><Link to="/accessibility" data-testid="footer-accessibility">Accessibility</Link></nav></div>{!user&&<p className="simple-footer-disclosure" data-testid="footer-independent-notice">Independent practice. Not affiliated with NTA, BITS Pilani or COMEDK. Preparation targets are not prediction guarantees.</p>}</div></footer>;
+};
 export const Loading = ({ text = "Loading your workspace…" }) => (
   <div className="loading" role="status" data-testid="workspace-loading">
     <Loader2 className="spin" aria-hidden="true" />

@@ -9,6 +9,8 @@ from .request_contracts import MODELS, EmptyPayload
 
 # owner boundary, workload tier, current idempotency behavior
 SPEC = {
+    'exam_navigation.catalogue': ('current_profile_exam_metadata', 'normal', 'read'),
+    'exam_navigation.history': ('attempt_owner_exam_history', 'normal', 'read_with_expiry_side_effect'),
     'chapter_books.list_books': ('staff_chapter_metadata', 'normal', 'read'),
     'chapter_books.upload_book': ('owner_private_chapter_source', 'batch', 'source_hash_and_request_receipt'),
     'chapter_books.read_book': ('staff_chapter_metadata', 'normal', 'read'),

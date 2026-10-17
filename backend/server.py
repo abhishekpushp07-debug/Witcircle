@@ -22,6 +22,7 @@ from tejas import (
     competitions,
     reviews,
     chapter_books,
+    exam_navigation,
 )
 from tejas.db import indexes, client
 from tejas.contracts import EnvelopeResponse, error_response, request_id
@@ -37,7 +38,7 @@ async def lifespan(app):
 
 
 app = FastAPI(
-    title="Tejas Exam Platform API",
+    title="jeemains.ai API",
     version="1.0.0",
     lifespan=lifespan,
     default_response_class=EnvelopeResponse,
@@ -127,7 +128,7 @@ for failure in (ConnectionFailure, ExecutionTimeout, WTimeoutError):
 
 @app.get("/api/health")
 async def health():
-    return {"status": "ok", "service": "Tejas Exam Platform", "version": "1.0.0"}
+    return {"status": "ok", "service": "jeemains.ai", "version": "1.0.0"}
 
 
 for module in [
@@ -145,6 +146,7 @@ for module in [
     competitions,
     reviews,
     chapter_books,
+    exam_navigation,
 ]:
     app.include_router(module.router)
 

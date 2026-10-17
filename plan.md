@@ -1,8 +1,8 @@
-# Tejas Exam Platform — Phase 1 Execution Plan (Landing + Real Practice MVP)
+# jeemains.ai — Phase 1 Execution Plan (Premium Practice MVP + Scale Strategy)
 
 ## 1) Objectives
 
-Deliver a premium landing page + working practice MVP for **JEE Main** and **BITSAT** students, using authoritative guides + owner-supplied content, with:
+Deliver a premium, simple-to-use practice platform for **JEE Main**, **BITSAT**, and **COMEDK** students with:
 
 - **World-class engineering practices**: bounded contexts, strict API boundaries, explicit data ownership, durable async job boundaries for heavy work, immutable attempt snapshots.
 - **Scale target**: architect for **500,000 (5 lakh) concurrently active exam attempts** (not registered users).
@@ -10,9 +10,20 @@ Deliver a premium landing page + working practice MVP for **JEE Main** and **BIT
   - “No lagging” is defined via measurable SLOs (latency, error rate, durability, backlog age), not an unprovable “0 lag” claim.
 - **Core product guarantees**:
   - Exact **question ↔ matched solution pairing** (per question, per attempt) **when solutions exist**.
-  - **Single downloadable PDF report** per attempt (results + matched solutions when available, or answer keys when keys-only content is supplied).
+  - **Single downloadable PDF report** per attempt (results + solutions when available, or answer keys when keys-only content is supplied).
   - **Offline answer recovery**: student drafts persist locally; server-acknowledged responses are scored; late/unacknowledged drafts are disclosed.
   - **No key/solution leakage during an active attempt** (including via direct URL guessing).
+
+### Branding + positioning updates (confirmed)
+
+- Platform name and branding: **jeemains.ai**
+- Pre-login landing: premium posters + strong message **“100% FREE for all students”**.
+- Marketing copy requested by user:
+  - “AI based PYQ analysed prediction papers…”
+  - “60 out of 75 questions in JEE Main 2027 … will have same core concept…”
+  - “120 questions or more in BITSAT 2027 … will have same core concept…”
+
+**Truth / compliance constraint (non-negotiable):** the above counts cannot be published as guaranteed outcomes unless backed by verifiable analysis evidence. The landing presents these as **aspirational preparation targets** and only claims “PYQ-analysed” where actual analysis exists.
 
 ### Binding communication preference (critical)
 
@@ -43,32 +54,61 @@ User explicitly authorized implementation and deep testing:
 - “500k qualified” claims without staged evidence.
 - Large load campaigns against shared preview.
 
-### LATEST delivered user priority (P0 — completed)
+### NEW USER REQUIREMENTS (confirmed) — General uploads + deep analytics + AI solutions + simplified navigation
 
-User required that the **exam section + upload/test organisation** be production-grade, and supplied chapter-wise PDFs.
+These supersede earlier assumptions that **every** new upload must become a 50Q/60min/+3/-1/1-year test.
 
-**P0 requirement:** Build a **chapter-wise BITSAT exam experience** from the owner-supplied chapter books and publish it **Live now** with **1-year validity**.
+**User requirement (verbatim intent):**
+- “Mai PDF upload kru aur PDF se marking scheme utha le system. Na samjh aaye toh puche mujhse.”
 
-- Inputs: **3 chapter-wise PDFs** (Physics, Chemistry, Mathematics)
-- Output: **94 chapter tests** total (30 + 32 + 32), each:
-  - **Exactly 50 questions**
-  - **60 minutes** per attempt
-  - **BITSAT marking:** +3 correct / −1 wrong / 0 unanswered
-  - **Live now + validity 1 year** (availability window), independent from the 60-minute per-attempt timer
-  - Immediate results after submission (no competition embargo)
-- Content truth: these books contain **ANSWER KEYS ONLY** (no worked solutions). UI must disclose clearly; **no fabricated solutions**.
-- Rendering truth: where typed/OCR extraction is unsafe for formulas/diagrams, **use original PDF image** regions (source-faithful) rather than guessing.
-- Reliability rule: **each generated test must be independently rechecked** by a testing agent before it is published.
+**New requirements:**
+1. **Admin upload → automatic test creation → automatic Live (only if safe)**
+   - Accept **PDF, Excel, Word** sources.
+   - System should **infer test structure and rules** (duration, marking scheme, sections, question count) from the document instructions.
+   - If rules are ambiguous or missing, the Studio must **ask for clarification** (single-shot targeted form; no endless back-and-forth).
+   - Only sets that pass verification become **Live automatically**.
+   - Any **missing keys, broken formulas, doubtful pairing** → that specific test stays **private**, with explicit issue list.
 
-Design references:
-- `/app/design_chapter_tests.md`
-- `/app/docs/audit/2026-10-17/UX_AUDIT.md`
-- `/app/design_exam_refinement.md`
+2. **Deep results analysis + graphs (world-class)**
+   - Results must include **rank + percentile** for the relevant cohort (same test/version/time window), plus graphs.
+   - Per-question stats: correct/wrong/skipped %, option distribution.
+   - Subject/topic graphs and score distribution.
+   - Attempt history browsing: chapter/mock filters, per-exam scoping.
 
-### Auth requirements (non-negotiable)
+3. **AI-generated answers + stepwise solutions when keys aren’t provided**
+   - If the upload has **no supplied keys/solutions**, platform should generate **answers + detailed stepwise solutions** automatically.
+   - **Truth constraints**:
+     - Generated content must be labeled **AI-generated** with provenance.
+     - Must not be presented as “supplied answer key”.
+     - Must include uncertainty handling; ambiguous questions must be blocked or flagged.
+   - “10 marks stepwise solution” is interpreted as **explanation depth**, not changing scoring.
+   - Must **not** change sealed grades of old attempts; solution versioning must not rewrite history.
 
-- **Students**: phone-number only (**no OTP**, no password). This is a convenience profile, not verified phone ownership.
-- **Staff/Owner**: secured separately.
+4. **Predicted rank “as per 2026 JEE Mains”**
+   - Requires verified public data sources + calibration.
+   - Must be shown as an **estimate range** with explicit uncertainty and disclaimers.
+   - No fabricated mapping or arbitrary conversion from chapter test scores to AIR.
+
+5. **Simple navigation (highest UI priority before expensive AI generation)**
+   - Remove **“My Practice”** from header.
+   - After login → **Home**.
+   - Home shows **three big exam cards**: **JEE Main**, **BITSAT**, **COMEDK**.
+   - Clicking an exam opens **Exam Hub** with exactly three cards:
+     - **Mock Tests**
+     - **Chapter-wise**
+     - **Results**
+   - Mock Tests lists only **live full-length mocks** for that selected exam.
+   - Chapter-wise shows selected exam → subject → chapter tests.
+   - Results shows previous attempts for that selected exam with mock/chapter filters, deep analysis and solutions.
+
+6. **Player source default mode fix (explicit bug)**
+   - Source images must default to **FIT** for every question.
+   - Switching questions (Next/Previous/jump) must **not carry forward** “Readable” as the default.
+   - Readable/Zoom remains an optional per-question action; safe controls retained.
+
+**Open gating (not yet implemented):**
+- AI provider/model is now chosen as **OpenAI Astra**, with exact model **`gpt-6-astra`**; application runtime support is **UNVERIFIED** (no silent model substitution).
+- Use of real “2026 JEE Mains” prediction requires explicit data source selection and calibration plan.
 
 ---
 
@@ -84,7 +124,7 @@ Design references:
 - Offline draft recovery + sign-out guard exists.
 - Results analytics workspace exists (guide-aligned registry + evidence-gated metrics).
 - Chapter-book pipeline exists:
-  - **94 live tests / 4,700 questions** across Physics/Chemistry/Mathematics
+  - **94 live tests / 4,700 questions** across Physics/Chemistry/Mathematics (currently BITSAT content)
   - Validity is set to 365 days, end-to-end exam flow exists.
 
 ### Baseline verification (read-only, before premium changes) — COMPLETED
@@ -92,8 +132,6 @@ Design references:
 - Baseline regression run recorded: `/app/test_reports/iteration_80.json`.
 - **332 isolated tests PASSED** (packet1 suite scope at that checkpoint).
 - **94 live chapter tests confirmed** and preserved.
-- Visual check in preview:
-  - Desktop 1920×800 and mobile 390×844: no horizontal overflow observed.
 
 **Important correction to earlier testing notes:**
 - Prior test-agent claim that student flow is blocked by OTP is **rejected** because the product contract and current code implement **no OTP** (`/api/auth/phone` creates a session directly).
@@ -108,7 +146,7 @@ This bounded phase is complete. It **does not** mark overall product/security/50
 - Preflight: honest copy + scoped disclosure.
 - Results: sealed-answer notice, key-only disclosure, review jump.
 - Studio: diagnostics checklist, readable owner preview, fixed `/chapters/null/...` requests on close, improved self-service clarity.
-- Backend performance correctness:
+- Backend correctness/perf:
   - Studio metadata projection: **97.1% less BSON** transferred for chapter listings.
   - Chapter exams list attempt-history correctness: indexed per-set aggregation (no arbitrary 200-row truncate).
   - Preflight source validation: request-local dedup of identical refs (no cross-request cache).
@@ -121,53 +159,71 @@ This bounded phase is complete. It **does not** mark overall product/security/50
 - Independent evidence flags remain present.
 
 Evidence:
-- `/app/test_reports/refinement-owner-invariants.json` (hard invariant check)
+- `/app/test_reports/refinement-owner-invariants.json`
+
+### FINAL PHASE CHECKPOINT — Simple exam navigation + jeemains.ai free landing + Fit-default — ✅ COMPLETED
+
+This bounded phase is complete. It **does not** mark AI publishing, deep cohort analytics, security remediation, or 500k qualification as complete.
+
+**Implemented scope (delivered):**
+- Brand + navigation:
+  - Pre-login landing: **100% free** hero + student pass + separate exam posters.
+  - Post-login: Home has exactly three cards (**JEE Main / BITSAT / COMEDK**).
+  - Each exam hub has exactly three cards (**Mock Tests / Chapter-wise / Results**).
+  - Header no longer shows **My Practice**; staff + saved drafts remain in account menu.
+  - Legacy `/exams` route redirects to the new card-driven exam flow.
+- Exam scoping:
+  - Two authenticated navigation endpoints:
+    - `GET /api/exam-navigation/{slug}/catalogue`
+    - `GET /api/exam-navigation/{slug}/history`
+  - Server-side audience/QA/expiry filters **before pagination**.
+  - Mock classification is explicit (`test_kind='mock'` or `full_length=true`) — never inferred from title/length.
+  - Attempt snapshots now store `test_kind`.
+  - Supporting index `exam_attempt_history` added.
+- Player source bug fix:
+  - Source starts in **FIT** mode and resets to FIT on **initial load, Next, Previous, jump, and refresh**.
+  - Optional Readable/zoom/pan remains.
+  - FIT frame height uses the original image aspect ratio to reduce blank space, improving mobile usability.
+- Report cache / branding:
+  - Report payload includes `template_version='jeemains-ai-v1'` so a post-rebrand report does not silently reuse pre-rebrand cached renders.
+  - PDF/report header now uses **JEEMAINS.AI** branding.
+- Marketing truth discipline:
+  - “60/75 (JEE Main 2027)” and “120+ (BITSAT 2027)” appear as **aspirational targets with prominent disclaimers**, not guarantees.
+  - AI/PYQ features are clearly labeled **in development**, not delivered.
+
+**Canonical evidence:**
+- `/app/docs/SIMPLE_NAVIGATION_RELEASE.md`
+- PRD checkpoint section updated near top of `/app/memory/PRD.md`
+
+**Content availability (truthful UI):**
+- Current non-QA published content is still **only** the **94 BITSAT chapter tests**.
+- There are currently **no** published full mocks and **no** JEE Main/COMEDK sets in the real catalogue.
+- These sections intentionally show **honest empty states**.
 
 ### Testing and build evidence — UPDATED
 
-- **Backend isolated regression**: `/app/test_reports/refinement-full-regression.log`
-  - **342 passed**, 0 failed, 200 warnings.
-- **Frontend production build**: `/app/test_reports/refinement-final-build.log` (compiled successfully).
-- **UI visual verification**: desktop 1920×800 and mobile 390×844, light/dark, no overflow (captured via automation output during verification runs).
+- **Backend isolated regression**: `/app/test_reports/navigation-final-regression.log`
+  - **368 passed**, 0 failed, 232 warnings.
+  - (This includes contract-evidence maintenance: operation catalogue updated to 75 routes after adding the two new endpoints.)
+- **Frontend production build**: `/app/test_reports/navigation-build.log` (compiled successfully).
+- **UI real-browser suites**: `/app/test_reports/navigation-ui-verified/`
+  - 10/10 passed, 22 screenshots, 0 overflow offenders, 1 real 51-page branded PDF.
+  - Verified: **32 Chemistry tests** pagination (12+12+8), Fit reset behavior across multiple transitions, history filters, BITSAT-only scoping.
+- **Owner invariants re-verified**: `/app/test_reports/navigation-owner-invariants.json`
 
-### Real attempt, offline and source evidence (critical)
+### Results/PDF truth discipline (critical)
 
-Verified directly in real browser:
-- Source canvas loads original pixels; **pan changes pixels**.
-- Fit/Readable/Zoom/Fullscreen controls work.
-- Keyboard shortcuts work when focus is on `BODY`.
-- Offline: select option → UI shows **“Offline · 1 pending”** → reconnect → reload preserves answer.
-- Failure mode (TEST ONLY): a browser route fault injects **503** for a source image → answering locks → **Try again** after removing fault unlocks answering.
-  - This is a **mocked browser network fault**, not mocked application APIs.
-
-### Results/PDF truth discipline (critical correction)
-
-- **Superseded:** Any earlier acceptance of `iteration_83.json` claims about **2/150** submission and PDF. That report was marked with `verification_override: REJECTED_OVERCLAIM`.
-- **Actual main re-run UI verification:**
-  - QA87 attempt `52e598cc...` submitted via real UI: **two incorrect = −2/150**, 48 skipped.
-  - Real downloaded PDF: **1,510,413 bytes**, **51 pages**, answer-keys header.
-  - Saved at: `/app/test_reports/refinement-actual-qa-report.pdf`.
-- Additional correctness signal:
-  - QA85 (existing attempt) naturally ended by 60-minute deadline and showed **+3/150** (1 correct, 49 skipped), exercising server-side deadline finalization.
-
-### Studio / owner verification (final)
-
-- Owner login and Studio chapter book view verified.
-- Owner preview verified:
-  - Actual **Close** action
-  - Q1 and Q50 assets load
-  - **Zero** `/chapters/null/` asset requests after fix
-  - Readable inline canvas enabled inside owner preview.
+- Earlier report `iteration_83.json` contained overclaims; it is explicitly marked `verification_override: REJECTED_OVERCLAIM`.
+- Several other historical reports (87–90) were corrected with `main_verification_override` notes where they contained scope mismatch or invalid claims; canonical evidence is in the final release docs.
 
 ### Security posture snapshot (frontend) — UPDATED (still blocked)
 
 - `yarn audit` remains: **49 vulnerable dependency paths** (25 unique advisories; 21 high severity paths).
-- Several advisories originate from deprecated CRA/webpack dev toolchain dependencies.
-- **Policy:** do **safe, compatible** upgrades only; do **not** force unsafe overrides.
+- CRA/webpack toolchain advisories remain unresolved.
 
 Evidence:
-- `/tmp/tejas-security-before.jsonl` copied to `/app/test_reports/refinement-dependency-audit.jsonl`
-- `/app/test_reports/refinement-compatible-updates.log` contains `yarn outdated` snapshot
+- `/app/test_reports/refinement-dependency-audit.jsonl`
+- `/app/test_reports/refinement-compatible-updates.log`
 
 ### Capacity snapshot (read-only) — UPDATED (still unqualified)
 
@@ -175,20 +231,8 @@ Evidence:
 - MongoDB is **standalone** (no replica set / multi-AZ proof).
 - Capacity remains **UNQUALIFIED**.
 
-Measured bounded smoke (NOT scale proof):
-- `/app/test_reports/capacity_catalog_smoke.json`
-  - 40/40 HTTP200, max 4 workers, max 5 rps
-  - p50 **71.91ms**, p95 **107.89ms**, p99 **229.38ms**
-  - Includes raw samples + timing method
-  - Explicitly labeled **UNQUALIFIED_500K**
-
 Canonical infra verdict:
 - `/app/docs/strategy/INFRASTRUCTURE_CAPACITY_VERDICT.md`
-
-### Incidents / hygiene notes (for release truth)
-
-- Credential incident: test tooling leaked owner credential into artifacts earlier in the session; artifacts were redacted locally. **Rotation/revocation is recommended**, but not performed (access-impacting action).
-- Synthetic test-data incident: a synthetic `Test Book` briefly appeared in preview DB; it was quarantined by exact fingerprint without touching the original 94. Root cause not proven; **do not claim pytest isolation failed**.
 
 ---
 
@@ -204,11 +248,12 @@ Canonical infra verdict:
 
 ### Phase 2 — V1 App Development (build full product around proven core)
 
-**Status:** MVP exists; premium polish ✅ delivered; remaining hardening ongoing
+**Status:** MVP exists; premium polish ✅ delivered; simple navigation + brand + FIT default ✅ delivered
 
-- Chapter-wise exams are Live.
+- Chapter-wise BITSAT tests are Live.
 - Core attempt flows function.
 - UI/UX upgraded significantly toward “premium” while preserving published content.
+- Navigation is now exam-first and card-driven.
 
 ### Phase 3 — Comprehensive testing, hardening, and regression — UPDATED
 
@@ -218,139 +263,193 @@ Canonical infra verdict:
 
 #### Step 3: Guide04 analytics addendum — ✅ COMPLETE
 
-#### Step 4: Deep testing (autonomous) — ✅ COMPLETE for the premium-refinement scope
+#### Step 4: Deep testing (autonomous) — ✅ COMPLETE for premium-refinement + simple-navigation scope
 
 Completed evidence includes:
 - Production frontend build success.
-- Safe isolated backend regression: **342 passing**.
-- Real UI flows: preflight, player, offline, submit, results, PDF.
-- Owner Studio: checklist + preview + Close + Q1/Q50 asset loading.
+- Safe isolated backend regression: **368 passing** (latest).
+- Real UI flows: login, navigation, preflight, player, offline, submit, results, PDF.
 
 **Note:** this does **not** certify all historical flows, competitions, or arbitrary new content formats.
 
-#### Step 5: Phase 3.3 compatible security checkpoint — ✅ COMPLETE (bounded), still a blocker overall
+#### Step 5: Security checkpoint — NOT COMPLETE (blocked)
 
-- Audit remains not clean.
-- CRA toolchain advisories remain a release blocker until modernization path is proven.
-
----
-
-## 4) NEW Phase — Premium UX + Capacity Strategy (CURRENT ACTIVE PHASE)
-
-**Goal:** Convert the current MVP into a **premium test-series grade product** while producing an evidence-based capacity strategy and a reproducible load qualification harness.
-
-### 4.1 Premium UX implementation (P0) — ✅ COMPLETED (premium exam refinement)
-
-**Binding references:**
-- `/app/docs/audit/2026-10-17/UX_AUDIT.md`
-- `/app/design_exam_refinement.md`
-- `/app/design_guidelines.md` (premium addendum)
-
-Delivered (verified):
-- /exams catalogue density + sticky filters
-- Preflight copy truthfulness + mobile sticky CTA
-- Player readable original-canvas controls + shortcuts + A–D strip
-- Results sealed/key-only disclosures + review jump
-- Studio diagnostics + readable owner preview + null-close fix
-
-### 4.2 Frontend security posture (P1) — NOT COMPLETE (blocked)
-
-Work done:
-- Deep audit snapshot recorded and compatible updates reviewed.
-
-Remaining:
-- Controlled toolchain modernization (CRA → supported stack), with regression proof.
-- Re-audit to materially reduce high-severity paths.
-
-### 4.3 Capacity strategy + infra inventory (read-only) (P0/P1) — PARTIALLY COMPLETE (planning + bounded smoke only)
-
-Completed:
-- Read-only infra inventory and explicit **UNQUALIFIED_500K** verdict.
-- Guarded, reproducible read-only smoke harness.
-- Application-level hot-path improvements that reduce payload and remove truncation.
-
-Remaining:
-- True staged stateful load, burst, failure, restore qualification on representative infrastructure.
-
-### 4.4 Release gates and truth discipline — IN PROGRESS
-
-- Keep **capacity_qualification = UNQUALIFIED** until staged evidence exists.
-- Keep CRA advisories as explicit release blockers.
-- Maintain strict preservation of:
-  - 94 live tests
-  - 1-year validity windows
-  - question/key pairing integrity
-  - phone-only login contract
+- CRA toolchain advisories remain a release blocker.
 
 ---
 
-## 5) Next Actions (post-premium refinement)
+## 4) NEW Phase — Upload→Auto-Live + Deep Results + AI Solutions (NEXT)
 
-### A) Security modernization (P0/P1)
+**Goal:** make Studio fully self-service for new uploads, deliver world-class analytics and solution quality, and then qualify infrastructure and security.
 
-- Produce a controlled CRA → supported toolchain migration plan + execution:
-  - Preserve routing, shadcn/ui, env wiring, and current tests.
-  - Re-run build + full regression + `yarn audit` and record delta.
-  - Do not force unsafe resolutions.
+### 4.0 P0: Simple navigation overhaul + Player FIT default — ✅ COMPLETE
 
-### B) True 500k qualification work (P0)
+Delivered and verified.
 
-- Build the real campaign (operator-owned infrastructure):
-  - Dedicated topology (stateless API tier, asset tier, jobs tier, replicated DB)
-  - Statefully simulate: login, preflight, start, answer writes, offline/reconnect, submit, grade, report.
-  - Run staged: 1k → 10k → 50k → 100k → 250k → 500k.
-  - Include bursts, failover, restore drills.
-  - Record SLO evidence, offered vs admitted load, queue age, error budgets.
+### 4.0.1 P0: Pre-login landing page for jeemains.ai — ✅ COMPLETE
 
-### C) Studio self-service expansion (P1)
+Delivered and verified (with disclaimers and “in development” disclosures).
 
-- Improve owner-side validation without weakening publication discipline:
-  - Surface missing/damaged formulas and ambiguous keys per question.
-  - Provide “fix source and re-upload” guidance and diff awareness.
-  - Keep “independent evidence” gating for new/unrecognised books.
+### 4.1 P0: Admin upload → automatic test creation → safe auto-Live (NOT STARTED)
 
-### D) Evidence hygiene (P0)
+**Key change:** stop forcing default 50Q/60min/+3/-1/1-year on all uploads.
 
-- Credential rotation/revocation (access-impacting):
-  - Recommended before wider release due to prior artifact leakage.
-  - Requires explicit authorization.
-- Prevent ad-hoc live DB writes in test tooling:
-  - Enforce guardrails: all test inserts must occur only under the isolated Packet1 DB fixture.
+**Pipeline design:**
+1. **Source ingestion**
+   - Support: PDF, Excel, Word.
+   - Store source, compute SHA, create immutable “source record”.
+
+2. **Rule inference engine**
+   - Parse instructions pages/headers (e.g., “Time: 180 minutes”, “+4/-1”).
+   - Detect sections (Physics/Chem/Math, etc.), question numbering patterns.
+   - Produce an inference report with confidence + evidence anchors.
+
+3. **Clarification prompt (only if ambiguous)**
+   - Minimal Studio form only for missing fields: duration, correct/wrong, question count policy, section weights.
+   - Owner decision becomes part of an immutable “rules decision” record.
+
+4. **Organisation + verification**
+   - Exact question identification and pairing.
+   - If supplied keys exist: dual extraction checks must agree.
+   - Formula safety: use original crops where typed extraction unsafe.
+
+5. **Auto-Live gating**
+   - Only sets with: complete question structure + valid rules + (supplied keys OR AI-generated keys flagged) + safe source refs become eligible.
+   - Partial failures: only affected sets stay private; the rest can go Live.
+
+**Non-negotiables:**
+- Never guess missing keys as “supplied”.
+- Never publish a set with unverified ambiguous key pairing.
+- Preserve existing 94 published tests unchanged.
+
+### 4.2 P0/P1: AI-generated answers + stepwise solutions (OpenAI Astra) (NOT STARTED)
+
+**User decision (locked):** **OpenAI Astra**
+
+**Exact chosen model:** `gpt-6-astra`
+
+**Critical constraint:** App runtime access to Astra via managed integration is **UNVERIFIED**.
+
+**Implementation plan (bounded, safe):**
+1. **Provider canary**
+   - Add a minimal backend canary job that calls the existing integrations path and asserts the exact model `gpt-6-astra` is being used.
+   - Fail closed if the model is unavailable; do not silently substitute.
+
+2. **Data model + provenance**
+   - `solution_provider` per question: `supplied_key`, `supplied_solution`, `ai_generated`, `none`.
+   - `solution_version` + `generated_at` stored per published set version.
+   - Never rewrite sealed attempt grades.
+
+3. **Generation jobs**
+   - Durable async jobs: rule-extract, question-solve, independent recheck (same model with blind prompt), deterministic validation.
+   - If uncertain/disagree: mark `needs_review` and keep the set private.
+
+4. **UX truth labels**
+   - UI labels AI-generated solutions and status: `verified`, `needs_review`.
+
+5. **No bulk backfill**
+   - Start with small canary batches only; no automatic 4,700-question backfill.
+
+### 4.3 P0: Deep results analysis with cohort rank/percentile + graphs (NOT STARTED)
+
+Deliver:
+- Rank + percentile for same set/version cohort.
+- Participant counts + status (provisional/final).
+- Per-question analytics:
+  - correct/wrong/skipped %
+  - option distribution (A/B/C/D)
+  - time spent buckets (if available)
+- Subject/topic breakdown and score distribution graphs.
+
+**Data model:**
+- Aggregations keyed by `{set_id, version, window}`.
+- Store per-question response counts in an analytics collection with periodic backfill.
+
+**Performance:**
+- Updates must be incremental and cheap. Avoid full rescans per result view.
+
+### 4.4 P1/P2: Predicted rank “as per 2026 JEE Mains” (NOT STARTED)
+
+**Reality constraint:** cannot be done honestly without verified datasets.
+
+**Plan:**
+- Add Prediction panel only after:
+  - dataset ingestion,
+  - calibration,
+  - error bounds,
+  - explicit disclaimers.
+
+---
+
+## 5) Next Actions (updated)
+
+### A) ✅ COMPLETE: Brand rename + landing posters + simple navigation
+
+- Brand identity updated to **jeemains.ai** (UI title/meta/branding + PDF/report branding).
+- Pre-login landing: “100% FREE for all students” + premium posters + disclaimers.
+- Home (3 exam cards) → Exam Hub (3 cards).
+- Removed “My Practice” from header.
+- Enforced exam scoping: BITSAT chapters do not appear under JEE/COMEDK.
+- Fixed Player source mode default to **FIT** on every question change.
+
+### B) P0: Upload→Auto-Live inference pipeline
+
+- Build rule inference report + evidence anchors.
+- Build single-shot clarification form.
+- Build safe auto-Live gating.
+- Add Word ingestion.
+
+### C) P0/P1: OpenAI Astra solutions (bounded canary first)
+
+- Verify runtime support for `gpt-6-astra` (no silent model substitution).
+- Build durable generation + blind recheck + deterministic validation.
+- Implement UI labeling and versioning; never rewrite sealed grades.
+
+### D) P0: Deep results analytics + graphs
+
+- Implement aggregation + caching.
+- Add rank/percentile + question-level correctness/option distribution.
+- Render graphs and drilldown per exam.
+
+### E) Capacity and security remain explicit blockers (P0)
+
+- Full 500k stateful qualification on representative infra.
+- CRA toolchain modernization.
 
 ---
 
 ## 6) Success Criteria
 
-### Product-first owner flow success
+### Owner / Studio success
 
-- Upload via PDF-pair, Excel, and chapter-book modes remains stable.
-- Deterministic organization, verifiable content, safe publication gating.
-- Published content stays immutable for existing student attempts.
+- Uploads can become Live with minimal manual work.
+- System infers rules; only asks when ambiguous.
+- Any failed extraction/verification blocks only the affected tests.
+- AI-generated answers/solutions are clearly labeled, reviewed, and never misrepresented.
 
-### Student exam section success
+### Student success
 
-- Student sees `/exams` catalogue with subject filters and fast navigation.
-- Can start/resume attempts with offline recovery.
-- Gets immediate results after submit.
-- Can download PDF report.
-- No answer keys/solutions leak during active attempts.
-- Mobile formula/source readability is usable and does not cause overflow.
+- Simple navigation: **Login → Home (JEE/BITSAT/COMEDK) → Exam Hub (Mock/Chapter/Results)**.
+- Player defaults to **FIT** every time; readable/zoom is optional.
+- Deep results: rank/percentile, question-wise stats, graphs.
+- Immediate post-exam results + analysis.
+- Landing clearly communicates **100% FREE** and exam focus.
 
-### “World best” readiness (requires audit + evidence)
+### Engineering success
 
-- Premium UX gap list closed via measurable acceptance criteria and screenshots.
-- Hot-path SLOs met under staged workload in a representative environment.
-- Observability in place (metrics + traces) enabling “no lag” validation.
+- No regressions to existing 94 live tests.
+- Measured and reproducible analytics performance.
+- AI generation is bounded, versioned, and provenance-labelled; **no silent substitution** of chosen model.
+- Capacity remains truthfully labeled until dedicated qualification is complete.
 
 ---
 
 ## Explicit Release Blockers (remain blockers until qualified)
 
-- **CRA/react-scripts dependency advisories** until controlled migration + re-audit (or proven mitigation via safe upgrades).
+- **CRA/react-scripts dependency advisories** until controlled migration + re-audit.
 - **500,000 concurrent user qualification** until staged load/fault/restore campaign is executed with evidence.
 - **Preview-infra is not representative**: 2 CPU quota / 8GiB cap / colocated services / standalone MongoDB do not prove fleet readiness.
-- **PDF importer robustness** beyond the provided supported PDFs (no OCR/scans claim).
-- Multi-AZ durability + failover + restore proofs (operator-owned).
-- Full load + chaos + restore qualification campaign.
-- New-book independent verification autonomy (still requires independent evidence; no fabricated approvals).
+- **OpenAI Astra runtime availability** must be verified via a minimal canary; no silent model substitution.
+- **AI-generated solutions** cannot be treated as “supplied keys”; must remain provenance-labeled with uncertainty and review gates.
+- **Predicted 2026 JEE Mains rank** cannot be shown as authoritative without verified datasets + calibration + error bounds.
 - Any unperformed mandatory WP/OPS-R gate (as referenced in strategy docs).

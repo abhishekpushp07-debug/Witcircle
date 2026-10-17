@@ -1,3 +1,4 @@
+import { examPath } from '../lib/exams';
 import React, { useEffect, useState } from "react";
 import {
   Link,
@@ -106,7 +107,7 @@ export default function Results() {
   }
   if (pending?.status === 'embargoed') return <div className="container page" data-testid="results-embargoed"><PageTitle eyebrow="SUBMISSION RECEIVED" title="Your answers are sealed." description={pending.title} /><section className="import-card"><h2>A fair window for everyone.</h2><p className="import-muted" data-testid="results-release-time">Your results, solutions and PDF report unlock at {new Date(pending.release_at * 1000).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST, after the competition closes.</p><p className="import-fineprint mt-4" data-testid="results-embargo-receipt">Submission receipt: {pending.receipt}</p><div className="flex flex-wrap gap-3 mt-6"><Button data-testid="results-release-refresh" onClick={() => setRefresh(v => v + 1)}>Check results</Button><Button asChild variant="outline"><Link data-testid="results-competition-hub" to="/competitions">Competition hub</Link></Button></div></section></div>;
   if (pending) return <div className="container page" data-testid="results-grading-pending">
-    <PageTitle eyebrow="SUBMISSION RECEIVED" title="Your answers are safely submitted." description="Your sealed answers are being graded in the background. You can leave this page and return from My practice." />
+    <PageTitle eyebrow="SUBMISSION RECEIVED" title="Your answers are safely submitted." description="Your sealed answers are being graded in the background. You can leave this page and return from your exam’s Results section." />
     <div className="card">
       <p data-testid="grading-status" role="status">{pending.grading_status === 'failed' ? 'Grading needs another try. Your submitted answers have not changed.' : 'Preparing your results and review…'}</p>
       <p data-testid="submission-receipt">Receipt: {pending.receipt}</p>
@@ -117,7 +118,7 @@ export default function Results() {
           try { if (pending.grading_status === 'failed') await post('/jobs/' + pending.job_id + '/retry', {}); setRefresh(v => v + 1); }
           catch (e) { setError(e.message); } finally { setBusy(false); }
         }}>{pending.grading_status === 'failed' ? 'Retry grading' : 'Check progress'}</Button>
-        <Button asChild variant="outline" className="btn btn-secondary"><Link data-testid="grading-back-home" to="/home">My practice</Link></Button>
+        <Button asChild variant="outline" className="btn btn-secondary"><Link data-testid="grading-back-home" to="/home">Home</Link></Button>
       </div>
     </div>
   </div>;
@@ -141,8 +142,8 @@ export default function Results() {
   } catch {}
   return (
     <div className="container page results-page">
-      <Link className="breadcrumb" to="/home" data-testid="results-home">
-        <ArrowLeft size={14} /> My practice
+      <Link className="breadcrumb" to={examPath(r.exam)+'/results'} data-testid="results-home">
+        <ArrowLeft size={14} /> All {r.exam} results
       </Link>
       <PageTitle
         eyebrow={`${r.exam} · ${r.mode === "preview" ? "UNAPPROVED PRIVATE PREVIEW" : "COMPLETED PRACTICE"}`}
@@ -299,7 +300,7 @@ export default function Results() {
         <ReportButton key={`${id}-${scoreVersion}`} id={id} scoreVersion={scoreVersion} answerKeyOnly={r.questions.every(q=>q.solution_kind==='answer_key_only')} />
       </div>
       <p className="report-privacy">
-        <ShieldCheck size={14} /> A downloaded copy is outside Tejas access
+        <ShieldCheck size={14} /> A downloaded copy is outside jeemains.ai access
         controls. Use it for permitted personal study only.
       </p>
       <div className="summary-tables">

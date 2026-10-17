@@ -13,9 +13,14 @@ import { Header, Footer, Loading, Empty } from "./components/Shared";
 import Landing from "./features/Landing";
 import "./App.css";
 import "./exam-refinement.css";
+import "./simple-navigation.css";
 const Auth = lazy(() => import("./features/Auth"));
 const Exams = lazy(() => import("./features/Exams"));
 const Home = lazy(() => import("./features/Home"));
+const ExamHub = lazy(() => import("./features/ExamHub"));
+const ExamSection = lazy(() => import("./features/ExamSection"));
+const ExamHistory = lazy(() => import("./features/ExamHistory"));
+const SavedDrafts = lazy(() => import("./features/SavedDrafts"));
 const SetDetail = lazy(() => import("./features/SetDetail"));
 const Player = lazy(() => import("./features/Player"));
 const Results = lazy(() => import("./features/Results"));
@@ -90,6 +95,11 @@ function Shell() {
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/exams" element={<Exams />} />
+            <Route path="/exams/:examSlug" element={<Protected><ExamHub /></Protected>} />
+            <Route path="/exams/:examSlug/mocks" element={<Protected><ExamSection kind="mocks" /></Protected>} />
+            <Route path="/exams/:examSlug/chapters" element={<Protected><ExamSection kind="chapters" /></Protected>} />
+            <Route path="/exams/:examSlug/results" element={<Protected><ExamHistory /></Protected>} />
+            <Route path="/saved-drafts" element={<Protected><SavedDrafts /></Protected>} />
             <Route path="/login" element={<Auth />} />
             <Route path="/signup" element={<Auth />} />
             <Route path="/owner-login" element={<Auth staff />} />

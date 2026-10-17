@@ -22,7 +22,7 @@ export default function Info() {
         <article className="card reading-content">
           <h2>Reading and interaction</h2>
           <p>
-            Tejas supports keyboard navigation, visible focus, labelled inputs,
+            jeemains.ai supports keyboard navigation, visible focus, labelled inputs,
             touch-friendly controls and meaningful status labels—not colour
             alone. The interface respects reduced motion. Mobile is a compact
             practice adaptation, not a claim of faithful official exam

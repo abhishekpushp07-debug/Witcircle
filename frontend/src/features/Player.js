@@ -1,3 +1,4 @@
+import { examPath } from '../lib/exams';
 import React, { useEffect, useState } from "react";
 import { ThemeToggle } from '../components/ThemeToggle';
 import { Link, useParams } from "react-router-dom";
@@ -145,8 +146,8 @@ export default function Player() {
         </div>
       </header>
       <div className="player-savebar">
-        <Link to="/home" data-testid="player-home">
-          <ArrowLeft size={14} /> My practice
+        <Link to={examPath(a.exam)} data-testid="player-home">
+          <ArrowLeft size={14} /> {a.exam} home
         </Link>
         <span
           data-testid="player-save-state-indicator"
